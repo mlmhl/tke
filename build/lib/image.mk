@@ -21,7 +21,7 @@
 DOCKER := docker
 DOCKER_SUPPORTED_API_VERSION ?= 1.32
 
-REGISTRY_PREFIX ?= tkestack
+REGISTRY_PREFIX ?= mirrors.tencent.com/tkestack
 BASE_IMAGE = alpine:3.10
 
 EXTRA_ARGS ?=
@@ -91,7 +91,7 @@ image.build.%: go.build.%
 image.push: image.verify go.build.verify $(addprefix image.push., $(addprefix $(IMAGE_PLAT)., $(IMAGES)))
 
 .PHONY: image.push.multiarch
-image.push.multiarch: image.verify go.build.verify $(foreach p,$(PLATFORMS),$(addprefix image.push., $(addprefix $(p)., $(IMAGES)))) 
+image.push.multiarch: image.verify go.build.verify $(foreach p,$(PLATFORMS),$(addprefix image.push., $(addprefix $(p)., $(IMAGES))))
 
 .PHONY: image.push.%
 image.push.%: image.build.%
@@ -128,4 +128,4 @@ image.manifest.push.multiarch: image.push.multiarch $(addprefix image.manifest.p
 image.manifest.push.multiarch.%:
 	@echo "===========> Pushing manifest $* $(VERSION) to $(REGISTRY_PREFIX) and then remove the local manifest list"
 	REGISTRY_PREFIX=$(REGISTRY_PREFIX) PLATFROMS="$(PLATFORMS)" IMAGE=$* VERSION=$(VERSION) DOCKER_CLI_EXPERIMENTAL=enabled \
-	  $(ROOT_DIR)/build/lib/create-manifest.sh 
+	  $(ROOT_DIR)/build/lib/create-manifest.sh
