@@ -19,14 +19,19 @@
 package requestheader
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
+	gooidc "github.com/coreos/go-oidc"
 	"github.com/emicklei/go-restful"
+	"golang.org/x/oauth2"
+	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/endpoints/handlers/responsewriters"
 
 	"tkestack.io/tke/pkg/apiserver/authentication/authenticator/oidc"
+	"tkestack.io/tke/pkg/gateway/token"
 )
 
 // GroupName is the api group name for gateway.
@@ -48,10 +53,19 @@ const (
 	tenantHeader = "X-Remote-Extra-TenantID"
 )
 
-func RegisterTokenRoute(container *restful.Container) {
+func RegisterTokenRoute(container *restful.Container, oauthConfig *oauth2.Config, oidcHTTPClient *http.Client) {
 	ws := new(restful.WebService)
 	ws.Path(fmt.Sprintf("/apis/%s/%s/tokens", GroupName, Version))
 
+	ws.Route(ws.
+		POST("/").
+		Doc("generate token by username and password").
+		Operation("createPasswordToken").
+		Produces(restful.MIME_JSON).
+		Returns(http.StatusCreated, "Created", v1.Status{}).
+		Returns(http.StatusInternalServerError, "InternalError", v1.Status{}).
+		Returns(http.StatusUnauthorized, "Unauthorized", v1.Status{}).
+		To(handleTokenGenerateFunc(oauthConfig, oidcHTTPClient)))
 	ws.Route(ws.
 		GET("info").
 		Doc("obtain the user information corresponding to the token").
@@ -82,6 +96,33 @@ func RegisterTokenRoute(container *restful.Container) {
 		Returns(http.StatusUnauthorized, "Unauthorized", v1.Status{}).
 		To(handleTokenRenewFunc()))
 	container.Add(ws)
+}
+
+func handleTokenGenerateFunc(oauthConfig *oauth2.Config, httpClient *http.Client) func(*restful.Request, *restful.Response) {
+	return func(request *restful.Request, response *restful.Response) {
+		username, password, err := retrievePassword(request.Request)
+		if err != nil {
+			responsewriters.WriteRawJSON(http.StatusUnauthorized, errors.NewUnauthorized(err.Error()), response.ResponseWriter)
+			return
+		}
+
+		ctx := gooidc.ClientContext(context.Background(), httpClient)
+		t, err := oauthConfig.PasswordCredentialsToken(ctx, username, password)
+		if err != nil {
+			responsewriters.WriteRawJSON(http.StatusUnauthorized, errors.NewUnauthorized(err.Error()), response.ResponseWriter)
+			return
+		}
+
+		if err := token.ResponseToken(t, response.ResponseWriter); err != nil {
+			responsewriters.WriteRawJSON(http.StatusInternalServerError, errors.NewInternalError(err), response.ResponseWriter)
+			return
+		}
+
+		responsewriters.WriteRawJSON(http.StatusCreated, v1.Status{
+			Status: v1.StatusSuccess,
+			Code:   http.StatusCreated,
+		}, response.ResponseWriter)
+	}
 }
 
 func handleTokenInfo() func(*restful.Request, *restful.Response) {
@@ -118,4 +159,15 @@ func handleTokenRenewFunc() func(*restful.Request, *restful.Response) {
 			Code:   http.StatusCreated,
 		}, response.ResponseWriter)
 	}
+}
+
+func retrievePassword(request *http.Request) (string, string, error) {
+	userName := request.PostFormValue("username")
+	password := request.PostFormValue("password")
+
+	if len(userName) == 0 || len(password) == 0 {
+		return "", "", fmt.Errorf("username or password is empty")
+	}
+
+	return userName, password, nil
 }

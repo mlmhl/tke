@@ -40,7 +40,7 @@ func RegisterRoute(container *restful.Container, cfg *gatewayconfig.GatewayConfi
 	if !headerRequest {
 		registerTokenRoute(container, oauthConfig, oidcHTTPClient, oidcAuthenticator, cfg.DisableOIDCProxy)
 	} else {
-		requestheader.RegisterTokenRoute(container)
+		requestheader.RegisterTokenRoute(container, oauthConfig, oidcHTTPClient)
 	}
 	registerSysInfoRoute(container, cfg)
 	registerLogoutRoute(container)
