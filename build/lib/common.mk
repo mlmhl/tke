@@ -38,7 +38,9 @@ endif
 # set the version number. you should not need to do this
 # for the majority of scenarios.
 ifeq ($(origin VERSION), undefined)
-VERSION := $(shell git describe --dirty --always --tags | sed 's/-/./g')
+    GITCOUNT=$(shell git log --oneline|wc -l|sed -e 's/^[ \t]*//')
+    COMMIT=$(shell git describe --dirty --always --tags | sed 's/-/./2' | sed 's/-/./2' )
+    VERSION=${GITCOUNT}-${COMMIT}
 endif
 # Check if the tree is dirty.  default to dirty
 GIT_TREE_STATE:="dirty"
