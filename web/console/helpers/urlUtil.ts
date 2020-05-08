@@ -96,6 +96,7 @@ interface K8sRestfulPathOptions {
   namespace?: string;
 
   isSpetialNamespace?: boolean;
+
   /** 不在路径最后的变量，比如projectId*/
   middleKey?: string;
 

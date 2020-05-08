@@ -6,7 +6,7 @@ import { bindActionCreators, deepClone, isSuccessWorkflow, OperationState } from
 import { t } from '@tencent/tea-app/lib/i18n';
 import { Alert, Bubble, Button, Icon, Modal, Text } from '@tencent/tea-component';
 
-import { getWorkflowError } from '../../common';
+import { getWorkflowError, RequestParams, ResourceInfo } from '../../common';
 import { allActions } from '../actions';
 import { projectActions } from '../actions/projectActions';
 import { resourceLimitTypeToText, resourceTypeToUnit } from '../constants/Config';
@@ -16,20 +16,23 @@ import { CreateProjectResourceLimitPanel } from '../../common/components';
 // import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
 import { EditProjectManagerPanel } from './EditProjectManagerPanel';
 import { RootProps } from './ProjectApp';
+import { resourceConfig } from '@config/resourceConfig';
+import { reduceK8sRestfulPath } from '@helper/urlUtil';
+import { Method, reduceNetworkRequest } from '@helper/reduceNetwork';
 
-const mapDispatchToProps = dispatch =>
+const mapDispatchToProps = (dispatch) =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), {
-    dispatch
+    dispatch,
   });
 
-@connect(state => state, mapDispatchToProps)
+@connect((state) => state, mapDispatchToProps)
 export class CreateProjectPanel extends React.Component<
   RootProps,
   { currentClusterIndex: number; isShowDialog: boolean }
 > {
   state = {
     currentClusterIndex: 0,
-    isShowDialog: false
+    isShowDialog: false,
   };
   componentDidMount() {
     let { actions, project, manager } = this.props;
@@ -40,6 +43,35 @@ export class CreateProjectPanel extends React.Component<
     if (manager.list.data.recordCount === 0) {
       actions.manager.applyFilter({});
     }
+    this.getUserInfo();
+  }
+
+  //获取用户信息包括用户业务信息
+  async getUserInfo() {
+    let { actions } = this.props;
+    let infoResourceInfo: ResourceInfo = resourceConfig()['info'];
+    let url = reduceK8sRestfulPath({ resourceInfo: infoResourceInfo });
+    let params: RequestParams = {
+      method: Method.get,
+      url,
+    };
+    try {
+      let response = await reduceNetworkRequest(params);
+      let loginUserInfo = {
+        id: '',
+        name: '',
+        displayName: '',
+      };
+      if (!response.code) {
+        const { uid, name, extra } = response.data;
+        loginUserInfo = {
+          id: uid,
+          name,
+          displayName: extra.displayname ? extra.displayname[0] : '',
+        };
+      }
+      actions.project.selectManager([loginUserInfo]);
+    } catch (error) {}
   }
 
   formatResourceLimit(resourceLimit: ProjectResourceLimit[]) {
@@ -63,14 +95,14 @@ export class CreateProjectPanel extends React.Component<
   render() {
     let { projectEdition, actions, project, route, createProject, cluster } = this.props;
 
-    let projectListOpions = project.list.data.records.map(item => {
+    let projectListOpions = project.list.data.records.map((item) => {
       return { text: `${item.metadata.name}(${item.spec.displayName})`, value: item.metadata.name };
     });
 
     let finalClusterList = deepClone(cluster);
 
     let parentProjectSelection = projectEdition.parentProject
-      ? project.list.data.records.find(item => item.metadata.name === projectEdition.parentProject)
+      ? project.list.data.records.find((item) => item.metadata.name === projectEdition.parentProject)
       : null;
     //筛选出project中的集群
     if (parentProjectSelection) {
@@ -78,7 +110,7 @@ export class CreateProjectPanel extends React.Component<
         ? Object.keys(parentProjectSelection.spec.clusters)
         : [];
       finalClusterList.list.data.records = finalClusterList.list.data.records.filter(
-        item => parentClusterList.indexOf(item.clusterId + '') !== -1
+        (item) => parentClusterList.indexOf(item.clusterId + '') !== -1
       );
       finalClusterList.list.data.recordCount = finalClusterList.list.data.records.length;
     }
@@ -93,16 +125,21 @@ export class CreateProjectPanel extends React.Component<
           validator={projectEdition.v_displayName}
           input={{
             value: projectEdition.displayName,
-            onChange: value => actions.project.inputProjectName(value),
-            onBlur: e => {
+            onChange: (value) => actions.project.inputProjectName(value),
+            onBlur: (e) => {
               actions.project.validateDisplayName(e.target.value);
-            }
+            },
           }}
         />
-        <FormPanel.Item label={t('业务成员')}>
+        <FormPanel.Item label={t('业务管理员')}>
           <div style={{ width: 600 }}>
             <EditProjectManagerPanel {...this.props} />
           </div>
+          {(!projectEdition.members || projectEdition.members.length === 0) && (
+            <Text theme="danger" style={{ fontSize: '12px' }}>
+              需要至少选择一个责任人
+            </Text>
+          )}
         </FormPanel.Item>
         <FormPanel.Item label={t('集群')}>
           {projectEdition.clusters.map((item, index) => {
@@ -117,9 +154,9 @@ export class CreateProjectPanel extends React.Component<
                         value={item.name}
                         model={finalClusterList}
                         action={actions.cluster}
-                        valueField={x => x.clusterId}
-                        displayField={x => `${x.clusterId}(${x.clusterName})`}
-                        onChange={clusterId => {
+                        valueField={(x) => x.clusterId}
+                        displayField={(x) => `${x.clusterId}(${x.clusterName})`}
+                        onChange={(clusterId) => {
                           actions.project.updateClusters(index, clusterId);
                           actions.project.validateClustersName(index);
                         }}
@@ -133,7 +170,7 @@ export class CreateProjectPanel extends React.Component<
                     onClick={() =>
                       this.setState({
                         isShowDialog: true,
-                        currentClusterIndex: index
+                        currentClusterIndex: index,
                       })
                     }
                   >
@@ -164,7 +201,7 @@ export class CreateProjectPanel extends React.Component<
             label={t('上级业务')}
             options={projectListOpions}
             value={projectEdition.parentProject}
-            onChange={value => {
+            onChange={(value) => {
               actions.project.inputParentPorject(value);
             }}
           />
@@ -208,7 +245,7 @@ export class CreateProjectPanel extends React.Component<
     const { actions, project, projectEdition } = this.props;
     let { currentClusterIndex, isShowDialog } = this.state;
     let parentProjectSelection = projectEdition.parentProject
-      ? project.list.data.records.find(item => item.metadata.name === projectEdition.parentProject)
+      ? project.list.data.records.find((item) => item.metadata.name === projectEdition.parentProject)
       : null;
     let clusterName = projectEdition.clusters[currentClusterIndex].name;
 
@@ -223,7 +260,7 @@ export class CreateProjectPanel extends React.Component<
             this.setState({ isShowDialog: false, currentClusterIndex: 0 });
           }}
           resourceLimits={projectEdition.clusters[currentClusterIndex].resourceLimits}
-          onSubmit={requestLimits => {
+          onSubmit={(requestLimits) => {
             actions.project.updateClustersLimit(currentClusterIndex, requestLimits);
           }}
         />

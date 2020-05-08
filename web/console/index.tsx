@@ -1,4 +1,4 @@
-import { i18n } from '@tencent/tea-app';
+import { i18n } from '@tea/app';
 import { translation } from '@i18n/translation';
 // 国际化工具的初始化
 i18n.init({ translation });
@@ -81,7 +81,7 @@ class ForbiddentDialog extends React.Component<any, ForbiddentDialogState> {
   constructor(props: any) {
     super(props);
     this.state = {
-      forbiddentConfig: Init_Forbiddent_Config
+      forbiddentConfig: Init_Forbiddent_Config,
     };
 
     changeForbiddentConfig = (config: { isShow: boolean; message: string }) => {
@@ -139,7 +139,7 @@ Entry.register({
           <ForbiddentDialog />
           <Cluster />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -152,7 +152,7 @@ Entry.register({
           <ForbiddentDialog />
           <Cluster />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -165,7 +165,7 @@ Entry.register({
           <ForbiddentDialog />
           <Project />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -178,7 +178,7 @@ Entry.register({
           <ForbiddentDialog />
           <Addon />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -191,7 +191,7 @@ Entry.register({
           <ForbiddentDialog />
           <Registry />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -204,7 +204,7 @@ Entry.register({
           <ForbiddentDialog />
           <Uam />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -217,7 +217,7 @@ Entry.register({
           <ForbiddentDialog />
           <AlarmPolicy />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -230,7 +230,7 @@ Entry.register({
           <ForbiddentDialog />
           <Notify />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -256,7 +256,7 @@ Entry.register({
           <ForbiddentDialog />
           <Helm />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -269,7 +269,7 @@ Entry.register({
           <ForbiddentDialog />
           <LogStash />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -282,7 +282,7 @@ Entry.register({
           <ForbiddentDialog />
           <PersistentEvent />
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -308,8 +308,8 @@ Entry.register({
           <ForbiddentDialog />
           <BlankPage />
         </Wrapper>
-      )
-    }
-  }
+      ),
+    },
+  },
 });
 /** ============================== end 容器服务 模块 ================================= */
