@@ -25,6 +25,7 @@ package v1
 import (
 	unsafe "unsafe"
 
+	corev1 "k8s.io/api/core/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	platform "tkestack.io/tke/api/platform"
@@ -1590,6 +1591,7 @@ func autoConvert_v1_ClusterMachine_To_platform_ClusterMachine(in *ClusterMachine
 	out.PrivateKey = *(*[]byte)(unsafe.Pointer(&in.PrivateKey))
 	out.PassPhrase = *(*[]byte)(unsafe.Pointer(&in.PassPhrase))
 	out.Labels = *(*map[string]string)(unsafe.Pointer(&in.Labels))
+	out.Taints = *(*[]corev1.Taint)(unsafe.Pointer(&in.Taints))
 	return nil
 }
 
@@ -1606,6 +1608,7 @@ func autoConvert_platform_ClusterMachine_To_v1_ClusterMachine(in *platform.Clust
 	out.PrivateKey = *(*[]byte)(unsafe.Pointer(&in.PrivateKey))
 	out.PassPhrase = *(*[]byte)(unsafe.Pointer(&in.PassPhrase))
 	out.Labels = *(*map[string]string)(unsafe.Pointer(&in.Labels))
+	out.Taints = *(*[]corev1.Taint)(unsafe.Pointer(&in.Taints))
 	return nil
 }
 
@@ -1671,6 +1674,7 @@ func autoConvert_v1_ClusterSpec_To_platform_ClusterSpec(in *ClusterSpec, out *pl
 	out.NetworkType = platform.NetworkType(in.NetworkType)
 	out.NetworkDevice = in.NetworkDevice
 	out.ClusterCIDR = in.ClusterCIDR
+	out.ServiceCIDR = (*string)(unsafe.Pointer(in.ServiceCIDR))
 	out.DNSDomain = in.DNSDomain
 	out.PublicAlternativeNames = *(*[]string)(unsafe.Pointer(&in.PublicAlternativeNames))
 	if err := Convert_v1_ClusterFeature_To_platform_ClusterFeature(&in.Features, &out.Features, s); err != nil {
@@ -1685,6 +1689,7 @@ func autoConvert_v1_ClusterSpec_To_platform_ClusterSpec(in *ClusterSpec, out *pl
 	out.APIServerExtraArgs = *(*map[string]string)(unsafe.Pointer(&in.APIServerExtraArgs))
 	out.ControllerManagerExtraArgs = *(*map[string]string)(unsafe.Pointer(&in.ControllerManagerExtraArgs))
 	out.SchedulerExtraArgs = *(*map[string]string)(unsafe.Pointer(&in.SchedulerExtraArgs))
+	out.ClusterCredentialRef = (*corev1.LocalObjectReference)(unsafe.Pointer(in.ClusterCredentialRef))
 	return nil
 }
 
@@ -1702,6 +1707,7 @@ func autoConvert_platform_ClusterSpec_To_v1_ClusterSpec(in *platform.ClusterSpec
 	out.NetworkType = NetworkType(in.NetworkType)
 	out.NetworkDevice = in.NetworkDevice
 	out.ClusterCIDR = in.ClusterCIDR
+	out.ServiceCIDR = (*string)(unsafe.Pointer(in.ServiceCIDR))
 	out.DNSDomain = in.DNSDomain
 	out.PublicAlternativeNames = *(*[]string)(unsafe.Pointer(&in.PublicAlternativeNames))
 	if err := Convert_platform_ClusterFeature_To_v1_ClusterFeature(&in.Features, &out.Features, s); err != nil {
@@ -1716,6 +1722,7 @@ func autoConvert_platform_ClusterSpec_To_v1_ClusterSpec(in *platform.ClusterSpec
 	out.APIServerExtraArgs = *(*map[string]string)(unsafe.Pointer(&in.APIServerExtraArgs))
 	out.ControllerManagerExtraArgs = *(*map[string]string)(unsafe.Pointer(&in.ControllerManagerExtraArgs))
 	out.SchedulerExtraArgs = *(*map[string]string)(unsafe.Pointer(&in.SchedulerExtraArgs))
+	out.ClusterCredentialRef = (*corev1.LocalObjectReference)(unsafe.Pointer(in.ClusterCredentialRef))
 	return nil
 }
 
@@ -2722,6 +2729,7 @@ func autoConvert_v1_MachineSpec_To_platform_MachineSpec(in *MachineSpec, out *pl
 	out.PrivateKey = *(*[]byte)(unsafe.Pointer(&in.PrivateKey))
 	out.PassPhrase = *(*[]byte)(unsafe.Pointer(&in.PassPhrase))
 	out.Labels = *(*map[string]string)(unsafe.Pointer(&in.Labels))
+	out.Taints = *(*[]corev1.Taint)(unsafe.Pointer(&in.Taints))
 	return nil
 }
 
@@ -2742,6 +2750,7 @@ func autoConvert_platform_MachineSpec_To_v1_MachineSpec(in *platform.MachineSpec
 	out.PrivateKey = *(*[]byte)(unsafe.Pointer(&in.PrivateKey))
 	out.PassPhrase = *(*[]byte)(unsafe.Pointer(&in.PassPhrase))
 	out.Labels = *(*map[string]string)(unsafe.Pointer(&in.Labels))
+	out.Taints = *(*[]corev1.Taint)(unsafe.Pointer(&in.Taints))
 	return nil
 }
 
@@ -3069,6 +3078,7 @@ func autoConvert_v1_PrometheusSpec_To_platform_PrometheusSpec(in *PrometheusSpec
 		return err
 	}
 	out.RunOnMaster = in.RunOnMaster
+	out.AlertRepeatInterval = in.AlertRepeatInterval
 	return nil
 }
 
@@ -3090,6 +3100,7 @@ func autoConvert_platform_PrometheusSpec_To_v1_PrometheusSpec(in *platform.Prome
 		return err
 	}
 	out.RunOnMaster = in.RunOnMaster
+	out.AlertRepeatInterval = in.AlertRepeatInterval
 	return nil
 }
 

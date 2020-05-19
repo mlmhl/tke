@@ -32,6 +32,7 @@ import (
 	"path"
 	goruntime "runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,6 +50,7 @@ import (
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd/api"
 	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
 	certutil "k8s.io/client-go/util/cert"
@@ -67,7 +69,7 @@ import (
 	baremetalconstants "tkestack.io/tke/pkg/platform/provider/baremetal/constants"
 	clusterprovider "tkestack.io/tke/pkg/platform/provider/cluster"
 	clusterstrategy "tkestack.io/tke/pkg/platform/registry/cluster"
-	platformutil "tkestack.io/tke/pkg/platform/util"
+	v1 "tkestack.io/tke/pkg/platform/types/v1"
 	"tkestack.io/tke/pkg/spec"
 	"tkestack.io/tke/pkg/util/apiclient"
 	"tkestack.io/tke/pkg/util/containerregistry"
@@ -85,7 +87,7 @@ import (
 type TKE struct {
 	Config  *config.Config           `json:"config"`
 	Para    *types.CreateClusterPara `json:"para"`
-	Cluster *clusterprovider.Cluster `json:"cluster"`
+	Cluster *v1.Cluster              `json:"cluster"`
 	Step    int                      `json:"step"`
 
 	log             *stdlog.Logger
@@ -107,7 +109,7 @@ func New(config *config.Config) *TKE {
 
 	c.Config = config
 	c.Para = new(types.CreateClusterPara)
-	c.Cluster = new(clusterprovider.Cluster)
+	c.Cluster = new(v1.Cluster)
 	c.progress = new(types.ClusterProgress)
 	c.progress.Status = types.StatusUnknown
 
@@ -238,6 +240,15 @@ func (t *TKE) initSteps() {
 		}...)
 	}
 
+	if t.auditEnabled() {
+		t.steps = append(t.steps, []types.Handler{
+			{
+				Name: "Install tke audit",
+				Func: t.installTKEAudit,
+			},
+		}...)
+	}
+
 	t.steps = append(t.steps, []types.Handler{
 		{
 			Name: "Install tke-platform-api",
@@ -306,6 +317,19 @@ func (t *TKE) initSteps() {
 			{
 				Name: "Install tke-gateway",
 				Func: t.installTKEGateway,
+			},
+		}...)
+	}
+
+	if t.Para.Config.Logagent != nil {
+		t.steps = append(t.steps, []types.Handler{
+			{
+				Name: "Install tke-logagent-api",
+				Func: t.installTKELogagentAPI,
+			},
+			{
+				Name: "Install tke-logagent-controller",
+				Func: t.installTKELogagentController,
 			},
 		}...)
 	}
@@ -480,7 +504,12 @@ func (t *TKE) prepare() errors.APIStatus {
 		return errors.NewInternalError(err)
 	}
 
-	t.Cluster.Cluster = *v1Cluster
+	statusError = t.validateResource(v1Cluster)
+	if statusError != nil {
+		return statusError
+	}
+
+	t.Cluster.Cluster = v1Cluster
 	t.backup()
 
 	return nil
@@ -657,6 +686,57 @@ func (t *TKE) validateCertAndKey(certificate []byte, privateKey []byte, dnsNames
 	return nil
 }
 
+// validateResource validate the cpu and memory of cluster machines whether meets the requirements.
+func (t *TKE) validateResource(cluster *platformv1.Cluster) *errors.StatusError {
+	var (
+		cpuSum    int
+		memorySum int
+	)
+	for _, machine := range cluster.Spec.Machines {
+		sshConfig := &ssh.Config{
+			User:       machine.Username,
+			Host:       machine.IP,
+			Port:       int(machine.Port),
+			Password:   string(machine.Password),
+			PrivateKey: machine.PrivateKey,
+			PassPhrase: machine.PassPhrase,
+		}
+		s, err := ssh.New(sshConfig)
+		if err != nil {
+			return errors.NewInternalError(err)
+		}
+		cmd := "nproc --all"
+		stdout, err := s.CombinedOutput(cmd)
+		if err != nil {
+			return errors.NewInternalError(fmt.Errorf("get cpu error: %w", err))
+		}
+		cpu, err := strconv.Atoi(strings.TrimSpace(string(stdout)))
+		if err != nil {
+			return errors.NewInternalError(fmt.Errorf("convert cpu value error: %w", err))
+		}
+		cpuSum += cpu
+
+		cmd = "free -g | grep Mem  | awk '{print $2}'"
+		stdout, err = s.CombinedOutput(cmd)
+		if err != nil {
+			return errors.NewInternalError(fmt.Errorf("get memory error: %w", err))
+		}
+		memory, err := strconv.Atoi(strings.TrimSpace(string(stdout)))
+		if err != nil {
+			return errors.NewInternalError(fmt.Errorf("convert memory value error: %w", err))
+		}
+		memorySum += memory
+	}
+	if cpuSum < constants.CPURequest {
+		return errors.NewBadRequest(fmt.Sprintf("at lease %d cores are required", constants.CPURequest))
+	}
+	if memorySum < constants.MemoryRequest {
+		return errors.NewBadRequest(fmt.Sprintf("at lease %d GiB memory are required", constants.MemoryRequest))
+	}
+
+	return nil
+}
+
 func (t *TKE) completeProviderConfigForRegistry() error {
 	c, err := baremetalconfig.New(constants.ProviderConfigFile)
 	if err != nil {
@@ -671,8 +751,29 @@ func (t *TKE) completeProviderConfigForRegistry() error {
 		}
 		c.Registry.IP = ip
 	}
+	if t.auditEnabled() {
+		c.Audit.Address = t.determineGatewayHTTPSAddress()
+	}
 
 	return c.Save(constants.ProviderConfigFile)
+}
+
+func (t *TKE) determineGatewayHTTPSAddress() string {
+	var host string
+	if t.Para.Config.Gateway.Domain != "" {
+		host = t.Para.Config.Gateway.Domain
+	} else if t.Para.Config.HA != nil {
+		host = t.Para.Config.HA.VIP()
+	} else {
+		host = t.Para.Cluster.Spec.Machines[0].IP
+	}
+	return fmt.Sprintf("https://%s", host)
+}
+
+func (t *TKE) auditEnabled() bool {
+	return t.Para.Config.Audit != nil &&
+		t.Para.Config.Audit.ElasticSearch != nil &&
+		t.Para.Config.Audit.ElasticSearch.Address != ""
 }
 
 func (t *TKE) createCluster(req *restful.Request, rsp *restful.Response) {
@@ -723,7 +824,7 @@ func (t *TKE) findCluster(request *restful.Request, response *restful.Response) 
 		_ = response.WriteHeaderAndJson(int(apiStatus.Status().Code), apiStatus.Status(), restful.MIME_JSON)
 	} else {
 		_ = response.WriteEntity(&types.CreateClusterPara{
-			Cluster: t.Cluster.Cluster,
+			Cluster: *t.Cluster.Cluster,
 			Config:  t.Para.Config,
 		})
 	}
@@ -886,29 +987,26 @@ func (t *TKE) createGlobalCluster() error {
 	}
 	t.completeWithProvider()
 
-	if t.Cluster.ClusterCredential.Name == "" { // set ClusterCredential default value
-		t.Cluster.ClusterCredential = platformv1.ClusterCredential{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("cc-%s", t.Cluster.Name),
-			},
-			TenantID:    t.Cluster.Spec.TenantID,
-			ClusterName: t.Cluster.Name,
-		}
+	t.Cluster.ClusterCredential = &platformv1.ClusterCredential{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("cc-%s", t.Cluster.Name),
+		},
+		TenantID:    t.Cluster.Spec.TenantID,
+		ClusterName: t.Cluster.Name,
 	}
 
 	var errCount int
 	for {
 		start := time.Now()
-		resp, err := t.clusterProvider.OnInitialize(*t.Cluster)
+		err := t.clusterProvider.OnCreate(t.Cluster)
 		if err != nil {
 			return err
 		}
-		t.Cluster = &resp
 		t.backup()
-		condition := resp.Status.Conditions[len(resp.Status.Conditions)-1]
+		condition := t.Cluster.Status.Conditions[len(t.Cluster.Status.Conditions)-1]
 		switch condition.Status {
 		case platformv1.ConditionFalse: // means current condition run into error
-			t.log.Printf("OnInitialize.%s [Failed] [%fs] reason: %s message: %s retry: %d",
+			t.log.Printf("OnCreate.%s [Failed] [%fs] reason: %s message: %s retry: %d",
 				condition.Type, time.Since(start).Seconds(),
 				condition.Reason, condition.Message, errCount)
 			if errCount >= 10 {
@@ -917,15 +1015,15 @@ func (t *TKE) createGlobalCluster() error {
 
 			errCount++
 		case platformv1.ConditionUnknown: // means has next condition need to process
-			condition = resp.Status.Conditions[len(resp.Status.Conditions)-2]
-			t.log.Printf("OnInitialize.%s [Success] [%fs]", condition.Type, time.Since(start).Seconds())
+			condition = t.Cluster.Status.Conditions[len(t.Cluster.Status.Conditions)-2]
+			t.log.Printf("OnCreate.%s [Success] [%fs]", condition.Type, time.Since(start).Seconds())
 
 			t.Cluster.Status.Reason = ""
 			t.Cluster.Status.Message = ""
 			errCount = 0
 		case platformv1.ConditionTrue: // means all condition is done
-			if resp.Status.Phase != platformv1.ClusterRunning {
-				return pkgerrors.Errorf("OnInitialize.%s, no next condition but cluster is not running!", condition.Type)
+			if t.Cluster.Status.Phase != platformv1.ClusterRunning {
+				return pkgerrors.Errorf("OnCreate.%s, no next condition but cluster is not running!", condition.Type)
 			}
 			return t.initDataForDeployTKE()
 		default:
@@ -1052,7 +1150,7 @@ func (t *TKE) readOrGenerateString(filename string) string {
 
 func (t *TKE) initDataForDeployTKE() error {
 	var err error
-	t.globalClient, err = platformutil.BuildVersionedClientSet(&t.Cluster.Cluster, &t.Cluster.ClusterCredential)
+	t.globalClient, err = t.Cluster.ClientsetForBootstrap()
 	if err != nil {
 		return err
 	}
@@ -1154,6 +1252,9 @@ func (t *TKE) prepareBaremetalProviderConfig() error {
 		ip := t.Cluster.Spec.Machines[0].IP // registry current only run in first node
 		c.Registry.IP = ip
 	}
+	if t.auditEnabled() {
+		c.Audit.Address = t.determineGatewayHTTPSAddress()
+	}
 
 	err = c.Save(constants.ProviderConfigFile)
 	if err != nil {
@@ -1166,7 +1267,7 @@ func (t *TKE) prepareBaremetalProviderConfig() error {
 	}{
 		{
 			Name: "provider-config",
-			File: baremetalconstants.ConfDir + "config.yaml",
+			File: baremetalconstants.ConfDir + "*.yaml",
 		},
 		{
 			Name: "docker",
@@ -1215,6 +1316,8 @@ func (t *TKE) installTKEGateway() error {
 		"EnableAuth":       t.Para.Config.Auth.TKEAuth != nil,
 		"EnableMonitor":    t.Para.Config.Monitor != nil,
 		"EnableBusiness":   t.Para.Config.Business != nil,
+		"EnableLogagent":   t.Para.Config.Logagent != nil,
+		"EnableAudit":      t.auditEnabled(),
 	}
 	if t.Para.Config.Registry.TKERegistry != nil {
 		option["RegistryDomainSuffix"] = t.Para.Config.Registry.TKERegistry.Domain
@@ -1238,6 +1341,60 @@ func (t *TKE) installTKEGateway() error {
 		}
 		return ok, nil
 	})
+}
+
+func (t *TKE) installTKELogagentAPI() error {
+	options := map[string]interface{}{
+		"Replicas":                   t.Config.Replicas,
+		"Image":                      images.Get().TKELogagentAPI.FullName(),
+		"TenantID":                   t.Para.Config.Auth.TKEAuth.TenantID,
+		"Username":                   t.Para.Config.Auth.TKEAuth.Username,
+		"SyncProjectsWithNamespaces": t.Config.SyncProjectsWithNamespaces,
+		"EnableAuth":                 t.Para.Config.Auth.TKEAuth != nil,
+		"EnableRegistry":             t.Para.Config.Registry.TKERegistry != nil,
+	}
+	if t.Para.Config.Auth.OIDCAuth != nil {
+		options["OIDCClientID"] = t.Para.Config.Auth.OIDCAuth.ClientID
+		options["OIDCIssuerURL"] = t.Para.Config.Auth.OIDCAuth.IssuerURL
+		options["UseOIDCCA"] = t.Para.Config.Auth.OIDCAuth.CACert != nil
+	}
+	err := apiclient.CreateResourceWithDir(t.globalClient, "manifests/tke-logagent-api/*.yaml", options)
+	if err != nil {
+		return err
+	}
+
+	return wait.PollImmediate(5*time.Second, 10*time.Minute, func() (bool, error) {
+		ok, err := apiclient.CheckDeployment(t.globalClient, t.namespace, "tke-logagent-api")
+		if err != nil {
+			return false, nil
+		}
+		return ok, nil
+	})
+}
+
+func (t *TKE) installTKELogagentController() error {
+	options := map[string]interface{}{
+		"Replicas":       t.Config.Replicas,
+		"Image":          images.Get().TKELogagentController.FullName(),
+		"EnableAuth":     t.Para.Config.Auth.TKEAuth != nil,
+		"EnableRegistry": t.Para.Config.Registry.TKERegistry != nil,
+		"RegistryDomain": t.Para.Config.Registry.Domain(),
+		"RegistryNamespace": t.Para.Config.Registry.Namespace(),
+	}
+	err := apiclient.CreateResourceWithDir(t.globalClient, "manifests/tke-logagent-controller/*.yaml", options)
+	if err != nil {
+		return err
+	}
+
+	return wait.PollImmediate(5*time.Second, 10*time.Minute, func() (bool, error) {
+		ok, err := apiclient.CheckDeployment(t.globalClient, t.namespace, "tke-logagent-controller")
+		if err != nil {
+			return false, nil
+		}
+		return ok, nil
+	})
+
+	return fmt.Errorf("installTKELogagentController not implemented")
 }
 
 func (t *TKE) installETCD() error {
@@ -1303,11 +1460,43 @@ func (t *TKE) installTKEAuthController() error {
 	})
 }
 
-func (t *TKE) installTKEPlatformAPI() error {
+func (t *TKE) installTKEAudit() error {
 	options := map[string]interface{}{
 		"Replicas":   t.Config.Replicas,
-		"Image":      images.Get().TKEPlatformAPI.FullName(),
+		"Image":      images.Get().TKEAudit.FullName(),
 		"EnableAuth": t.Para.Config.Auth.TKEAuth != nil,
+	}
+	if t.Para.Config.Auth.OIDCAuth != nil {
+		options["OIDCClientID"] = t.Para.Config.Auth.OIDCAuth.ClientID
+		options["OIDCIssuerURL"] = t.Para.Config.Auth.OIDCAuth.IssuerURL
+		options["UseOIDCCA"] = t.Para.Config.Auth.OIDCAuth.CACert != nil
+	}
+
+	if t.Para.Config.Audit.ElasticSearch != nil {
+		options["StorageType"] = "es"
+		options["StorageAddress"] = t.Para.Config.Audit.ElasticSearch.Address
+		options["ReserveDays"] = t.Para.Config.Audit.ElasticSearch.ReserveDays
+	}
+
+	if err := apiclient.CreateResourceWithDir(t.globalClient, "manifests/tke-audit-api/*.yaml", options); err != nil {
+		return err
+	}
+
+	return wait.PollImmediate(5*time.Second, 10*time.Minute, func() (bool, error) {
+		ok, err := apiclient.CheckDeployment(t.globalClient, t.namespace, "tke-audit-api")
+		if err != nil {
+			return false, nil
+		}
+		return ok, nil
+	})
+}
+
+func (t *TKE) installTKEPlatformAPI() error {
+	options := map[string]interface{}{
+		"Replicas":    t.Config.Replicas,
+		"Image":       images.Get().TKEPlatformAPI.FullName(),
+		"EnableAuth":  t.Para.Config.Auth.TKEAuth != nil,
+		"EnableAudit": t.auditEnabled(),
 	}
 	if t.Para.Config.Auth.OIDCAuth != nil {
 		options["OIDCClientID"] = t.Para.Config.Auth.OIDCAuth.ClientID
@@ -1640,7 +1829,7 @@ func (t *TKE) preparePushImagesToTKERegistry() error {
 func (t *TKE) registerAPI() error {
 	caCert, _ := ioutil.ReadFile(constants.CACrtFile)
 
-	restConfig, err := platformutil.GetExternalRestConfig(&t.Cluster.Cluster, &t.Cluster.ClusterCredential)
+	restConfig, err := t.Cluster.RESTConfigForBootstrap(&rest.Config{})
 	if err != nil {
 		return err
 	}
@@ -1682,17 +1871,23 @@ func (t *TKE) registerAPI() error {
 			},
 		}
 
-		_, err := client.ApiregistrationV1().APIServices().Get(apiService.Name, metav1.GetOptions{})
-		if err == nil {
-			err := client.ApiregistrationV1().APIServices().Delete(apiService.Name, &metav1.DeleteOptions{})
-			if err != nil {
-				return err
+		err = wait.PollImmediate(5*time.Second, 10*time.Minute, func() (bool, error) {
+			_, err := client.ApiregistrationV1().APIServices().Get(apiService.Name, metav1.GetOptions{})
+			if err == nil {
+				err := client.ApiregistrationV1().APIServices().Delete(apiService.Name, &metav1.DeleteOptions{})
+				if err != nil {
+					return false, nil
+				}
 			}
-		}
-		if _, err := client.ApiregistrationV1().APIServices().Create(apiService); err != nil {
-			if !errors.IsAlreadyExists(err) {
-				return err
+			if _, err := client.ApiregistrationV1().APIServices().Create(apiService); err != nil {
+				if !errors.IsAlreadyExists(err) {
+					return false, nil
+				}
 			}
+			return true, nil
+		})
+		if err != nil {
+			return pkgerrors.Wrapf(err, "register apiservice %v error", one)
 		}
 
 		err = wait.PollImmediate(5*time.Second, 10*time.Minute, func() (bool, error) {
@@ -1706,19 +1901,17 @@ func (t *TKE) registerAPI() error {
 			return false, nil
 		})
 		if err != nil {
-			return err
+			return pkgerrors.Wrapf(err, "check apiservices %v error", one)
 		}
 	}
 	return nil
 }
 
 func (t *TKE) importResource() error {
-	restConfig, err := platformutil.GetExternalRestConfig(&t.Cluster.Cluster, &t.Cluster.ClusterCredential)
+	restConfig, err := t.Cluster.RESTConfigForBootstrap(&rest.Config{Timeout: 120 * time.Second})
 	if err != nil {
 		return err
 	}
-	// default timeout is 5 seconds, but create cluster need more time to validate spec
-	restConfig.Timeout = 120 * time.Second
 
 	client, err := tkeclientset.NewForConfig(restConfig)
 	if err != nil {
@@ -1741,18 +1934,6 @@ func (t *TKE) importResource() error {
 		return err
 	}
 
-	_, err = client.PlatformV1().Clusters().Get(t.Cluster.Name, metav1.GetOptions{})
-	if err == nil {
-		err := client.PlatformV1().Clusters().Delete(t.Cluster.Name, &metav1.DeleteOptions{})
-		if err != nil {
-			return err
-		}
-	}
-	_, err = client.PlatformV1().Clusters().Create(&t.Cluster.Cluster)
-	if err != nil {
-		return err
-	}
-
 	_, err = client.PlatformV1().ClusterCredentials().Get(t.Cluster.ClusterCredential.Name, metav1.GetOptions{})
 	if err == nil {
 		err := client.PlatformV1().ClusterCredentials().Delete(t.Cluster.ClusterCredential.Name, &metav1.DeleteOptions{})
@@ -1760,7 +1941,19 @@ func (t *TKE) importResource() error {
 			return err
 		}
 	}
-	_, err = client.PlatformV1().ClusterCredentials().Create(&t.Cluster.ClusterCredential)
+	_, err = client.PlatformV1().ClusterCredentials().Create(t.Cluster.ClusterCredential)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.PlatformV1().Clusters().Get(t.Cluster.Name, metav1.GetOptions{})
+	if err == nil {
+		err := client.PlatformV1().Clusters().Delete(t.Cluster.Name, &metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
+	}
+	_, err = client.PlatformV1().Clusters().Create(t.Cluster.Cluster)
 	if err != nil {
 		return err
 	}
@@ -1866,7 +2059,7 @@ func (t *TKE) execHook(filename string) error {
 }
 
 func (t *TKE) getKubeconfig() (*api.Config, error) {
-	host, err := platformutil.ClusterV1Host(&t.Cluster.Cluster)
+	host, err := t.Cluster.Host()
 	if err != nil {
 		return nil, err
 	}

@@ -243,7 +243,8 @@ func (ClusterList) SwaggerDoc() map[string]string {
 }
 
 var map_ClusterMachine = map[string]string{
-	"": "ClusterMachine is the master machine definition of cluster.",
+	"":       "ClusterMachine is the master machine definition of cluster.",
+	"taints": "If specified, the node's taints.",
 }
 
 func (ClusterMachine) SwaggerDoc() map[string]string {
@@ -269,9 +270,11 @@ func (ClusterResource) SwaggerDoc() map[string]string {
 }
 
 var map_ClusterSpec = map[string]string{
-	"":           "ClusterSpec is a description of a cluster.",
-	"finalizers": "Finalizers is an opaque list of values that must be empty to permanently remove object from storage.",
-	"dnsDomain":  "DNSDomain is the dns domain used by k8s services. Defaults to \"cluster.local\".",
+	"":                     "ClusterSpec is a description of a cluster.",
+	"finalizers":           "Finalizers is an opaque list of values that must be empty to permanently remove object from storage.",
+	"serviceCIDR":          "ServiceCIDR is used to set a separated CIDR for k8s service, it's exclusive with MaxClusterServiceNum.",
+	"dnsDomain":            "DNSDomain is the dns domain used by k8s services. Defaults to \"cluster.local\".",
+	"clusterCredentialRef": "If not specified, the provider should at least create one; If specified, provider should validates.",
 }
 
 func (ClusterSpec) SwaggerDoc() map[string]string {
@@ -622,6 +625,7 @@ func (MachineList) SwaggerDoc() map[string]string {
 var map_MachineSpec = map[string]string{
 	"":           "MachineSpec is a description of machine.",
 	"finalizers": "Finalizers is an opaque list of values that must be empty to permanently remove object from storage.",
+	"taints":     "If specified, the node's taints.",
 }
 
 func (MachineSpec) SwaggerDoc() map[string]string {
@@ -739,12 +743,13 @@ func (PrometheusRemoteAddr) SwaggerDoc() map[string]string {
 }
 
 var map_PrometheusSpec = map[string]string{
-	"":              "PrometheusSpec describes the attributes on a Prometheus.",
-	"subVersion":    "SubVersion is the components version such as node-exporter.",
-	"remoteAddress": "RemoteAddress is the remote address for prometheus when writing/reading outside of cluster.",
-	"notifyWebhook": "NotifyWebhook is the address that alert messages send to, optional. If not set, a default webhook address \"https://[notify-api-address]/webhook\" will be used.",
-	"resources":     "Resources is the resource request and limit for prometheus",
-	"runOnMaster":   "RunOnMaster indicates whether to add master Affinity for all monitor components or not",
+	"":                    "PrometheusSpec describes the attributes on a Prometheus.",
+	"subVersion":          "SubVersion is the components version such as node-exporter.",
+	"remoteAddress":       "RemoteAddress is the remote address for prometheus when writing/reading outside of cluster.",
+	"notifyWebhook":       "NotifyWebhook is the address that alert messages send to, optional. If not set, a default webhook address \"https://[notify-api-address]/webhook\" will be used.",
+	"resources":           "Resources is the resource request and limit for prometheus",
+	"runOnMaster":         "RunOnMaster indicates whether to add master Affinity for all monitor components or not",
+	"alertRepeatInterval": "AlertRepeatInterval indicates repeat interval of alerts",
 }
 
 func (PrometheusSpec) SwaggerDoc() map[string]string {

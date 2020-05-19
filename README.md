@@ -29,21 +29,36 @@
   * Event persistence storage plugin.
   * System and application log persistence storage plugin.
 
-## Installation
-
-TKEStack use tke-installer tool to deploy. [refer](docs/user/tke-installer/normal-installation.md)
-
-```
-version=v1.2.3 && wget https://tke-release-1251707795.cos.ap-guangzhou.myqcloud.com/tke-installer-x86_64-$version.run{,.sha256} && sha256sum --check --status tke-installer-x86_64-$version.run.sha256 && chmod +x tke-installer-x86_64-$version.run && ./tke-installer-x86_64-$version.run
-```
-
 ## Architecture
 
 ![Architecture Of TKE](docs/images/TKEStackHighLevelArchitecture@2x.png)
 
+## Installation
+
+### Minimum Requirements
+
+* Hardware
+  * 8 vCPU
+  * 16 GB of Memory
+  * 50 GB of Disk Space
+* Operating Systems
+  * Ubuntu 16.04/18.04  LTS (64-bit)
+  * CentOS Linux 7.6 (64-bit)
+  * Tencent Linux 2.2 
+
+### QuickStart
+
+[First please confirm the installation requirements](docs/guide/zh-CN/installation/installation-requirement.md)
+
+```
+version=v1.2.4 && wget https://tke-release-1251707795.cos.ap-guangzhou.myqcloud.com/tke-installer-x86_64-$version.run{,.sha256} && sha256sum --check --status tke-installer-x86_64-$version.run.sha256 && chmod +x tke-installer-x86_64-$version.run && ./tke-installer-x86_64-$version.run
+```
+
+TKEStack use tke-installer tool to deploy. [refer](https://github.com/tkestack/tke/blob/master/docs/user/tke-installer/README.md)
+
 ## Using
 
-- [tke-installer](./docs/user/tke-installer/README.md)
+[TKEStack Documentation ](docs/guide/zh-CN)
 
 ## Developing
 
@@ -69,7 +84,7 @@ Other active channels:
 
 - WeChat Group
 
-![TKEStack](docs/images/WechatIMG6.jpeg)
+![TKEStack](docs/images/wechat.png)
 
 ## Licensing
 

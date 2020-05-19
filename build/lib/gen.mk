@@ -20,11 +20,12 @@ K8S_APIMACHINERY_DIR = $(shell go list -f '{{ .Dir }}' -m k8s.io/apimachinery)
 K8S_API_DIR = $(shell go list -f '{{ .Dir }}' -m k8s.io/api)
 # set the gogo protobuf package dir
 GOGO_PROTOBUF_DIR = $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
+EXT_PB_APIS = "k8s.io/api/core/v1 k8s.io/api/apps/v1"
 # set the code generator image version
-CODE_GENERATOR_VERSION := v1.17.0-2
+CODE_GENERATOR_VERSION := v1.17.0-3
 
 .PHONY: gen.run
-gen.run: gen.clean gen.api gen.openapi gen.gateway gen.registry gen.monitor
+gen.run: gen.clean gen.api gen.openapi gen.gateway gen.registry gen.monitor gen.audit
 
 # ==============================================================================
 # Generator
@@ -33,18 +34,20 @@ gen.run: gen.clean gen.api gen.openapi gen.gateway gen.registry gen.monitor
 gen.api:
 	@$(DOCKER) run --rm \
 		-v $(ROOT_DIR):/go/src/$(ROOT_PACKAGE) \
+		-e EXT_PB_APIS=$(EXT_PB_APIS)\
 	 	$(REGISTRY_PREFIX)/code-generator:$(CODE_GENERATOR_VERSION) \
-	 	/root/code.sh \
+	 	bash -x /root/code.sh \
 	 	all \
 	 	$(ROOT_PACKAGE)/api/client \
 	 	$(ROOT_PACKAGE)/api \
 	 	$(ROOT_PACKAGE)/api \
-	 	"platform:v1 business:v1 notify:v1 registry:v1 monitor:v1 auth:v1"
+		"platform:v1 business:v1 notify:v1 registry:v1 monitor:v1 auth:v1 logagent:v1"
 
 .PHONY: gen.gateway
 gen.gateway:
 	@$(DOCKER) run --rm \
 		-v $(ROOT_DIR):/go/src/$(ROOT_PACKAGE) \
+		-e EXT_PB_APIS=$(EXT_PB_APIS)\
 	 	$(REGISTRY_PREFIX)/code-generator:$(CODE_GENERATOR_VERSION) \
 	 	/root/code.sh \
 	 	deepcopy-internal,deepcopy-external,defaulter-external,conversion-external \
@@ -53,10 +56,23 @@ gen.gateway:
 	 	$(ROOT_PACKAGE)/pkg/gateway/apis \
 	 	"config:v1"
 
+.PHONY: gen.audit
+gen.audit:
+	@$(DOCKER) run --rm \
+		-v $(ROOT_DIR):/go/src/$(ROOT_PACKAGE) \
+	 	$(REGISTRY_PREFIX)/code-generator:$(CODE_GENERATOR_VERSION) \
+	 	/root/code.sh \
+	 	deepcopy-internal,deepcopy-external,defaulter-external,conversion-external \
+	 	$(ROOT_PACKAGE)/pkg/audit/apis \
+	 	$(ROOT_PACKAGE)/pkg/audit/apis \
+	 	$(ROOT_PACKAGE)/pkg/audit/apis \
+	 	"config:v1"
+
 .PHONY: gen.registry
 gen.registry:
 	@$(DOCKER) run --rm \
 		-v $(ROOT_DIR):/go/src/$(ROOT_PACKAGE) \
+		-e EXT_PB_APIS=$(EXT_PB_APIS)\
 	 	$(REGISTRY_PREFIX)/code-generator:$(CODE_GENERATOR_VERSION) \
 	 	/root/code.sh \
 	 	deepcopy-internal,deepcopy-external,defaulter-external,conversion-external \
@@ -69,6 +85,7 @@ gen.registry:
 gen.monitor:
 	@$(DOCKER) run --rm \
 		-v $(ROOT_DIR):/go/src/$(ROOT_PACKAGE) \
+		-e EXT_PB_APIS=$(EXT_PB_APIS)\
 	 	$(REGISTRY_PREFIX)/code-generator:$(CODE_GENERATOR_VERSION) \
 	 	/root/code.sh \
 	 	deepcopy-internal,deepcopy-external,defaulter-external,conversion-external \
@@ -81,6 +98,7 @@ gen.monitor:
 gen.openapi:
 	@$(DOCKER) run --rm \
     	-v $(ROOT_DIR):/go/src/$(ROOT_PACKAGE) \
+		-e EXT_PB_APIS=$(EXT_PB_APIS)\
 		-v $(K8S_APIMACHINERY_DIR):/go/src/k8s.io/apimachinery \
 		-v $(K8S_API_DIR):/go/src/k8s.io/api \
 	 	$(REGISTRY_PREFIX)/code-generator:$(CODE_GENERATOR_VERSION) \

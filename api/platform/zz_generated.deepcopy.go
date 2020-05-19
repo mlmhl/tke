@@ -23,6 +23,7 @@
 package platform
 
 import (
+	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -668,6 +669,13 @@ func (in *ClusterMachine) DeepCopyInto(out *ClusterMachine) {
 			(*out)[key] = val
 		}
 	}
+	if in.Taints != nil {
+		in, out := &in.Taints, &out.Taints
+		*out = make([]v1.Taint, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -759,6 +767,11 @@ func (in *ClusterSpec) DeepCopyInto(out *ClusterSpec) {
 		*out = make([]FinalizerName, len(*in))
 		copy(*out, *in)
 	}
+	if in.ServiceCIDR != nil {
+		in, out := &in.ServiceCIDR, &out.ServiceCIDR
+		*out = new(string)
+		**out = **in
+	}
 	if in.PublicAlternativeNames != nil {
 		in, out := &in.PublicAlternativeNames, &out.PublicAlternativeNames
 		*out = make([]string, len(*in))
@@ -807,6 +820,11 @@ func (in *ClusterSpec) DeepCopyInto(out *ClusterSpec) {
 		for key, val := range *in {
 			(*out)[key] = val
 		}
+	}
+	if in.ClusterCredentialRef != nil {
+		in, out := &in.ClusterCredentialRef, &out.ClusterCredentialRef
+		*out = new(v1.LocalObjectReference)
+		**out = **in
 	}
 	return
 }
@@ -1799,6 +1817,13 @@ func (in *MachineSpec) DeepCopyInto(out *MachineSpec) {
 		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
+		}
+	}
+	if in.Taints != nil {
+		in, out := &in.Taints, &out.Taints
+		*out = make([]v1.Taint, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	return
