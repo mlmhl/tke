@@ -170,7 +170,7 @@ export async function fetchPolicyPlainList(query: QueryState<PolicyFilter>) {
                     displayName: i.spec && i.spec.displayName,
                     category: i.spec && i.spec.category,
                     description: i.spec && i.spec.description,
-                    tenantID: i.sepc && i.spec.tenantID
+                    tenantID: i.spec && i.spec.tenantID
                 };
             })
             : [];
