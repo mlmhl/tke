@@ -119,7 +119,6 @@ export const reduceK8sRestfulPath = (options: K8sRestfulPathOptions) => {
   let {
     resourceInfo,
     namespace = '',
-    middleKey = '',
     specificName = '',
     extraResource = '',
     clusterId = '',
