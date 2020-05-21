@@ -89,6 +89,7 @@ export interface ApiVersion {
   /** 告警配置 */
   prometheus?: ResourceApiInfo;
   alarmPolicy?: ResourceApiInfo;
+  alarmRecord?: ResourceApiInfo;
   channel?: ResourceApiInfo;
   template?: ResourceApiInfo;
   message?: ResourceApiInfo;
@@ -689,6 +690,13 @@ const alarmPolicyApiVersion: ApiVersion = {
     watchModule: ConsoleModuleEnum.Monitor,
     headTitle: 'AlarmPolicy'
   },
+  alarmRecord: {
+    group: notifyServerVersion.group,
+    version: notifyServerVersion.version,
+    basicEntry: notifyServerVersion.basicUrl,
+    watchModule: ConsoleModuleEnum.Notify,
+    headTitle: 'AlarmRecord'
+  },
   prometheus: {
     group: apiServerVersion.group,
     version: apiServerVersion.version,
@@ -718,7 +726,6 @@ const notifyApiVersion: ApiVersion = {
     version: notifyServerVersion.version,
     basicEntry: notifyServerVersion.basicUrl,
     watchModule: ConsoleModuleEnum.Notify,
-
     headTitle: 'Message'
   },
   receiver: {
