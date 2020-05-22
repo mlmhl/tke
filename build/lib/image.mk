@@ -21,7 +21,7 @@
 DOCKER := docker
 DOCKER_SUPPORTED_API_VERSION ?= 1.32
 
-REGISTRY_PREFIX ?= mirrors.tencent.com/tkestack
+REGISTRY_PREFIX ?= tkestack
 BASE_IMAGE = alpine:3.10
 
 EXTRA_ARGS ?=
