@@ -153,14 +153,14 @@ const commonRouterConfig: RouterConfig[] = [
       {
         url: '/tkestack/notify',
         title: '通知设置',
-        watchModule: ConsoleModuleEnum.Notify,
+        watchModule: ConsoleModuleEnum.Notify
       },
       {
         url: '/tkestack/alarm-record',
         title: '告警记录',
-        watchModule: ConsoleModuleEnum.Notify,
+        watchModule: ConsoleModuleEnum.Notify
       }
-    ],
+    ]
   },
   {
     title: '运维中心',
@@ -184,7 +184,7 @@ const commonRouterConfig: RouterConfig[] = [
       {
         url: '/tkestack/audit',
         title: '审计记录',
-        watchModule: ConsoleModuleEnum.PLATFORM
+        watchModule: ConsoleModuleEnum.Audit
       }
     ]
   }

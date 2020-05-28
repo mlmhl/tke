@@ -12,7 +12,7 @@ import { Wrapper, PlatformTypeEnum } from './Wrapper';
 import { Addon } from './src/modules/addon';
 import { Uam } from './src/modules/uam';
 import { PersistentEvent } from './src/modules/persistentEvent';
-import { Audit }  from './src/modules/audit';
+import { Audit } from './src/modules/audit';
 import { AlarmPolicy } from './src/modules/alarmPolicy';
 import { AlarmRecord } from './src/modules/alarmRecord';
 import { Notify } from './src/modules/notify';
@@ -243,7 +243,7 @@ Entry.register({
           <ForbiddentDialog />
           <AlarmRecord />
         </Wrapper>
-      ),
+      )
     },
 
     /**
@@ -288,7 +288,7 @@ Entry.register({
     /**
      * @url https://{{domain}}/tkestack/audit
      */
-    'audit': {
+    audit: {
       title: t('审计记录 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
