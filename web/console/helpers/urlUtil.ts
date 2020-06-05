@@ -96,6 +96,8 @@ interface K8sRestfulPathOptions {
   namespace?: string;
 
   isSpetialNamespace?: boolean;
+  /** 不在路径最后的变量，比如projectId*/
+  middleKey?: string;
 
   /** 具体的资源名称 */
   specificName?: string;
@@ -122,6 +124,7 @@ export const reduceK8sRestfulPath = (options: K8sRestfulPathOptions) => {
     resourceInfo,
     namespace = '',
     isSpetialNamespace = false,
+    middleKey = '',
     specificName = '',
     extraResource = '',
     clusterId = '',
