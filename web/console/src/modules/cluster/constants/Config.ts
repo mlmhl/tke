@@ -144,7 +144,7 @@ export const TailList = [
 export const ResourceTypeList = [
   {
     value: 'deployment',
-    label: t('Deployment（可扩展的部署Pod）'),
+    label: t('Deployment（无状态的部署Pod，使用浮动IP时默认随时回收）'),
   },
   {
     value: 'daemonset',
