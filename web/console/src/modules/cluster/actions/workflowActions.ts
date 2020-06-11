@@ -394,7 +394,9 @@ export const workflowActions = {
   deletePod: generateWorkflowActionCreator<CreateResource, number>({
     actionType: ActionType.DeletePod,
     workflowStateLocator: (state: RootState) => state.subRoot.resourceDetailState.deletePodFlow,
-    operationExecutor: WebAPI.deleteResourceIns,
+    operationExecutor: (targets, params, dispatch, getState) => {
+      return WebAPI.deleteResourceIns([{ ...targets[0], isSpetialNamespace: true }], params);
+    },
     after: {
       [OperationTrigger.Done]: (dispatch, getState: GetState) => {
         let { subRoot, route } = getState(),
