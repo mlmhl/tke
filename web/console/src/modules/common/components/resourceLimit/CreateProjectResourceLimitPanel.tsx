@@ -89,6 +89,11 @@ export const initProjectResourceLimit = {
   v_value: initValidator
 };
 
+
+// import { LinkButton } from '../../common/components';
+// import { initProjectResourceLimit, resourceLimitTypeList, resourceTypeToUnit } from '../constants/Config';
+// import { ProjectResourceLimit } from '../models/Project';
+
 export interface ProjectResourceLimit extends Identifiable {
   type: string;
   v_type: Validation;
@@ -292,7 +297,7 @@ export class CreateProjectResourceLimitPanel extends React.Component<
     });
     if (ok) {
       this.props.onSubmit && this.props.onSubmit(resourceLimits);
-      this.props.onCancel && this.props.onCancel();
+      // this.props.onCancel && this.props.onCancel();
     }
   }
   _renderResourceLimitList() {
@@ -341,7 +346,7 @@ export class CreateProjectResourceLimitPanel extends React.Component<
             </Bubble>
           </Col>
           <Col span={2}>
-            <Button icon="close" disabled={maxLimit !== null} onClick={() => this.deleteLimit(item.id + '')} />
+            <Button icon="close" disabled={maxLimit !== undefined} onClick={() => this.deleteLimit(item.id + '')} />
           </Col>
         </Row>
       );
