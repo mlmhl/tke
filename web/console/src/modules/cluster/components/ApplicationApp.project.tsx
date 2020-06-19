@@ -91,12 +91,7 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
       newMode === 'list' &&
         resourceName === 'np' &&
         actions.projectNamespace.applyFilter({ specificName: projectName });
-      newMode === 'list' &&
-        actions.resource.poll({
-          namespace: namespaceSelection,
-          clusterId: route.queries['clusterId'],
-          regionId: +route.queries['rid']
-        });
+      newMode === 'list' && actions.resource.poll();
     }
 
     /** =================== 这里是判断二级菜单路由的配置 ====================== */

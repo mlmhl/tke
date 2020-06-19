@@ -245,13 +245,7 @@ export const workflowActions = {
             router.navigate(Object.assign({}, urlParams, { mode: 'list' }), route.queries);
           }
           dispatch(workflowActions.applyResource.reset());
-          dispatch(
-            resourceActions.poll({
-              namespace: namespaceSelection,
-              clusterId: route.queries['clusterId'],
-              regionId: +route.queries['rid']
-            })
-          );
+          dispatch(resourceActions.poll());
         }
       }
     }
@@ -301,13 +295,7 @@ export const workflowActions = {
               router.navigate(Object.assign({}, urlParams, { mode: 'list' }), route.queries);
             }
             dispatch(workflowActions.applyResource.reset());
-            dispatch(
-              resourceActions.poll({
-                namespace: namespaceSelection,
-                clusterId: route.queries['clusterId'],
-                regionId: +route.queries['rid']
-              })
-            );
+            dispatch(resourceActions.poll());
           }
         }
       }
@@ -354,13 +342,7 @@ export const workflowActions = {
             );
           }
           dispatch(workflowActions.modifyResource.reset());
-          dispatch(
-            resourceActions.poll({
-              namespace: namespaceSelection,
-              clusterId: route.queries['clusterId'],
-              regionId: +route.queries['rid']
-            })
-          );
+          dispatch(resourceActions.poll());
         }
       }
     }
@@ -378,13 +360,7 @@ export const workflowActions = {
 
         if (isSuccessWorkflow(deleteResourceFlow)) {
           dispatch(workflowActions.deleteResource.reset());
-          dispatch(
-            resourceActions.poll({
-              namespace: namespaceSelection,
-              clusterId: route.queries['clusterId'],
-              regionId: +route.queries['rid']
-            })
-          );
+          dispatch(resourceActions.poll());
         }
       }
     }
@@ -519,13 +495,7 @@ export const workflowActions = {
           router.navigate(urlChangeParams, routeQueries);
 
           // 还需要进行资源列表的拉取
-          dispatch(
-            resourceActions.poll({
-              namespace: route.queries['np'],
-              clusterId: route.queries['clusterId'],
-              regionId: +route.queries['rid']
-            })
-          );
+          dispatch(resourceActions.poll());
         }
       }
     }
@@ -630,13 +600,7 @@ export const workflowActions = {
           router.navigate(urlChangeParams, routeQueries);
 
           // 还需要进行资源列表的拉取
-          dispatch(
-            resourceActions.poll({
-              namespace: route.queries['np'],
-              clusterId: route.queries['clusterId'],
-              regionId: +route.queries['rid']
-            })
-          );
+          dispatch(resourceActions.poll());
         }
       }
     }
@@ -668,13 +632,7 @@ export const workflowActions = {
             );
           }
           dispatch(workflowActions.modifyMultiResource.reset());
-          dispatch(
-            resourceActions.poll({
-              namespace: namespaceSelection,
-              clusterId: route.queries['clusterId'],
-              regionId: +route.queries['rid']
-            })
-          );
+          dispatch(resourceActions.poll());
         }
       }
     }
