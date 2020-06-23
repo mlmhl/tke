@@ -607,19 +607,19 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       }
 
       const CMDBData = this.myCMDBComponentRef.current.getCMDBData();
-      labelsInfo['cmdb'] = CMDBData.cmdb;
+      // labelsInfo['cmdb'] = CMDBData.cmdb;
       if (CMDBData.cmdb) {
         templateAnnotations['cmdb.io/bakOperator'] = CMDBData.bakOperator ? CMDBData.bakOperator.join(',') : '';
         templateAnnotations['cmdb.io/bsiPath'] = CMDBData.bsiPath;
         templateAnnotations['cmdb.io/operator'] = CMDBData.operator;
         templateAnnotations['cmdb.io/depName'] = CMDBData.department;
-        templateAnnotations['cmdb.io/depId'] = CMDBData.departmentId;
+        templateAnnotations['cmdb.io/depId'] = CMDBData.departmentId + '';
       }
 
       // template的内容，因为cronJob是放在 jobTemplate当中
       let templateContent = {
         metadata: {
-          labels: labelsInfo,
+          labels: {...labelsInfo, cmdb: CMDBData.cmdb ? 'true' : 'false' },
           annotations: isEmpty(templateAnnotations) ? undefined : templateAnnotations,
         },
         spec: {
