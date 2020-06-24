@@ -52,7 +52,7 @@ export async function fetchBsiPath1List(department: { dept_name: string }) {
   let bsiPath1List = [];
   const params: RequestParams = {
     method: Method.post,
-    url,
+    url: url + '?api_key=tencent_suanli_gaia',
     data: {
       method: 'GetBussiness1Info',
       jsonrpc,
@@ -85,7 +85,7 @@ export async function fetchBsiPath2List(bs1_info: { bs1_name_id: number }) {
   let bsiPath2List = [];
   const params: RequestParams = {
     method: Method.post,
-    url,
+    url: url + '?api_key=tencent_suanli_gaia',
     data: {
       method: 'GetBussiness2Info',
       jsonrpc,
@@ -118,7 +118,7 @@ export async function fetchBsiPath3List(bs2_info: { bs2_name_id: number }) {
   let bsiPath3List = [];
   const params: RequestParams = {
     method: Method.post,
-    url,
+    url: url + '?api_key=tencent_suanli_gaia',
     data: {
       method: 'GetBussiness3Info',
       jsonrpc,

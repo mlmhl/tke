@@ -509,10 +509,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     let { actions, subRoot, route, region, clusterVersion } = this.props,
       { mode, workloadEdit, serviceEdit } = subRoot;
 
-    const isVerified = await this.myCMDBComponentRef.current.triggerValidation();
-
     actions.validate.workload.validateWorkloadEdit();
-    if (validateWorkloadActions._validateWorkloadEdit(workloadEdit, serviceEdit) && isVerified) {
+    if (validateWorkloadActions._validateWorkloadEdit(workloadEdit, serviceEdit)) {
       let {
         isCreateService,
         workloadType,
@@ -567,7 +565,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       if (description) {
         annotations['description'] = description;
       }
-      
+
       // 判断当前的工作负载类型
       let isCronJobs = workloadType === 'cronjob',
         isJobs = workloadType === 'job',
@@ -611,17 +609,27 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       const CMDBData = this.myCMDBComponentRef.current.getCMDBData();
       // labelsInfo['cmdb'] = CMDBData.cmdb;
       if (CMDBData.cmdb) {
-        templateAnnotations['cmdb.io/bakOperator'] = CMDBData.bakOperator ? CMDBData.bakOperator.join(',') : '';
-        templateAnnotations['cmdb.io/bsiPath'] = CMDBData.bsiPath;
-        templateAnnotations['cmdb.io/operator'] = CMDBData.operator;
-        templateAnnotations['cmdb.io/depName'] = CMDBData.department;
-        templateAnnotations['cmdb.io/depId'] = CMDBData.departmentId + '';
+        if(CMDBData.bakOperator) {
+          templateAnnotations['cmdb.io/bakOperator'] = CMDBData.bakOperator.join(',');
+        }
+        if(CMDBData.bsiPath) {
+          templateAnnotations['cmdb.io/bsiPath'] = CMDBData.bsiPath;
+        }
+        if(CMDBData.operator) {
+          templateAnnotations['cmdb.io/operator'] = CMDBData.operator;
+        }
+        if(CMDBData.department) {
+          templateAnnotations['cmdb.io/depName'] = CMDBData.department;
+        }
+        if(CMDBData.departmentId) {
+          templateAnnotations['cmdb.io/depId'] = CMDBData.departmentId + '';
+        }
       }
 
       // template的内容，因为cronJob是放在 jobTemplate当中
       let templateContent = {
         metadata: {
-          labels: {...labelsInfo, cmdb: CMDBData.cmdb ? 'true' : 'false' },
+          labels: CMDBData.cmdb ? {...labelsInfo, cmdb: 'true' } : labelsInfo,
           annotations: isEmpty(templateAnnotations) ? undefined : templateAnnotations,
         },
         spec: {
