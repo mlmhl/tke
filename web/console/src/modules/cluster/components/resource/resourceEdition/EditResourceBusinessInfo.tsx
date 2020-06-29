@@ -10,7 +10,7 @@ import {
   fetchBsiPath2List,
   fetchBsiPath3List,
   fetchUserList,
-  getLoginUserInfo,
+  getLoginUserInfo
 } from '../../../WebAPI/CMDBPartAPI';
 const { useState, useEffect, useRef, useImperativeHandle } = React;
 
@@ -30,7 +30,7 @@ insertCSS(
 );
 export const EditResourceBusinessInfo = (props, ref) => {
   const { register, watch, handleSubmit, reset, control, setValue, getValues, triggerValidation, errors } = useForm({
-    mode: 'onBlur',
+    mode: 'onBlur'
   });
   const [departmentList, setDepartmentList] = useState([]);
   const [bsiPath1List, setBsiPath1List] = useState([]);
@@ -49,10 +49,10 @@ export const EditResourceBusinessInfo = (props, ref) => {
     }
     fetchData();
 
-    fetchUserList().then((result) => {
+    fetchUserList().then(result => {
       setUserList(result);
     });
-    getLoginUserInfo().then((result) => {
+    getLoginUserInfo().then(result => {
       setLoginUserInfo(result);
     });
   }, []);
@@ -65,7 +65,7 @@ export const EditResourceBusinessInfo = (props, ref) => {
 
   useEffect(() => {
     if (selectedDepartment) {
-      fetchBsiPath1List({ dept_name: selectedDepartment }).then((result) => {
+      fetchBsiPath1List({ dept_name: selectedDepartment }).then(result => {
         console.log('fetchBsiPath1List result: ', result);
         setBsiPath1List(result);
         if (!result.length) {
@@ -78,7 +78,7 @@ export const EditResourceBusinessInfo = (props, ref) => {
 
   useEffect(() => {
     if (selectedBsiPath1) {
-      fetchBsiPath2List({ bs1_name_id: selectedBsiPath1 }).then((result) => {
+      fetchBsiPath2List({ bs1_name_id: selectedBsiPath1 }).then(result => {
         setBsiPath2List(result);
         if (!result.length) {
           setBsiPath3List([]);
@@ -89,7 +89,7 @@ export const EditResourceBusinessInfo = (props, ref) => {
 
   useEffect(() => {
     if (selectedBsiPath2) {
-      fetchBsiPath3List({ bs2_name_id: selectedBsiPath2 }).then((result) => {
+      fetchBsiPath3List({ bs2_name_id: selectedBsiPath2 }).then(result => {
         setBsiPath3List(result);
       });
     }
@@ -104,29 +104,29 @@ export const EditResourceBusinessInfo = (props, ref) => {
       let bsiPath2Name: string = '';
       let bsiPath3Name: string = '';
       let departmentId: number = null;
-      departmentList.forEach((item) => {
+      departmentList.forEach(item => {
         if (item.value === department) {
           departmentId = item.Id;
         }
       });
-      bsiPath1List.forEach((item) => {
+      bsiPath1List.forEach(item => {
         if (item.value === bsiPath1) {
           bsiPath1Name = item.text;
         }
       });
-      bsiPath2List.forEach((item) => {
+      bsiPath2List.forEach(item => {
         if (item.value === bsiPath2) {
           bsiPath2Name = item.text;
         }
       });
-      bsiPath3List.forEach((item) => {
+      bsiPath3List.forEach(item => {
         if (item.value === bsiPath3) {
           bsiPath3Name = item.text;
         }
       });
       const bsiPath = bsiPath1Name ? bsiPath1Name + ' - ' + bsiPath2Name + ' - ' + bsiPath3Name : '';
       return { ...CMDBData, bsiPath, departmentId };
-    },
+    }
     // triggerValidation,
   }));
 
@@ -134,21 +134,19 @@ export const EditResourceBusinessInfo = (props, ref) => {
     <section className="CMDB-creat-section">
       <Controller
         as={
-          <Switch>
+          <Switch defaultValue={true}>
             <Trans>CMDB录入</Trans>
           </Switch>
         }
         name="cmdb"
         control={control}
         className="CMDB-modify-control"
+        defaultValue
       />
       {cmdb && (
         <form className="CMDB-modify-content">
           <Form>
-            <Form.Item
-              label={t('部门')}
-              showStatusIcon={false}
-            >
+            <Form.Item label={t('部门')} showStatusIcon={false}>
               <Controller
                 as={
                   <Select
@@ -165,10 +163,7 @@ export const EditResourceBusinessInfo = (props, ref) => {
               />
             </Form.Item>
 
-            <Form.Item
-              label="业务"
-              showStatusIcon={false}
-            >
+            <Form.Item label="业务" showStatusIcon={false}>
               <Controller
                 as={
                   <Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={bsiPath1List} />
@@ -195,20 +190,14 @@ export const EditResourceBusinessInfo = (props, ref) => {
                 className="bsi-path"
               />
             </Form.Item>
-            <Form.Item
-              label="负责人"
-              showStatusIcon={false}
-            >
+            <Form.Item label="负责人" showStatusIcon={false}>
               <Controller
                 as={<Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={useList} />}
                 name="operator"
                 control={control}
               />
             </Form.Item>
-            <Form.Item
-              label="备份负责人"
-              showStatusIcon={false}
-            >
+            <Form.Item label="备份负责人" showStatusIcon={false}>
               <Controller
                 as={<SelectMultiple staging={false} searchable size="m" appearence="button" options={useList} />}
                 name="bakOperator"
