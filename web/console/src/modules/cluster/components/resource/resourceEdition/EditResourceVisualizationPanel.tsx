@@ -19,7 +19,7 @@ import {
   NodeAbnormalStrategy,
   ResourceTypeList,
   RestartPolicyTypeList,
-  WorkloadNetworkTypeEnum,
+  WorkloadNetworkTypeEnum
 } from '../../../constants/Config';
 import {
   Computer,
@@ -31,7 +31,7 @@ import {
   MetricOption,
   ServiceEditJSONYaml,
   VolumeItem,
-  WorkloadEditJSONYaml,
+  WorkloadEditJSONYaml
 } from '../../../models';
 import { AffinityRule } from '../../../models/WorkloadEdit';
 import { router } from '../../../router';
@@ -57,7 +57,7 @@ const serviceTypeMap = {
   ClusterIP: 'ClusterIP',
   NodePort: 'NodePort',
   SvcLBTypeInner: 'LoadBalancer',
-  ExternalName: 'ExternalName',
+  ExternalName: 'ExternalName'
 };
 
 insertCSS(
@@ -82,17 +82,17 @@ interface EditResourceVisualizationPanelState {
   isOpenServiceAdvancedSetting?: boolean;
 }
 
-const mapDispatchToProps = (dispatch) =>
+const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
 
-@connect((state) => state, mapDispatchToProps)
+@connect(state => state, mapDispatchToProps)
 export class EditResourceVisualizationPanel extends React.Component<RootProps, EditResourceVisualizationPanelState> {
   private myCMDBComponentRef: any;
   constructor(props, context) {
     super(props, context);
     this.state = {
       isOpenAdvancedSetting: false,
-      isOpenServiceAdvancedSetting: false,
+      isOpenServiceAdvancedSetting: false
     };
     this.myCMDBComponentRef = React.createRef();
   }
@@ -165,7 +165,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         imagePullSecrets,
         configEdit,
         nodeAbnormalMigratePolicy,
-        isCanUseTapp,
+        isCanUseTapp
       } = workloadEdit,
       { secretList } = configEdit;
 
@@ -183,7 +183,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
      * 渲染imagePullSecret的列表
      * pre: secret的类型为 kubernetes.io/dockercfg
      */
-    let finalSecretList = secretList.data.records.filter((item) => item.type === 'kubernetes.io/dockercfg');
+    let finalSecretList = secretList.data.records.filter(item => item.type === 'kubernetes.io/dockercfg');
     let secretListOptions = finalSecretList.map((item, index) => (
       <option key={index} value={item.metadata.name}>
         {item.metadata.name}
@@ -203,13 +203,13 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     let isDeploymentOrStateful =
       workloadType === 'deployment' || workloadType === 'statefulset' || workloadType === 'tapp';
 
-    let namespaceOptions = namespaceList.data.records.map((item) => ({
+    let namespaceOptions = namespaceList.data.records.map(item => ({
       value: item.name,
-      text: item.name,
+      text: item.name
     }));
 
     let finalResourceTypeList = [];
-    ResourceTypeList.forEach((list) => {
+    ResourceTypeList.forEach(list => {
       if (list.value !== 'tapp' || isCanUseTapp) {
         finalResourceTypeList.push(list);
       } else if (list.value === 'tapp' && addons['TappController'] !== undefined) {
@@ -263,7 +263,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                   size="m"
                   options={namespaceOptions}
                   value={namespace}
-                  onChange={(value) => {
+                  onChange={value => {
                     actions.editWorkload.selectNamespace(value);
                     actions.namespace.selectNamespace(value);
                   }}
@@ -274,7 +274,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                   className="form-unit specific"
                   style={{ backgroundColor: '#f2f2f2', padding: '15px 10px 10px', maxWidth: '350px' }}
                 >
-                  <Radio.Group value={workloadType} onChange={(value) => this._handleResourceTypeSelect(value)}>
+                  <Radio.Group value={workloadType} onChange={value => this._handleResourceTypeSelect(value)}>
                     {finalResourceTypeList.map((item, rIndex) => {
                       return (
                         <Radio key={rIndex} name={item.value}>
@@ -290,7 +290,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                   size="m"
                   options={NodeAbnormalStrategy}
                   value={nodeAbnormalMigratePolicy}
-                  onChange={(value) => {
+                  onChange={value => {
                     actions.editWorkload.selectNodeAbnormalMigratePolicy(value);
                   }}
                 />
@@ -348,7 +348,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                       className="tc-15-select m"
                       style={{ marginRight: '6px', minWidth: '150px' }}
                       value={restartPolicy}
-                      onChange={(e) => {
+                      onChange={e => {
                         actions.editWorkload.selectRestartPolicy(e.target.value);
                       }}
                     >
@@ -393,9 +393,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                   >
                     {failed ? t('重试') : t('创建Workload')}
                   </Button>
-                  <Button
-                    onClick={(e) => router.navigate(Object.assign({}, urlParams, { mode: 'list' }), route.queries)}
-                  >
+                  <Button onClick={e => router.navigate(Object.assign({}, urlParams, { mode: 'list' }), route.queries)}>
                     {t('取消')}
                   </Button>
                   <TipInfo isShow={failed} type="error" isForm>
@@ -476,7 +474,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                       href="javascript:;"
                       className="more-links-btn"
                       style={{ marginLeft: '-5px', marginBottom: '10px', display: 'inline-block' }}
-                      onClick={(e) =>
+                      onClick={e =>
                         this.setState({ isOpenServiceAdvancedSetting: !this.state.isOpenServiceAdvancedSetting })
                       }
                     >
@@ -537,7 +535,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         networkType,
         floatingIPReleasePolicy,
         oversoldRatio,
-        isOpenCronHpa,
+        isOpenCronHpa
       } = workloadEdit;
 
       // 当前该资源的具体配置
@@ -551,13 +549,13 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
       // 进行容器的labels的数据拼接，默认有一个 qcloud-app: workload的名称，很懂监控等都用qcloud-app的标签
       let labelsInfo = { 'qcloud-app': workloadName };
-      workloadLabels.forEach((label) => {
+      workloadLabels.forEach(label => {
         labelsInfo[label.labelKey] = label.labelValue;
       });
 
       // selector的相关配置信息
       let selectorContent = {
-        matchLabels: labelsInfo,
+        matchLabels: labelsInfo
       };
 
       // 描述信息放在annotaitions
@@ -609,19 +607,19 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       const CMDBData = this.myCMDBComponentRef.current.getCMDBData();
       // labelsInfo['cmdb'] = CMDBData.cmdb;
       if (CMDBData.cmdb) {
-        if(CMDBData.bakOperator) {
+        if (CMDBData.bakOperator) {
           templateAnnotations['cmdb.io/bakOperator'] = CMDBData.bakOperator.join(',');
         }
-        if(CMDBData.bsiPath) {
+        if (CMDBData.bsiPath) {
           templateAnnotations['cmdb.io/bsiPath'] = CMDBData.bsiPath;
         }
-        if(CMDBData.operator) {
+        if (CMDBData.operator) {
           templateAnnotations['cmdb.io/operator'] = CMDBData.operator;
         }
-        if(CMDBData.department) {
+        if (CMDBData.department) {
           templateAnnotations['cmdb.io/depName'] = CMDBData.department;
         }
-        if(CMDBData.departmentId) {
+        if (CMDBData.departmentId) {
           templateAnnotations['cmdb.io/depId'] = CMDBData.departmentId + '';
         }
       }
@@ -629,21 +627,21 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       // template的内容，因为cronJob是放在 jobTemplate当中
       let templateContent = {
         metadata: {
-          labels: CMDBData.cmdb ? {...labelsInfo, cmdb: 'true' } : labelsInfo,
-          annotations: isEmpty(templateAnnotations) ? undefined : templateAnnotations,
+          labels: CMDBData.cmdb ? { ...labelsInfo, cmdb: 'true' } : labelsInfo,
+          annotations: isEmpty(templateAnnotations) ? undefined : templateAnnotations
         },
         spec: {
           volumes: volumesInfo.length ? volumesInfo : undefined,
           containers: containersInfo,
           restartPolicy: finalRestartPolicy,
           imagePullSecrets: imagePullSecrets.length
-            ? imagePullSecrets.map((item) => ({
-                name: item.secretName,
+            ? imagePullSecrets.map(item => ({
+                name: item.secretName
               }))
             : undefined,
           affinity: affinityInfo ? affinityInfo : undefined,
-          hostNetwork: networkType === WorkloadNetworkTypeEnum.Host ? true : undefined,
-        },
+          hostNetwork: networkType === WorkloadNetworkTypeEnum.Host ? true : undefined
+        }
       };
 
       // cronjob的独有的配置
@@ -651,8 +649,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         spec: {
           template: templateContent,
           completions: +completion,
-          parallelism: +parallelism,
-        },
+          parallelism: +parallelism
+        }
       };
 
       // 构建创建workload的json的格式，model的定义 https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#jobspec-v1-batch
@@ -663,7 +661,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           name: workloadName,
           namespace: reduceNs(namespace),
           labels: labelsInfo,
-          annotations: isEmpty(annotations) ? undefined : annotations,
+          annotations: isEmpty(annotations) ? undefined : annotations
         },
         spec: {
           replicas: isNeedContainerNum ? (isAutoScale ? +minReplicas : +containerNum) : undefined,
@@ -674,8 +672,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           selector: !isCronJobOrCronJob ? selectorContent : undefined,
           completions: isJobs ? +completion : undefined,
           parallelism: isJobs ? +parallelism : undefined,
-          forceDeletePod: isTapp ? (nodeAbnormalMigratePolicy === 'true' ? true : false) : undefined,
-        },
+          forceDeletePod: isTapp ? (nodeAbnormalMigratePolicy === 'true' ? true : false) : undefined
+        }
       };
 
       /**
@@ -710,7 +708,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         mode,
         namespace: namespace,
         clusterId: route.queries['clusterId'],
-        jsonData: finalJSON,
+        jsonData: finalJSON
       };
       /**Tapp的请求需要创建多个不同接口的资源,所以需要进行特殊处理 */
       if (isTapp) {
@@ -724,7 +722,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
             mode,
             namespace: namespace,
             clusterId: route.queries['clusterId'],
-            jsonData: hpaJsonData,
+            jsonData: hpaJsonData
           });
           /**不需要operation 所以传入的值为{},需要传值 */
           differentInterfaceResourceOperation.push({});
@@ -737,7 +735,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
             mode,
             namespace,
             clusterId: route.queries['clusterId'],
-            jsonData: serviceJsonData,
+            jsonData: serviceJsonData
           });
         }
         /** 创建Cronhpa资源 */
@@ -748,7 +746,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
             mode,
             namespace,
             clusterId: route.queries['clusterId'],
-            jsonData: cronhpaJsonData,
+            jsonData: cronhpaJsonData
           });
         }
 
@@ -759,7 +757,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           mode,
           namespace: namespace,
           clusterId: route.queries['clusterId'],
-          jsonData: JSON.stringify(jsonData),
+          jsonData: JSON.stringify(jsonData)
         });
 
         differentInterfaceResourceOperation.push({});
@@ -793,21 +791,21 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       apiVersion: (resourceInfo.group ? resourceInfo.group + '/' : '') + resourceInfo.version,
       metadata: {
         name: workloadName,
-        namespace: reduceNs(namespace),
+        namespace: reduceNs(namespace)
       },
       spec: {
         scaleTargetRef: {
           apiVersion: isTapp ? 'apps.tkestack.io/v1' : ResourceInfo.group + '/' + ResourceInfo.version,
           kind: ResourceInfo.headTitle,
-          name: workloadName,
+          name: workloadName
         },
-        crons: cronMetrics.map((metric) => {
+        crons: cronMetrics.map(metric => {
           return {
             schedule: metric.crontab,
-            targetReplicas: +metric.targetReplicas,
+            targetReplicas: +metric.targetReplicas
           };
-        }),
-      },
+        })
+      }
     };
 
     return JSON.parse(JSON.stringify(jsonData));
@@ -825,7 +823,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
     let isTapp = workloadType === 'tapp' ? true : false;
     // 处理hpa的metrics
-    let metricsInfo: MetricOption[] = metrics.map((item) => {
+    let metricsInfo: MetricOption[] = metrics.map(item => {
       let tmp: MetricOption;
       if (
         item.type === 'cpuUtilization' ||
@@ -844,16 +842,16 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                 ? item.type === 'cpuAverage'
                   ? +item.value * 1000 + 'm'
                   : item.value + 'Mi'
-                : undefined,
-          },
+                : undefined
+          }
         };
       } else if (item.type === 'inBandwidth' || item.type === 'outBandwidth') {
         tmp = {
           type: 'Pods',
           pods: {
             metricName: item.type === 'inBandwidth' ? 'pod_in_bandwidth' : 'pod_out_bandwidth',
-            targetAverageValue: item.value,
-          },
+            targetAverageValue: item.value
+          }
         };
       }
       return tmp;
@@ -866,8 +864,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         name: workloadName,
         namespace: reduceNs(namespace),
         labels: {
-          'qcloud-app': workloadName,
-        },
+          'qcloud-app': workloadName
+        }
       },
       spec: {
         minReplicas: +minReplicas,
@@ -876,9 +874,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         scaleTargetRef: {
           apiVersion: isTapp ? 'apps.tkestack.io/v1' : ResourceInfo.group + '/' + ResourceInfo.version,
           kind: ResourceInfo.headTitle,
-          name: workloadName,
-        },
-      },
+          name: workloadName
+        }
+      }
     };
 
     return JSON.parse(JSON.stringify(jsonData));
@@ -905,7 +903,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     let sessionConfig = {
       externalTrafficPolicy: serviceEdit.externalTrafficPolicy,
       sessionAffinity: serviceEdit.sessionAffinity,
-      sessionAffinityTimeout: serviceEdit.sessionAffinityTimeout,
+      sessionAffinityTimeout: serviceEdit.sessionAffinityTimeout
     };
 
     let jsonData: ServiceEditJSONYaml = ReduceServiceJSONData({
@@ -917,7 +915,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       communicationType,
       serviceName: workloadEdit.workloadName,
       isOpenHeadless,
-      sessionConfig,
+      sessionConfig
     });
 
     return jsonData;
@@ -926,9 +924,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   /** 处理数据卷的相关信息 */
   private _reduceVolumes(volumes: VolumeItem[]) {
     let volumesInfo = [];
-    volumesInfo = volumes.map((volume) => {
+    volumesInfo = volumes.map(volume => {
       let volumeItem = {
-        name: volume.name,
+        name: volume.name
       };
 
       if (volume.volumeType === 'emptyDir') {
@@ -938,13 +936,13 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         // type 默认为 ""  不需要填入
         volumeItem['hostPath'] = {
           path: volume.hostPath,
-          type: volume.hostPathType !== 'NoChecks' ? volume.hostPathType : undefined,
+          type: volume.hostPathType !== 'NoChecks' ? volume.hostPathType : undefined
         };
       } else if (volume.volumeType === 'nfsDisk') {
         let [server, path] = volume.nfsPath.split(':');
         volumeItem['nfs'] = {
           path,
-          server,
+          server
         };
       } else if (volume.volumeType === 'configMap') {
         volumeItem['configMap'] = {};
@@ -952,10 +950,10 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
         // 如果有configKey，则说明只需要特定的key
         if (volume.configKey) {
-          volumeItem['configMap']['items'] = volume.configKey.map((c) => ({
+          volumeItem['configMap']['items'] = volume.configKey.map(c => ({
             key: c.configKey,
             mode: c.mode ? parseInt(c.mode, 8) : undefined,
-            path: c.path,
+            path: c.path
           }));
         }
       } else if (volume.volumeType === 'secret') {
@@ -964,15 +962,15 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
         // 如果有 secretKey，则说明只需要特定的key
         if (volume.secretKey) {
-          volumeItem['secret']['items'] = volume.secretKey.map((c) => ({
+          volumeItem['secret']['items'] = volume.secretKey.map(c => ({
             key: c.configKey,
             mode: c.mode ? parseInt(c.mode, 8) : undefined,
-            path: c.path,
+            path: c.path
           }));
         }
       } else if (volume.volumeType === 'pvc') {
         volumeItem['persistentVolumeClaim'] = {
-          claimName: volume.pvcSelection,
+          claimName: volume.pvcSelection
         };
       }
       return volumeItem;
@@ -984,30 +982,30 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   private _reduceContainers(containers: ContainerItem[], volumes: VolumeItem[], extraOption?: any) {
     let containersInfo = [];
     let { oversoldRatio, networkType } = extraOption;
-    containersInfo = containers.map((c) => {
+    containersInfo = containers.map(c => {
       let containerItem = {
         name: c.name,
         image: c.registry + (c.tag ? ':' + c.tag : ''),
-        imagePullPolicy: c.imagePullPolicy,
+        imagePullPolicy: c.imagePullPolicy
       };
 
       // 挂载点的相关配置
       if (c.mounts.length && volumes.length) {
-        containerItem['volumeMounts'] = c.mounts.map((m) => {
+        containerItem['volumeMounts'] = c.mounts.map(m => {
           return {
             mountPath: m.mountPath,
             subPath: m.mountSubPath ? m.mountSubPath : undefined,
             name: m.volume,
-            readOnly: m.mode === 'rw' ? undefined : true,
+            readOnly: m.mode === 'rw' ? undefined : true
           };
         });
       }
 
       // request/limit的相关配置request
-      let cpuLimit = c.cpuLimit.find((cpu) => cpu.type === 'limit').value,
-        cpuRequest = c.cpuLimit.find((cpu) => cpu.type === 'request').value,
-        memLimit = c.memLimit.find((mem) => mem.type === 'limit').value,
-        memRequest = c.memLimit.find((mem) => mem.type === 'request').value;
+      let cpuLimit = c.cpuLimit.find(cpu => cpu.type === 'limit').value,
+        cpuRequest = c.cpuLimit.find(cpu => cpu.type === 'request').value,
+        memLimit = c.memLimit.find(mem => mem.type === 'limit').value,
+        memRequest = c.memLimit.find(mem => mem.type === 'request').value;
 
       if (oversoldRatio.cpu) {
         cpuRequest = (+cpuLimit * 1.0) / +oversoldRatio.cpu + '';
@@ -1032,8 +1030,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
             'nvidia.com/gpu': +c.gpu > 0 ? c.gpu + '' : undefined,
             'tencent.com/vcuda-core': +c.gpuCore ? +c.gpuCore * 100 : undefined,
             'tencent.com/vcuda-memory': +c.gpuMem ? +c.gpuMem : undefined,
-            'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP ? '1' : undefined,
-          },
+            'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP ? '1' : undefined
+          }
         };
       }
       if (
@@ -1049,16 +1047,16 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
             memory: memRequest ? memRequest + 'Mi' : undefined,
             'tencent.com/vcuda-core': +c.gpuCore ? +c.gpuCore * 100 : undefined,
             'tencent.com/vcuda-memory': +c.gpuMem ? +c.gpuMem : undefined,
-            'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP ? '1' : undefined,
-          },
+            'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP ? '1' : undefined
+          }
         });
       }
 
       // 处理 env相关的
       if (c.envs.length) {
-        containerItem['env'] = c.envs.map((env) => {
+        containerItem['env'] = c.envs.map(env => {
           let envItem = {
-            name: env.envName,
+            name: env.envName
           };
 
           if (env.envValue) {
@@ -1071,24 +1069,24 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       // 处理 envFrom的问题
       if (c.valueFrom.length) {
         let valueFrom = [];
-        valueFrom = c.valueFrom.map((item) => {
+        valueFrom = c.valueFrom.map(item => {
           let envItem = {
-            name: item.aliasName,
+            name: item.aliasName
           };
 
           let keyRef = {
             key: item.key,
             name: item.name,
-            optional: false,
+            optional: false
           };
 
           if (item.type === 'configMap') {
             envItem['valueFrom'] = {
-              configMapKeyRef: keyRef,
+              configMapKeyRef: keyRef
             };
           } else {
             envItem['valueFrom'] = {
-              secretKeyRef: keyRef,
+              secretKeyRef: keyRef
             };
           }
           return envItem;
@@ -1116,7 +1114,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       // 特权级容器
       if (c.privileged) {
         containerItem['securityContext'] = {
-          privileged: c.privileged,
+          privileged: c.privileged
         };
       }
 
@@ -1149,22 +1147,22 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           successThreshold: +healthCheckItem.healthThreshold,
           initialDelaySeconds: healthCheckItem.delayTime ? +healthCheckItem.delayTime : undefined,
           timeoutSeconds: healthCheckItem.timeOut ? +healthCheckItem.timeOut : undefined,
-          periodSeconds: healthCheckItem.intervalTime ? +healthCheckItem.intervalTime : undefined,
+          periodSeconds: healthCheckItem.intervalTime ? +healthCheckItem.intervalTime : undefined
         };
 
         if (healthCheckItem.checkMethod === 'methodTcp') {
           healthItem['tcpSocket'] = {
-            port: +healthCheckItem.port,
+            port: +healthCheckItem.port
           };
         } else if (healthCheckItem.checkMethod === 'methodHttp') {
           healthItem['httpGet'] = {
             path: healthCheckItem.path,
             port: +healthCheckItem.port,
-            scheme: healthCheckItem.protocol,
+            scheme: healthCheckItem.protocol
           };
         } else if (healthCheckItem.checkMethod === 'methodCmd') {
           healthItem['exec'] = {
-            command: healthCheckItem.cmd.split('\n').map((item) => item.trim()),
+            command: healthCheckItem.cmd.split('\n').map(item => item.trim())
           };
         }
 
@@ -1189,7 +1187,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   private _reduceNodeAffinityInfo(nodeAffinityType: string, nodeAffinityRule: AffinityRule, nodeSelection: Computer[]) {
     let affinityInfo = {};
     if (nodeAffinityType === affinityType.node) {
-      let nodeSelector = nodeSelection.map((node) => {
+      let nodeSelector = nodeSelection.map(node => {
         return node.metadata.labels['kubernetes.io/hostname'];
       });
       affinityInfo['requiredDuringSchedulingIgnoredDuringExecution'] = {
@@ -1199,11 +1197,11 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               {
                 key: 'kubernetes.io/hostname',
                 operator: 'In',
-                values: nodeSelector,
-              },
-            ],
-          },
-        ],
+                values: nodeSelector
+              }
+            ]
+          }
+        ]
       };
     } else if (nodeAffinityType === affinityType.rule) {
       affinityInfo['preferredDuringSchedulingIgnoredDuringExecution'] = nodeAffinityRule.preferredExecution[0]
@@ -1211,16 +1209,16 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         ? [
             {
               preference: {
-                matchExpressions: nodeAffinityRule.preferredExecution[0].preference.matchExpressions.map((rule) => {
+                matchExpressions: nodeAffinityRule.preferredExecution[0].preference.matchExpressions.map(rule => {
                   return {
                     key: rule.key,
                     operator: rule.operator,
-                    values: rule.values ? rule.values.split(';') : undefined,
+                    values: rule.values ? rule.values.split(';') : undefined
                   };
-                }),
+                })
               },
-              weight: 1,
-            },
+              weight: 1
+            }
           ]
         : undefined;
       affinityInfo['requiredDuringSchedulingIgnoredDuringExecution'] = nodeAffinityRule.requiredExecution[0]
@@ -1228,15 +1226,15 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         ? {
             nodeSelectorTerms: [
               {
-                matchExpressions: nodeAffinityRule.requiredExecution[0].matchExpressions.map((rule) => {
+                matchExpressions: nodeAffinityRule.requiredExecution[0].matchExpressions.map(rule => {
                   return {
                     key: rule.key,
                     operator: rule.operator,
-                    values: rule.values ? rule.values.split(';') : undefined,
+                    values: rule.values ? rule.values.split(';') : undefined
                   };
-                }),
-              },
-            ],
+                })
+              }
+            ]
           }
         : undefined;
     }
