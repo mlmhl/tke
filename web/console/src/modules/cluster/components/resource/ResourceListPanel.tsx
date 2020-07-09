@@ -107,7 +107,7 @@ export class ResourceListPanel extends React.Component<ResourceListPanelProps, {
 
     return (
       <React.Fragment>
-        <ContentView>
+        <ContentView className="affix-target">
           <ContentView.Header>
             <ResourceHeaderPanel />
           </ContentView.Header>

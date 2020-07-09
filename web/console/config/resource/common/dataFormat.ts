@@ -23,5 +23,6 @@ export const dataFormatConfig = {
   backendGroups: 'backendGroups',
   backendRecords: 'backendRecords',
   forceDeletePod: 'forceDeletePod',
-  resourceLimit: 'resourceLimit'
+  resourceLimit: 'resourceLimit',
+  cmdb: 'cmdb'
 };

@@ -20,6 +20,7 @@ import { EditResourceVisualizationPanel } from './EditResourceVisualizationPanel
 import { EditSecretPanel } from './EditSecretPanel';
 import { EditServicePanel } from './EditServicePanel';
 import { SubHeaderPanel } from './SubHeaderPanel';
+import { EditBusinessNamespacePanel } from './EditBusinessNamespacePanel';
 
 interface EditResourcePanelState {
   /** edited data */
@@ -81,6 +82,7 @@ export class EditResourcePanel extends React.Component<RootProps, EditResourcePa
     // 如果 模式为 modify，只提供 Yaml创建
     let resourceType = urlParams['resourceName'];
     let kind = urlParams['type'];
+    let sub = urlParams['sub'];
     let headTitle = resourceConfig()[resourceType] ? typeMapName[mode] + resourceConfig()[resourceType].headTitle : '';
 
     if (resourceType === 'svc' && mode === 'create') {
@@ -90,8 +92,11 @@ export class EditResourcePanel extends React.Component<RootProps, EditResourcePa
       headTitle = typeMapName[mode] + 'Workload';
       // } else if (resourceType === 'ingress' && mode === 'create') {
       //   content = <EditIngressPanel />;
-    } else if (resourceType === 'np' && mode === 'create') {
+    } else if (resourceType === 'np' && mode === 'create' && sub) {
       content = <EditNamespacePanel />;
+    } else if (resourceType === 'np' && (mode === 'create' || mode === 'modify-namespace')) {
+      content = <EditBusinessNamespacePanel />;
+      headTitle = t('修改Namespace');
     } else if (resourceType === 'secret' && mode === 'create') {
       content = <EditSecretPanel />;
     } else if (resourceType === 'configmap' && mode === 'create') {

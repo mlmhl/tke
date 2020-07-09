@@ -44,7 +44,10 @@ const listResourceActions = createFFListActions<Resource, ResourceFilter>({
       let list = [];
       projectNamespaceList.data.records.forEach(item => {
         list.push({
-          metadata: { name: item.spec.namespace, creationTimestamp: item.metadata.creationTimestamp },
+          metadata: {
+            name: item.spec.namespace,
+            creationTimestamp: item.metadata.creationTimestamp
+          },
           spec: {
             clusterId: item.spec.clusterName,
             clusterVersion: item.spec.clusterVersion,
@@ -54,7 +57,8 @@ const listResourceActions = createFFListActions<Resource, ResourceFilter>({
           status: {
             phase: item.status.phase,
             used: item.status.used || {}
-          }
+          },
+          originalDataBak: item
         });
       });
       const result: RecordSet<Resource> = {
