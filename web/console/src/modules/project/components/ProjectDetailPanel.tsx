@@ -9,10 +9,10 @@ import { autotip } from '@tencent/tea-component/lib/table/addons';
 
 import { dateFormatter } from '../../../../helpers';
 import { getWorkflowError } from '../../common';
-import { WorkflowDialog } from '../../common/components';
+import { WorkflowDialog, CreateProjectResourceLimitPanel } from '../../common/components';
 import { DialogBodyLayout } from '../../common/layouts';
 import { resourceLimitTypeToText, resourceTypeToUnit } from '../constants/Config';
-import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
+// import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
 import { EditProjectManagerPanel } from './EditProjectManagerPanel';
 import { EditProjectNamePanel } from './EditProjectNamePanel';
 import { RootProps } from './ProjectApp';

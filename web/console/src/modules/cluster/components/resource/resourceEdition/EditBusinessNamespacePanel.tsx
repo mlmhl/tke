@@ -132,6 +132,7 @@ export const EditBusinessNamespacePanel = () => {
       : [];
     const operator = annotations['cmdb.io/operator'];
     const bakOperator = annotations['cmdb.io/bakOperator'] ? annotations['cmdb.io/bakOperator'].split(',') : undefined;
+    const all = labels['cmdb.all'] ? true : false;
     return JSON.parse(
       JSON.stringify({
         cmdb,
@@ -140,7 +141,8 @@ export const EditBusinessNamespacePanel = () => {
         bsiPath2: bsiPath2 ? Number(bsiPath2) : undefined,
         bsiPath3: bsiPath3 ? Number(bsiPath3) : undefined,
         operator,
-        bakOperator
+        bakOperator,
+        all
       })
     );
   }, [selectResource]);
@@ -158,7 +160,7 @@ export const EditBusinessNamespacePanel = () => {
     setDisabled(true);
     const { current } = myCMDBComponentRef;
     // @ts-ignore
-    const { cmdb, department, departmentId, bsiPath, bsiPathIds, operator, bakOperator } = current.getCMDBData();
+    const { cmdb, department, departmentId, bsiPath, bsiPathIds, operator, bakOperator, all } = current.getCMDBData();
     const namespaceInfo = {
       ...data,
       projectId: projectSelection,
@@ -169,6 +171,7 @@ export const EditBusinessNamespacePanel = () => {
       bsiPathIds,
       operator,
       bakOperator,
+      all,
       resourceLimits: editRequestLimits
     };
     let namespaceChangeResult = null;
@@ -290,7 +293,12 @@ export const EditBusinessNamespacePanel = () => {
                 ></Button>
               </Form.Item>
               <Form.Item label={t('业务信息')}>
-                <NewEditResourceBusinessInfo ref={myCMDBComponentRef} defaultBusinessInfo={defaultBusinessInfo} />
+                <NewEditResourceBusinessInfo
+                  ref={myCMDBComponentRef}
+                  defaultBusinessInfo={defaultBusinessInfo}
+                  hasPod={true}
+                  isModify={mode === MODIFY ? true : false}
+                />
               </Form.Item>
             </Form>
           </form>

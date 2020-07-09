@@ -41,8 +41,12 @@ export interface DefaultBusinessInfo {
   bakOperator?: string[];
   bsiPath?: string;
   bsiPathIds?: string;
+  all?: boolean;
 }
-export const EditResourceBusinessInfo = (props: { defaultBusinessInfo?: any }, ref) => {
+export const EditResourceBusinessInfo = (
+  props: { defaultBusinessInfo?: any; hasPod?: boolean; isModify?: boolean },
+  ref
+) => {
   const { register, watch, handleSubmit, reset, control, setValue, getValues, triggerValidation, errors } = useForm({
     mode: 'onBlur'
   });
@@ -57,7 +61,7 @@ export const EditResourceBusinessInfo = (props: { defaultBusinessInfo?: any }, r
   /**
    * 如果有默认值，用默认值进行初始化
    */
-  const { defaultBusinessInfo } = props;
+  const { defaultBusinessInfo, hasPod, isModify } = props;
   useEffect(() => {
     if (defaultBusinessInfo) {
       reset(defaultBusinessInfo);
@@ -172,13 +176,13 @@ export const EditResourceBusinessInfo = (props: { defaultBusinessInfo?: any }, r
     <section className="CMDB-creat-section">
       <Controller
         as={
-          <Switch defaultValue={true}>
+          <Switch defaultValue={isModify && !defaultBusinessInfo ? false : true}>
             <Trans>CMDB录入</Trans>
           </Switch>
         }
         name="cmdb"
         control={control}
-        defaultValue={true}
+        defaultValue={isModify && !defaultBusinessInfo ? false : true}
         className="CMDB-modify-control"
       />
       {cmdb && (
@@ -242,6 +246,15 @@ export const EditResourceBusinessInfo = (props: { defaultBusinessInfo?: any }, r
                 control={control}
               />
             </Form.Item>
+            {hasPod && (
+              <Form.Item label="自动同步所有pod">
+                <Controller
+                  as={<Switch defaultValue={defaultBusinessInfo && defaultBusinessInfo.all ? true : false} />}
+                  name="all"
+                  control={control}
+                />
+              </Form.Item>
+            )}
           </Form>
         </div>
       )}

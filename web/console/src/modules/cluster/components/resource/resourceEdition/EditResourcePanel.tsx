@@ -96,7 +96,7 @@ export class EditResourcePanel extends React.Component<RootProps, EditResourcePa
       content = <EditNamespacePanel />;
     } else if (resourceType === 'np' && (mode === 'create' || mode === 'modify-namespace')) {
       content = <EditBusinessNamespacePanel />;
-      headTitle = t('修改Namespace');
+      headTitle = mode === 'create' ? t('创建Namespace') : t('修改Namespace');
     } else if (resourceType === 'secret' && mode === 'create') {
       content = <EditSecretPanel />;
     } else if (resourceType === 'configmap' && mode === 'create') {

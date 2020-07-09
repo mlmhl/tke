@@ -22,6 +22,7 @@ interface EditNamespaceParams {
   bsiPathIds?: string; // 业务IDS
   operator?: string; // 负责人
   bakOperator?: string[]; // 备份负责人
+  all?: boolean; // 自动同步所有pod
   // [props: string]: any;
 }
 
@@ -74,6 +75,7 @@ export async function editNamespace({ namespaces, selectedNamespace }: { namespa
       bsiPathIds,
       operator,
       bakOperator,
+      all
     } = namespaces;
 
     /** 构建参数 */
@@ -92,6 +94,9 @@ export async function editNamespace({ namespaces, selectedNamespace }: { namespa
     const annotations = {};
     if (cmdb) {
       metadata['labels'] = { cmdb: 'true' };
+      if (all) {
+        metadata['labels']['cmdb.all'] = 'true';
+      }
       if (department) {
         annotations['cmdb.io/depName'] = department;
       }
@@ -127,12 +132,27 @@ export async function editNamespace({ namespaces, selectedNamespace }: { namespa
       newSelectedNamespace.spec.hard = _reduceProjectLimit(resourceLimits);
       newSelectedNamespace.spec.projectName = projectId;
       if (!cmdb) {
-        newSelectedNamespace.metadata.labels && delete newSelectedNamespace.metadata.labels.cmdb;
+        if (newSelectedNamespace.metadata.labels) {
+          delete newSelectedNamespace.metadata.labels.cmdb;
+          delete newSelectedNamespace.metadata.labels['cmdb.all'];
+        }
         delete newSelectedNamespace.metadata.annotations;
       } else {
-        newSelectedNamespace.metadata.labels ? newSelectedNamespace.metadata.labels.cmdb = 'true' : newSelectedNamespace.metadata.labels = {
-          cmdb: 'true'
-        };
+        if (newSelectedNamespace.metadata.labels) {
+          newSelectedNamespace.metadata.labels.cmdb = 'true';
+          if (all) {
+            newSelectedNamespace.metadata.labels['cmdb.all'] = 'true';
+          } else {
+            delete newSelectedNamespace.metadata.labels['cmdb.all'];
+          }
+        } else {
+          newSelectedNamespace.metadata.labels = {
+            cmdb: 'true'
+          };
+          if (all) {
+            newSelectedNamespace.metadata.labels['cmdb.all'] = 'true';
+          }
+        }
         newSelectedNamespace.metadata.annotations = annotations;
       }
       requestParams = newSelectedNamespace;
