@@ -2,9 +2,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { FormPanel } from '@tencent/ff-component';
-import {
-    bindActionCreators, deepClone, isSuccessWorkflow, OperationState
-} from '@tencent/ff-redux';
+import { bindActionCreators, deepClone, isSuccessWorkflow, OperationState } from '@tencent/ff-redux';
 import { t } from '@tencent/tea-app/lib/i18n';
 import { Alert, Button, Modal } from '@tencent/tea-component';
 

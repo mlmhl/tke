@@ -3,14 +3,10 @@ import * as React from 'react';
 import { K8SUNIT, valueLabels1000, valueLabels1024 } from '@helper/k8sUnitUtil';
 import { deepClone, uuid } from '@tencent/ff-redux';
 import { t } from '@tencent/tea-app/lib/i18n';
-import {
-    Alert, Bubble, Button, Col, Input, InputAdorment, Row, Select
-} from '@tencent/tea-component';
+import { Alert, Bubble, Button, Col, Input, InputAdorment, Row, Select } from '@tencent/tea-component';
 
 import { LinkButton } from '../../common/components';
-import {
-    initProjectResourceLimit, resourceLimitTypeList, resourceTypeToUnit
-} from '../constants/Config';
+import { initProjectResourceLimit, resourceLimitTypeList, resourceTypeToUnit } from '../constants/Config';
 import { ProjectResourceLimit } from '../models/Project';
 
 interface CreateProjectResourceLimitPanelPorps {
