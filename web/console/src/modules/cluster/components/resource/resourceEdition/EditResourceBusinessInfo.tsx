@@ -1,8 +1,11 @@
+/**
+ * 业务侧&平台侧，namespace 及 workload 的创建及修改的 CMDB 部分，
+ */
 import * as React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { bindActionCreators, insertCSS, uuid } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import { Switch, Form, Select, SelectMultiple, Button, Bubble, Input } from '@tencent/tea-component';
+import { Switch, Form, Select, SelectMultiple, Input } from '@tencent/tea-component';
 
 import {
   fetchDepartmentList,
@@ -17,7 +20,7 @@ const { useState, useEffect, useRef, useImperativeHandle } = React;
 insertCSS(
   'CMDBInfoComponentCss',
   `
-    .CMDB-creat-section .tea-form .tea-form__controls--text{
+    .CMDB-creat-section .tea-form .tea-form__controls--text {
       padding-top: 0;
     }
     .CMDB-creat-section .bsi-path {
@@ -28,19 +31,42 @@ insertCSS(
     }
   `
 );
-export const EditResourceBusinessInfo = (props, ref) => {
+export interface DefaultBusinessInfo {
+  cmdb?: boolean;
+  department?: string;
+  bsiPath1?: number;
+  bsiPath2?: number;
+  bsiPath3?: number;
+  operator?: string;
+  bakOperator?: string[];
+  bsiPath?: string;
+  bsiPathIds?: string;
+}
+export const EditResourceBusinessInfo = (props: { defaultBusinessInfo?: any }, ref) => {
   const { register, watch, handleSubmit, reset, control, setValue, getValues, triggerValidation, errors } = useForm({
     mode: 'onBlur'
   });
+
   const [departmentList, setDepartmentList] = useState([]);
   const [bsiPath1List, setBsiPath1List] = useState([]);
   const [bsiPath2List, setBsiPath2List] = useState([]);
   const [bsiPath3List, setBsiPath3List] = useState([]);
-  const [useList, setUserList] = useState([]);
+  const [userList, setUserList] = useState([]);
   const [loginUserInfo, setLoginUserInfo] = useState(null);
 
-  const { cmdb, department: selectedDepartment, bsiPath1: selectedBsiPath1, bsiPath2: selectedBsiPath2 } = watch();
+  /**
+   * 如果有默认值，用默认值进行初始化
+   */
+  const { defaultBusinessInfo } = props;
+  useEffect(() => {
+    if (defaultBusinessInfo) {
+      reset(defaultBusinessInfo);
+    }
+  }, [reset, defaultBusinessInfo]);
 
+  /**
+   * 获取组件form.item需要的下拉list初始数据
+   */
   useEffect(() => {
     // 初次请求 部门&业务列表 等数据
     async function fetchData() {
@@ -57,6 +83,10 @@ export const EditResourceBusinessInfo = (props, ref) => {
     });
   }, []);
 
+  /**
+   * 相关数据发生变更时，做进一步处理
+   */
+  const { cmdb, department: selectedDepartment, bsiPath1: selectedBsiPath1, bsiPath2: selectedBsiPath2 } = watch();
   useEffect(() => {
     if (loginUserInfo && cmdb) {
       setValue('operator', loginUserInfo.name);
@@ -65,12 +95,14 @@ export const EditResourceBusinessInfo = (props, ref) => {
 
   useEffect(() => {
     if (selectedDepartment) {
-      fetchBsiPath1List({ dept_name: selectedDepartment }).then(result => {
-        console.log('fetchBsiPath1List result: ', result);
+      fetchBsiPath1List({ dept_name: selectedDepartment ? String(selectedDepartment) : '' }).then(result => {
         setBsiPath1List(result);
         if (!result.length) {
           setBsiPath2List([]);
           setBsiPath3List([]);
+          setValue('bsiPath1', undefined);
+          setValue('bsiPath2', undefined);
+          setValue('bsiPath3', undefined);
         }
       });
     }
@@ -78,10 +110,12 @@ export const EditResourceBusinessInfo = (props, ref) => {
 
   useEffect(() => {
     if (selectedBsiPath1) {
-      fetchBsiPath2List({ bs1_name_id: selectedBsiPath1 }).then(result => {
+      fetchBsiPath2List({ bs1_name_id: selectedBsiPath1 ? Number(selectedBsiPath1) : undefined }).then(result => {
         setBsiPath2List(result);
         if (!result.length) {
           setBsiPath3List([]);
+          setValue('bsiPath2', undefined);
+          setValue('bsiPath3', undefined);
         }
       });
     }
@@ -89,12 +123,15 @@ export const EditResourceBusinessInfo = (props, ref) => {
 
   useEffect(() => {
     if (selectedBsiPath2) {
-      fetchBsiPath3List({ bs2_name_id: selectedBsiPath2 }).then(result => {
+      fetchBsiPath3List({ bs2_name_id: selectedBsiPath2 ? Number(selectedBsiPath2) : undefined }).then(result => {
         setBsiPath3List(result);
       });
     }
   }, [selectedBsiPath2]);
 
+  /**
+   * 对父组件暴露接口
+   */
   useImperativeHandle(ref, () => ({
     // 在使用 ref 时自定义暴露给父组件的实例值
     getCMDBData: () => {
@@ -125,9 +162,10 @@ export const EditResourceBusinessInfo = (props, ref) => {
         }
       });
       const bsiPath = bsiPath1Name ? bsiPath1Name + ' - ' + bsiPath2Name + ' - ' + bsiPath3Name : '';
-      return { ...CMDBData, bsiPath, departmentId };
-    }
-    // triggerValidation,
+      const bsiPathIds = bsiPath1 ? bsiPath1 + ' - ' + bsiPath2 + ' - ' + bsiPath3 : '';
+      return { ...CMDBData, bsiPath, bsiPathIds, departmentId };
+    },
+    triggerValidation
   }));
 
   return (
@@ -140,11 +178,11 @@ export const EditResourceBusinessInfo = (props, ref) => {
         }
         name="cmdb"
         control={control}
+        defaultValue={true}
         className="CMDB-modify-control"
-        defaultValue
       />
       {cmdb && (
-        <form className="CMDB-modify-content">
+        <div className="CMDB-modify-content">
           <Form>
             <Form.Item label={t('部门')} showStatusIcon={false}>
               <Controller
@@ -192,20 +230,20 @@ export const EditResourceBusinessInfo = (props, ref) => {
             </Form.Item>
             <Form.Item label="负责人" showStatusIcon={false}>
               <Controller
-                as={<Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={useList} />}
+                as={<Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={userList} />}
                 name="operator"
                 control={control}
               />
             </Form.Item>
             <Form.Item label="备份负责人" showStatusIcon={false}>
               <Controller
-                as={<SelectMultiple staging={false} searchable size="m" appearence="button" options={useList} />}
+                as={<SelectMultiple staging={false} searchable size="m" appearence="button" options={userList} />}
                 name="bakOperator"
                 control={control}
               />
             </Form.Item>
           </Form>
-        </form>
+        </div>
       )}
     </section>
   );

@@ -1,15 +1,102 @@
 import * as React from 'react';
-
 import { K8SUNIT, valueLabels1000, valueLabels1024 } from '@helper/k8sUnitUtil';
-import { deepClone, uuid } from '@tencent/ff-redux';
+import { deepClone, Identifiable, uuid } from '@tencent/ff-redux';
 import { t } from '@tencent/tea-app/lib/i18n';
 import { Alert, Bubble, Button, Col, Input, InputAdorment, Row, Select } from '@tencent/tea-component';
+import { LinkButton } from '../index';
+import { Validation, initValidator } from '../../models';
 
-import { LinkButton } from '../../common/components';
-import { initProjectResourceLimit, resourceLimitTypeList, resourceTypeToUnit } from '../constants/Config';
-import { ProjectResourceLimit } from '../models/Project';
+export const resourceLimitTypeList = [
+  {
+    text: t('Pod数目'),
+    value: 'pods'
+  },
+  {
+    text: t('Services数目'),
+    value: 'services'
+  },
+  {
+    text: t('quotas'),
+    value: 'resourcequotas'
+  },
+  {
+    text: t('Secrets数目'),
+    value: 'secrets'
+  },
+  {
+    text: t('Configmaps数目'),
+    value: 'configmaps'
+  },
+  {
+    text: t('PVC数目'),
+    value: 'persistentvolumeclaims'
+  },
+  {
+    text: t('nodeports模式服务数目'),
+    value: 'services.nodeports'
+  },
+  {
+    text: t('LB模式服务数目'),
+    value: 'services.loadbalancers'
+  },
+  {
+    text: t('CPU Request'),
+    value: 'requests.cpu'
+  },
+  {
+    text: t('Mem Request'),
+    value: 'requests.memory'
+  },
+  {
+    text: t('Local ephemeral storage request'),
+    value: 'requests.ephemeral-storage'
+  },
+  {
+    text: t('CPU Limits'),
+    value: 'limits.cpu'
+  },
+  {
+    text: t('Mem Limits'),
+    value: 'limits.memory'
+  },
+  {
+    text: t('Local ephemeral storage Limits'),
+    value: 'limits.ephemeral-storage'
+  }
+];
 
-interface CreateProjectResourceLimitPanelPorps {
+export const resourceTypeToUnit = {
+  pods: t('个'),
+  services: t('个'),
+  resourcequotas: t('个'),
+  secrets: t('个'),
+  configmaps: t('个'),
+  persistentvolumeclaims: t('个'),
+  'services.nodeports': t('个'),
+  'services.loadbalancers': t('个'),
+  'requests.cpu': t('核'),
+  'limits.cpu': t('核'),
+  'requests.memory': 'MiB',
+  'limits.memory': 'MiB',
+  'requests.ephemeral-storage': 'MiB',
+  'limits.ephemeral-storage': 'MiB'
+};
+
+export const initProjectResourceLimit = {
+  type: 'requests.cpu',
+  value: '',
+  v_type: initValidator,
+  v_value: initValidator
+};
+
+export interface ProjectResourceLimit extends Identifiable {
+  type: string;
+  v_type: Validation;
+  value: string;
+  v_value: Validation;
+}
+
+export interface CreateProjectResourceLimitPanelPorps {
   resourceLimits: ProjectResourceLimit[];
   parentResourceLimits: {
     [props: string]: string;
@@ -18,6 +105,7 @@ interface CreateProjectResourceLimitPanelPorps {
   onCancel: () => void;
   onSubmit: (resourceLimits: ProjectResourceLimit[]) => void;
 }
+
 export class CreateProjectResourceLimitPanel extends React.Component<
   CreateProjectResourceLimitPanelPorps,
   { resourceLimits: ProjectResourceLimit[]; parentResourceMaxLimit: { [props: string]: string } }

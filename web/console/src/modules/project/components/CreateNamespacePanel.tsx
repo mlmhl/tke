@@ -12,7 +12,8 @@ import { namespaceActions } from '../actions/namespaceActions';
 import { resourceLimitTypeToText, resourceTypeToUnit } from '../constants/Config';
 import { ProjectResourceLimit } from '../models/Project';
 import { router } from '../router';
-import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
+// import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
+import { CreateProjectResourceLimitPanel } from '../../common/components';
 import { RootProps } from './ProjectApp';
 
 const mapDispatchToProps = dispatch =>

@@ -181,11 +181,19 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
           <Bubble
             content={
               <Text parent="p" nowrap={false}>
-                {showData}
+                {Array.isArray(showData) ? showData.join(',') : showData}
               </Text>
             }
           >
-            <Text overflow>{showData}</Text>
+            {Array.isArray(showData) ? (
+              showData.map((item, index) => (
+                <Text key={index} overflow>
+                  {item}
+                </Text>
+              ))
+            ) : (
+              <Text overflow>{showData}</Text>
+            )}
           </Bubble>
         );
       }
@@ -266,7 +274,7 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
             if (!disabled) {
               actions.resource.select(resource);
               router.navigate(
-                Object.assign({}, urlParams, { mode: 'modify' }),
+                Object.assign({}, urlParams, { mode: operator.actionType }),
                 Object.assign({}, route.queries, {
                   resourceIns: resource.metadata.name
                 })
@@ -372,7 +380,7 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
 
     let btns = [];
     operatorList.forEach(operatorItem => {
-      if (operatorItem.actionType === 'modify') {
+      if (operatorItem.actionType === 'modify' || operatorItem.actionType === 'modify-namespace') {
         btns.push(renderModifyButton(operatorItem));
       } else if (operatorItem.actionType === 'delete') {
         btns.push(renderDeleteButton(operatorItem));
@@ -654,12 +662,25 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
   private _getFinalData(dataFieldIns, resource: Resource) {
     let result = resource;
 
-    for (let index = 0; index < dataFieldIns.length; index++) {
+    // 处理类似 "cmdb.io/bsiPath" 字段存在的情况，这个字段拆分成了dataFieldIns中最后的2个元素
+    const newDataFieldIns = [];
+    for (let i = 0, length = dataFieldIns.length; i < length; i++) {
+      if (dataFieldIns[i] === 'cmdb') {
+        newDataFieldIns.push(dataFieldIns[i] + '.' + dataFieldIns[i + 1]);
+        ++i;
+      } else {
+        newDataFieldIns.push(dataFieldIns[i]);
+      }
+    }
+    if (dataFieldIns.includes('cmdb')) {
+      result = resource.originalDataBak;
+    }
+    for (let index = 0; index < newDataFieldIns.length; index++) {
       // 如果result不为一个 Object，则遍历结束
       if (typeof result !== 'object') {
         break;
       }
-      result = result[dataFieldIns[index]]; // 这里做一下处理，防止因为配错找不到
+      result = result[newDataFieldIns[index]]; // 这里做一下处理，防止因为配错找不到
     }
 
     // 返回空值，是因为如果不存在值，则使用配置文件的默认值
@@ -691,7 +712,6 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
       ffResourceList.list.data.recordCount < 4 || resourceIndex < ffResourceList.list.data.recordCount - 2
         ? 'top'
         : 'bottom';
-
     if (fieldInfo.dataFormat === 'text') {
       content = this._reduceText(showData, fieldInfo, resource, clipId);
     } else if (fieldInfo.dataFormat === 'labels') {
@@ -724,7 +744,6 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
     let { actions, subRoot } = this.props,
       { resourceOption, resourceInfo, resourceName } = subRoot,
       { ffResourceList, resourceMultipleSelection } = resourceOption;
-
     let addons = [];
 
     let displayField = !isEmpty(resourceInfo) && resourceInfo.displayField ? resourceInfo.displayField : {};

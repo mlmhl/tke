@@ -5,7 +5,7 @@ import { reduceK8sRestfulPath } from '../../../../helpers';
 import { Method, reduceNetworkRequest } from '../../../../helpers/reduceNetwork';
 import { RequestParams, Resource } from '../../../modules/common';
 import { ResourceInfo } from '../../common/models/ResourceInfo';
-import { Namespace, ResourceFilter } from '../models';
+import { ResourceFilter } from '../models';
 
 //业务控制台api
 
@@ -63,4 +63,27 @@ export async function fetchProjectNamespaceList(query: QueryState<ResourceFilter
   };
 
   return result;
+}
+
+export async function fetchProjectById(projectId: string) {
+  let resourceInfo: ResourceInfo = resourceConfig().projects;
+  let url = reduceK8sRestfulPath({
+    resourceInfo
+  });
+  let params: RequestParams = {
+    method: Method.get,
+    url: url + '/' + projectId
+  };
+  try {
+    let response = await reduceNetworkRequest(params);
+    if (response.code === 0) {
+      return response.data;
+    } else {
+      return { error: true, msg: response.data.message };
+    }
+  } catch (error) {
+    if (+error.response.status !== 404) {
+      throw error;
+    }
+  }
 }

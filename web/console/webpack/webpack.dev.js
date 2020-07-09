@@ -14,6 +14,7 @@ const version = process.argv[2] || 'tke';
 const lng = process.argv[3] || 'zh';
 
 module.exports = {
+  // devtool: 'eval-cheap-source-map',
   devtool: 'eval-source-map',
   mode: 'development',
 
