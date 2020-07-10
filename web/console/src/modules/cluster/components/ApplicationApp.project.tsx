@@ -164,7 +164,7 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
       );
     } else if (urlMode === 'detail') {
       return <ResourceDetail />;
-    } else if (urlMode === 'create' || urlMode === 'modify-namespace') {
+    } else if (urlMode === 'create' || urlMode === 'modify' || urlMode === 'modify-namespace') {
       return <EditResourcePanel {...this.props} />;
     } else if (urlMode === 'update') {
       return <UpdateResourcePanel />;
