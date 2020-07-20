@@ -15,11 +15,11 @@ const { useState, useEffect } = React;
 const { RangePicker } = DatePicker;
 const { expandable } = Table.addons;
 
-insertCSS(
-  'auditPanelDatePicker',
-  `.tea-form__item { display: inline }
-`
-);
+// insertCSS(
+//   'auditPanelDatePicker',
+//   `.tea-form__item { display: inline }
+// `
+// );
 export const AuditPanel = () => {
   const state = useSelector(state => state);
   const dispatch = useDispatch();
@@ -121,7 +121,7 @@ export const AuditPanel = () => {
   return (
     <>
       <Card>
-        <Form style={{ padding: '20px' }}>
+        <Form layout="inline" style={{ padding: '20px' }}>
           <Form.Item label={t('操作集群')}>
             <Select
               boxSizeSync

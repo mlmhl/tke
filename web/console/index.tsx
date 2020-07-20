@@ -18,6 +18,7 @@ import { AlarmRecord } from './src/modules/alarmRecord';
 import { Notify } from './src/modules/notify';
 import { LogStash } from './src/modules/logStash';
 import { Helm } from './src/modules/helm';
+import CLBInstance from './src/modules/clb/pages/instance';
 import { TipDialog } from './src/modules/common';
 import { Button, Alert, Text } from '@tencent/tea-component';
 import { Init_Forbiddent_Config } from './helpers/reduceNetwork';
@@ -25,6 +26,8 @@ import { Init_Forbiddent_Config } from './helpers/reduceNetwork';
 // 公有云的图表组件为异步加载，这里为了减少路径配置，还是保留为同步加载，预先import即可变成不split
 import '@tencent/tchart/build/ChartsComponents';
 import { BlankPage } from './blankPage';
+import { CLBServer } from '@src/modules/clb/pages/server'
+import { CLBRule } from '@src/modules/clb/pages/rule'
 
 insertCSS(
   'hidden-checkbox',
@@ -63,11 +66,6 @@ interface TempWrapperProps {
   businessKey: string;
 }
 
-class TempWrapper extends React.Component<TempWrapperProps, any> {
-  render() {
-    return <Wrapper platformType={PlatformTypeEnum.Manager}>{this.props.children}</Wrapper>;
-  }
-}
 /** ======= hack外层，使其能够接受参数，触发state变化，进行侧边栏的更新 ======== */
 
 /** ========================== 展示没有权限弹窗 ================================ */
@@ -136,8 +134,12 @@ Entry.register({
       title: 'TKEStack',
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <Cluster />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <Cluster {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -149,8 +151,12 @@ Entry.register({
       title: t('集群管理 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <Cluster />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <Cluster {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -162,8 +168,12 @@ Entry.register({
       title: t('业务管理 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <Project />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <Project {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -175,8 +185,12 @@ Entry.register({
       title: t('扩展组件 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <Addon />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <Addon {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -188,8 +202,12 @@ Entry.register({
       title: t('组织资源 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <Registry />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <Registry {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -201,8 +219,12 @@ Entry.register({
       title: t('访问管理 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <Uam />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <Uam {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -214,8 +236,12 @@ Entry.register({
       title: t('告警设置 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <AlarmPolicy />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <AlarmPolicy {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -227,8 +253,12 @@ Entry.register({
       title: t('通知设置 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <Notify />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <Notify {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -240,8 +270,12 @@ Entry.register({
       title: t('告警记录 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <AlarmRecord />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <AlarmRecord {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -253,8 +287,12 @@ Entry.register({
       title: t('Helm 应用 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <Helm />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <Helm {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -266,8 +304,12 @@ Entry.register({
       title: t('日志采集 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <LogStash />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <LogStash {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -279,8 +321,12 @@ Entry.register({
       title: t('事件持久化 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <PersistentEvent />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <PersistentEvent {...props} />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -292,8 +338,64 @@ Entry.register({
       title: t('审计记录 - TKEStack'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager}>
-          <ForbiddentDialog />
-          <Audit />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <Audit {...props} />
+            </>
+          )}
+        </Wrapper>
+      )
+    },
+
+    /**
+     * @url https://{{domain}}/tkestack/clb-instance
+     */
+    'clb-instance': {
+      title: t('CLB管理 - TKEStack'),
+      container: (
+        <Wrapper platformType={PlatformTypeEnum.Manager}>
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <CLBInstance {...props} />
+            </>
+          )}
+        </Wrapper>
+      )
+    },
+
+    /**
+     * @url https://{{domain}}/tkestack/clb-instance
+     */
+    'clb-rule': {
+      title: t('CLB管理 - TKEStack'),
+      container: (
+        <Wrapper platformType={PlatformTypeEnum.Manager}>
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <CLBRule {...props} context="platform" />
+            </>
+          )}
+        </Wrapper>
+      )
+    },
+
+    /**
+     * @url https://{{domain}}/tkestack/clb-instance
+     * context="platform" 表示是平台侧；类似的，context="business" 表示业务侧
+     */
+    'clb-backendsgroup': {
+      title: t('CLB管理 - TKEStack'),
+      container: (
+        <Wrapper platformType={PlatformTypeEnum.Manager}>
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <CLBServer {...props} context="platform" />
+            </>
+          )}
         </Wrapper>
       )
     },
@@ -305,8 +407,12 @@ Entry.register({
       title: t('暂无权限'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Manager} sideBar={false}>
-          <ForbiddentDialog />
-          <BlankPage />
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <BlankPage {...props} />
+            </>
+          )}
         </Wrapper>
       )
     }

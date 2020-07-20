@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 59.1 (86144) - https://sketch.com -->
+    <title>形状</title>
+    <desc>Created with Sketch.</desc>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="画板" transform="translate(-360.000000, -1034.000000)" fill="#0ABF5B">
+            <g id="分组-10复制" transform="translate(340.000000, 976.000000)">
+                <path d="M28,58 C32.418,58 36,61.582 36,66 C36,70.418 32.418,74 28,74 C23.582,74 20,70.418 20,66 C20,61.582 23.582,58 28,58 Z M28,60 C24.691,60 22,62.691 22,66 C22,69.309 24.691,72 28,72 C31.309,72 34,69.309 34,66 C34,62.691 31.309,60 28,60 Z M30.9246212,62.8 L32.3388348,64.2142136 L27.0355339,69.5175144 L23.5,65.9819805 L24.9142136,64.567767 L27.0355339,66.6890873 L30.9246212,62.8 Z" id="形状"></path>
+            </g>
+        </g>
+    </g>
+</svg>

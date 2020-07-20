@@ -138,8 +138,10 @@ export const reduceNetworkRequest = async (userParams: RequestParams, clusterId?
     }
   }
 
+  console.log('rsp = ', rsp);
   // 处理回报请求
   let response = reduceNetworkResponse(rsp);
+  console.log('response = ', response);
   return response;
 };
 

@@ -1,5 +1,10 @@
 {
-  "extends": ["eslint-config-alloy/react", "eslint-config-alloy/typescript"],
+  "extends": [
+    "eslint-config-alloy/react",
+    "eslint-config-alloy/typescript",
+    "plugin:you-dont-need-lodash-underscore/compatible"
+  ],
+  "plugins": ["prettier"],
   "rules": {
     "indent": ["off"],
     "no-script-url": ["off"],
@@ -34,12 +39,14 @@
     "react/jsx-curly-brace-presence": ["off"],
     "react/sort-comp": ["off"]
   },
-  "overrides": [{
-    "files": ["**/*.ts", "**/*.tsx"],
-    "rules": {
-      "no-unused-vars": ["off"]
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "rules": {
+        "no-unused-vars": ["off"]
+      }
     }
-  }],
+  ],
   "settings": {
     "react": {
       "version": "detect"
