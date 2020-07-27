@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>饼状图</title>
+    <desc>Created with Sketch.</desc>
+    <g id="饼状图" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="编组">
+            <rect id="矩形" fill="#D8D8D8" opacity="0" x="0" y="0" width="16" height="16"></rect>
+            <path d="M7,0.0618937549 L7,2.08295844 C4.16228666,2.55903653 2,5.02700371 2,8 C2,11.3137085 4.6862915,14 8,14 C9.86042208,14 11.5230786,13.153265 12.6236174,11.8241473 L14.3742438,12.8348719 C12.9131842,14.7581392 10.6016182,16 8,16 C3.581722,16 0,12.418278 0,8 C0,3.92038235 3.05368842,0.553991843 7,0.0618937549 Z M9,7.42264973 L9,0.0618937549 C12.9463116,0.553991843 16,3.92038235 16,8 C16,9.1006032 15.7777471,10.1492965 15.3756743,11.103647 L9,7.42264973 Z" id="Combined-Shape" fill="#888888" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>

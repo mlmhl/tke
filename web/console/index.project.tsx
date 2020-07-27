@@ -7,6 +7,8 @@ import * as React from 'react';
 import { Entry, insertCSS } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import { Application } from './src/modules/cluster/index.project';
+import { CLBRule } from './src/modules/clb/pages/rule';
+import { CLBServer } from './src/modules/clb/pages/server';
 import { Wrapper, PlatformTypeEnum } from './Wrapper';
 import { Registry } from '@src/modules/registry';
 import { Init_Forbiddent_Config } from '@helper/reduceNetwork';
@@ -19,6 +21,7 @@ import { AlarmPolicy } from '@src/modules/alarmPolicy';
 import { Notify } from '@src/modules/notify';
 // 公有云的图表组件为异步加载，这里为了减少路径配置，还是保留为同步加载，预先import即可变成不split
 import '@tencent/tchart/build/ChartsComponents';
+import CLBInstance from '@src/modules/clb/pages/instance';
 insertCSS(
   'myTagSearchBox',
   `.myTagSearchBox{ width:100% !important; background-color: #fff; }
@@ -40,7 +43,7 @@ class ForbiddentDialog extends React.Component<any, ForbiddentDialogState> {
   constructor(props: any) {
     super(props);
     this.state = {
-      forbiddentConfig: Init_Forbiddent_Config
+      forbiddentConfig: Init_Forbiddent_Config,
     };
 
     changeForbiddentConfig = (config: { isShow: boolean; message: string }) => {
@@ -94,10 +97,14 @@ Entry.register({
       title: '应用管理 - TKEStack业务侧',
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          <ForbiddentDialog />
-          <Application />
+          {(projects) => (
+            <>
+              <ForbiddentDialog />
+              <Application />
+            </>
+          )}
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -107,10 +114,14 @@ Entry.register({
       title: '应用管理 - TKEStack业务侧',
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          <ForbiddentDialog />
-          <Application />
+          {(projects) => (
+            <>
+              <ForbiddentDialog />
+              <Application />
+            </>
+          )}
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -120,10 +131,14 @@ Entry.register({
       title: t('组织资源 - TKEStack业务侧'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          <ForbiddentDialog />
-          <Registry />
+          {(projects) => (
+            <>
+              <ForbiddentDialog />
+              <Registry />
+            </>
+          )}
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -133,10 +148,14 @@ Entry.register({
       title: t('告警设置 - TKEStack业务侧'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          <ForbiddentDialog />
-          <AlarmPolicy />
+          {(projects) => (
+            <>
+              <ForbiddentDialog />
+              <AlarmPolicy />
+            </>
+          )}
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -146,10 +165,14 @@ Entry.register({
       title: t('通知设置 - TKEStack业务侧'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          <ForbiddentDialog />
-          <Notify />
+          {(projects) => (
+            <>
+              <ForbiddentDialog />
+              <Notify />
+            </>
+          )}
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -159,10 +182,14 @@ Entry.register({
       title: t('Helm 应用 - TKEStack业务侧'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          <ForbiddentDialog />
-          <Helm />
+          {(projects) => (
+            <>
+              <ForbiddentDialog />
+              <Helm />
+            </>
+          )}
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -172,10 +199,14 @@ Entry.register({
       title: t('日志采集 - TKEStack业务侧'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          <ForbiddentDialog />
-          <LogStash />
+          {(projects) => (
+            <>
+              <ForbiddentDialog />
+              <LogStash />
+            </>
+          )}
         </Wrapper>
-      )
+      ),
     },
 
     /**
@@ -185,10 +216,66 @@ Entry.register({
       title: t('事件持久化 - TKEStack业务侧'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          <ForbiddentDialog />
-          <PersistentEvent />
+          {(projects) => (
+            <>
+              <ForbiddentDialog />
+              <PersistentEvent />
+            </>
+          )}
+        </Wrapper>
+      ),
+    },
+
+    /**
+     * TODO: 调试用
+     * @url https://{{domain}}/tkestack-project/clb-instance
+     */
+    'clb-instance': {
+      title: t('CLB管理 - TKEStack'),
+      container: (
+        <Wrapper platformType={PlatformTypeEnum.Business}>
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <CLBInstance {...props} context="business" />
+            </>
+          )}
         </Wrapper>
       )
-    }
-  }
+    },
+
+    /**
+     * @url https://{{domain}}/tkestack-project/clb-rule
+     */
+    'clb-rule': {
+      title: t('CLB规则 - TKEStack业务侧'),
+      container: (
+        <Wrapper platformType={PlatformTypeEnum.Business}>
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <CLBRule {...props} context="business" />
+            </>
+          )}
+        </Wrapper>
+      ),
+    },
+
+    /**
+     * @url https://{{domain}}/tkestack-project/clb-server
+     */
+    'clb-backendsgroup': {
+      title: t('CLB服务器组 - TKEStack业务侧'),
+      container: (
+        <Wrapper platformType={PlatformTypeEnum.Business}>
+          {props => (
+            <>
+              <ForbiddentDialog />
+              <CLBServer {...props} context="business" />
+            </>
+          )}
+        </Wrapper>
+      ),
+    },
+  },
 });

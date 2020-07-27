@@ -3,12 +3,10 @@ const webpack = require('webpack');
 const HappyPack = require('happypack');
 const os = require('os');
 const happyThreadPool = HappyPack.ThreadPool({
-  size: os.cpus().length
+  size: os.cpus().length,
 });
 // 进行ts的校验
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-// 修改进度条的展示
-const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 
 const version = process.argv[2] || 'tke';
 const lng = process.argv[3] || 'zh';
@@ -19,86 +17,86 @@ module.exports = {
   mode: 'development',
 
   entry: {
-    app: ['./index.tsx']
+    app: ['./index.tsx'],
     // vendor: ['react', 'react-dom']
   },
 
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'js/[name].js',
-    publicPath: 'http://localhost:8088/'
+    publicPath: 'http://localhost:8088/',
   },
 
   module: {
-    rules: [{
+    rules: [
+      {
         test: /\.tsx?$/,
         use: [
           'happypack/loader?id=happyBabel',
           'happypack/loader?id=happyTs',
-          'happypack/loader?id=happyESLint',
+          // 'happypack/loader?id=happyESLint',
           path.resolve(`./loader/iffile-loader.js?version=${version}`),
-          path.resolve(`./loader/ifelse-loader.js?version=${version}`)
-        ]
+          path.resolve(`./loader/ifelse-loader.js?version=${version}`),
+        ],
+        exclude: /node_modules/
       },
       {
         test: /\.jsx?$/,
         use: ['happypack/loader?id=happyBabel'],
-        exclude: [path.resolve(__dirname, '../node_modules')]
+        exclude: /node_modules/
       },
       {
         test: /\.css?$/,
-        use: ['happypack/loader?id=happyCSS']
-      }
-    ]
+        use: ['happypack/loader?id=happyCSS'],
+      },
+    ],
   },
 
   plugins: [
     new HappyPack({
       id: 'happyTs',
-      loaders: [{
-        loader: 'ts-loader',
-        options: {
-          happyPackMode: true,
-          transpileOnly: true
-        }
-      }],
-      threadPool: happyThreadPool
+      loaders: [
+        {
+          loader: 'ts-loader',
+          options: {
+            happyPackMode: true,
+            transpileOnly: true,
+          },
+        },
+      ],
+      threadPool: happyThreadPool,
     }),
 
-    new HappyPack({
-      id: 'happyESLint',
-      loaders: [{
-        loader: 'eslint-loader',
-        options: {
-          failOnWarning: true,
-          failOnError: true
-        }
-      }],
-      threadPool: happyThreadPool
-    }),
+    // new HappyPack({
+    //   id: 'happyESLint',
+    //   loaders: [{
+    //     loader: 'eslint-loader',
+    //     options: {
+    //       failOnWarning: true,
+    //       failOnError: true
+    //     }
+    //   }],
+    //   threadPool: happyThreadPool
+    // }),
 
     new HappyPack({
       id: 'happyBabel',
       loaders: ['babel-loader'],
-      threadPool: happyThreadPool
+      threadPool: happyThreadPool,
     }),
 
     new HappyPack({
       id: 'happyCSS',
       loaders: ['style-loader', 'css-loader'],
-      threadPool: happyThreadPool
-    }),
-
-    new ProgressBarPlugin({
-      summary: false
+      threadPool: happyThreadPool,
     }),
 
     new ForkTsCheckerWebpackPlugin({
-      async: false,
-      checkSyntacticErrors: true
+      async: true,
+      checkSyntacticErrors: true,
     }),
 
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
   ],
 
   resolve: {
@@ -129,12 +127,12 @@ module.exports = {
       // react 和 react-dom 控制台通过全局变量提供，我们不打包
       react: path.resolve(__dirname, './alias/react.js'),
       'react-dom': path.resolve(__dirname, './alias/react-dom.js'),
-      d3: path.resolve(__dirname, '../node_modules/d3')
-    }
+      d3: path.resolve(__dirname, '../node_modules/d3'),
+    },
   },
 
   externals: {
     '__react-global': 'window.React16',
-    '__react-dom-global': 'window.ReactDOM16'
-  }
+    '__react-dom-global': 'window.ReactDOM16',
+  },
 };
