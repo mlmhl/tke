@@ -19,6 +19,8 @@ import { Notify } from './src/modules/notify';
 import { LogStash } from './src/modules/logStash';
 import { Helm } from './src/modules/helm';
 import CLBInstance from './src/modules/clb/pages/instance';
+import { CLBServer } from './src/modules/clb/pages/server';
+import { CLBRule } from './src/modules/clb/pages/rule';
 import { TipDialog } from './src/modules/common';
 import { Button, Alert, Text } from '@tencent/tea-component';
 import { Init_Forbiddent_Config } from './helpers/reduceNetwork';
@@ -26,8 +28,6 @@ import { Init_Forbiddent_Config } from './helpers/reduceNetwork';
 // 公有云的图表组件为异步加载，这里为了减少路径配置，还是保留为同步加载，预先import即可变成不split
 import '@tencent/tchart/build/ChartsComponents';
 import { BlankPage } from './blankPage';
-import { CLBServer } from '@src/modules/clb/pages/server'
-import { CLBRule } from '@src/modules/clb/pages/rule'
 
 insertCSS(
   'hidden-checkbox',
