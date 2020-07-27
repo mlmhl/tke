@@ -47,8 +47,10 @@ import { ReduceServiceAnnotations, ReduceServiceJSONData, ReduceServicePorts } f
 import { EditServicePortMapPanel } from './EditServicePortMapPanel';
 import { ResourceEditHostPathDialog } from './ResourceEditHostPathDialog';
 import { ResourceSelectConfigDialog } from './ResourceSelectConfigDialog';
+import { EditResourceBusinessInfo } from './EditResourceBusinessInfo';
 import { reduceNs } from '../../../../../../helpers';
-
+const { forwardRef } = React;
+const NewEditResourceBusinessInfo = forwardRef(EditResourceBusinessInfo);
 /** service YAML当中的type映射 */
 const serviceTypeMap = {
   LoadBalancer: 'LoadBalancer',
@@ -85,12 +87,14 @@ const mapDispatchToProps = dispatch =>
 
 @connect(state => state, mapDispatchToProps)
 export class EditResourceVisualizationPanel extends React.Component<RootProps, EditResourceVisualizationPanelState> {
+  private myCMDBComponentRef: any;
   constructor(props, context) {
     super(props, context);
     this.state = {
       isOpenAdvancedSetting: false,
       isOpenServiceAdvancedSetting: false
     };
+    this.myCMDBComponentRef = React.createRef();
   }
 
   componentDidMount() {
@@ -221,6 +225,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               className="form-list jiqun fixed-layout"
               style={isDeploymentOrStateful ? {} : { paddingBottom: '50px' }}
             >
+              <FormItem label={t('业务信息')}>
+                <NewEditResourceBusinessInfo ref={this.myCMDBComponentRef} />
+              </FormItem>
               <FormItem label={t('工作负载名')}>
                 <InputField
                   type="text"
@@ -496,12 +503,11 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
   /** 处理提交请求 */
   /* eslint-disable */
-  private _handleSubmit() {
+  private async _handleSubmit() {
     let { actions, subRoot, route, region, clusterVersion } = this.props,
       { mode, workloadEdit, serviceEdit } = subRoot;
 
     actions.validate.workload.validateWorkloadEdit();
-
     if (validateWorkloadActions._validateWorkloadEdit(workloadEdit, serviceEdit)) {
       let {
         isCreateService,
@@ -598,10 +604,30 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         }
       }
 
+      const CMDBData = this.myCMDBComponentRef.current.getCMDBData();
+      // labelsInfo['cmdb'] = CMDBData.cmdb;
+      if (CMDBData.cmdb) {
+        if (CMDBData.bakOperator) {
+          templateAnnotations['cmdb.io/bakOperator'] = CMDBData.bakOperator.join(',');
+        }
+        if (CMDBData.bsiPath) {
+          templateAnnotations['cmdb.io/bsiPath'] = CMDBData.bsiPath;
+        }
+        if (CMDBData.operator) {
+          templateAnnotations['cmdb.io/operator'] = CMDBData.operator;
+        }
+        if (CMDBData.department) {
+          templateAnnotations['cmdb.io/depName'] = CMDBData.department;
+        }
+        if (CMDBData.departmentId) {
+          templateAnnotations['cmdb.io/depId'] = CMDBData.departmentId + '';
+        }
+      }
+
       // template的内容，因为cronJob是放在 jobTemplate当中
       let templateContent = {
         metadata: {
-          labels: labelsInfo,
+          labels: CMDBData.cmdb ? { ...labelsInfo, cmdb: 'true' } : labelsInfo,
           annotations: isEmpty(templateAnnotations) ? undefined : templateAnnotations
         },
         spec: {

@@ -44,7 +44,10 @@ const listResourceActions = createFFListActions<Resource, ResourceFilter>({
       let list = [];
       projectNamespaceList.data.records.forEach(item => {
         list.push({
-          metadata: { name: item.spec.namespace, creationTimestamp: item.metadata.creationTimestamp },
+          metadata: {
+            name: item.spec.namespace,
+            creationTimestamp: item.metadata.creationTimestamp
+          },
           spec: {
             clusterId: item.spec.clusterName,
             clusterVersion: item.spec.clusterVersion,
@@ -54,7 +57,8 @@ const listResourceActions = createFFListActions<Resource, ResourceFilter>({
           status: {
             phase: item.status.phase,
             used: item.status.used || {}
-          }
+          },
+          originalDataBak: item
         });
       });
       const result: RecordSet<Resource> = {
@@ -125,12 +129,12 @@ async function _reduceGameGateResource(clusterVersion, resourceQuery, resourceIn
   let gameBRresourceInfo = resourceConfig(clusterVersion).lbcf_br;
   let gameBGList = await WebAPI.fetchResourceList(resourceQuery, {
       resourceInfo: gameBGresourceInfo,
-      isClearData,
-      isContinue: true
+      isClearData
     }),
     gameLBList = await WebAPI.fetchResourceList(resourceQuery, {
       resourceInfo,
-      isClearData
+      isClearData,
+      isContinue: true
     }),
     gameBRList = await WebAPI.fetchResourceList(resourceQuery, {
       resourceInfo: gameBRresourceInfo,
@@ -144,10 +148,8 @@ async function _reduceGameGateResource(clusterVersion, resourceQuery, resourceIn
           records => records.metadata.labels['lbcf.tkestack.io/backend-group'] === backgroup.metadata.name
         );
         try {
-          backGroups.push({
+          let backGroup = {
             name: backgroup.metadata.name,
-            labels: backgroup.spec.pods.byLabel.selector,
-            port: backgroup.spec.pods.port,
             status: backgroup.status,
             backendRecords: backendRecords.map(record => {
               return {
@@ -156,7 +158,23 @@ async function _reduceGameGateResource(clusterVersion, resourceQuery, resourceIn
                 conditions: record.status && record.status.conditions ? record.status.conditions : []
               };
             })
-          });
+          };
+          if (backgroup.spec.pods) {
+            backGroup['pods'] = {
+              labels: backgroup.spec.pods.byLabel.selector,
+              port: backgroup.spec.pods.port,
+              byName: backgroup.spec.pods.byName
+            };
+          } else if (backgroup.spec.service) {
+            backGroup['service'] = {
+              name: backgroup.spec.service.name,
+              port: backgroup.spec.service.port,
+              nodeSelector: backgroup.spec.service.nodeSelector
+            };
+          } else {
+            backGroup['static'] = backgroup.spec.static;
+          }
+          backGroups.push(backGroup);
         } catch (e) {}
       }
     });

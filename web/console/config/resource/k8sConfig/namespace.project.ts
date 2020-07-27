@@ -6,45 +6,59 @@ const displayField: DisplayField = {
   name: {
     dataField: ['metadata.name'],
     dataFormat: dataFormatConfig['text'],
-    width: '20%',
+    width: '10%',
     headTitle: t('名称'),
     noExsitedValue: defaulNotExistedValue,
     isLink: true, // 用于判断该值是否为链接
     isClip: true
   },
   clusterName: {
-    dataField: ['spec.clusterId'],
+    dataField: ['spec.clusterId', 'spec.clusterDisplayName'],
     dataFormat: dataFormatConfig['text'],
-    width: '20%',
+    width: '10%',
     headTitle: t('归属集群'),
     noExsitedValue: defaulNotExistedValue
   },
   status: {
     dataField: ['status.phase'],
     dataFormat: dataFormatConfig['status'],
-    width: '15%',
+    width: '10%',
     headTitle: t('状态'),
     noExsitedValue: defaulNotExistedValue
   },
   creationTimestamp: {
     dataField: ['metadata.creationTimestamp'],
     dataFormat: dataFormatConfig['time'],
-    width: '25%',
+    width: '10%',
     headTitle: t('创建时间'),
     noExsitedValue: defaulNotExistedValue
   },
   hard: {
     dataField: ['spec.hard'],
     dataFormat: dataFormatConfig['resourceLimit'],
-    width: '25%',
+    width: '10%',
     headTitle: t('资源限制'),
     noExsitedValue: defaulNotExistedValue
   },
   used: {
     dataField: ['status.used'],
     dataFormat: dataFormatConfig['resourceLimit'],
-    width: '25%',
+    width: '10%',
     headTitle: t('已使用'),
+    noExsitedValue: defaulNotExistedValue
+  },
+  business: {
+    dataField: ['metadata.annotations.cmdb.io/bsiPath'],
+    dataFormat: dataFormatConfig['cmdb'],
+    width: '15%',
+    headTitle: t('业务'),
+    noExsitedValue: defaulNotExistedValue
+  },
+  theOperator: {
+    dataField: ['metadata.annotations.cmdb.io/operator'],
+    dataFormat: dataFormatConfig['cmdb'],
+    width: '10%',
+    headTitle: t('负责人'),
     noExsitedValue: defaulNotExistedValue
   },
   operator: {
@@ -52,16 +66,16 @@ const displayField: DisplayField = {
     dataFormat: dataFormatConfig['operator'],
     width: '10%',
     headTitle: t('操作'),
-    operatorList: []
+    operatorList: [{
+      name: t('编辑'),
+      actionType: 'modify-namespace',
+      isInMoreOp: false
+    }]
   }
 };
 
 /** resrouce action当中的配置 */
-const actionField = Object.assign({}, commonActionField, {
-  create: {
-    isAvailable: false
-  }
-});
+const actionField = Object.assign({}, commonActionField);
 
 /** 自定义tabList */
 const tabList = [

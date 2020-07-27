@@ -82,11 +82,15 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
       newUrlParam = router.resolve(route),
       { mode, subRouterList, addons } = subRoot;
     let newMode = newUrlParam['mode'];
+    const resourceName = newUrlParam['resourceName'];
+    const projectName = route.queries['projectName'];
     let oldMode = this.props.subRoot.mode;
-
     if (newMode !== '' && oldMode !== newMode && newMode !== mode) {
       actions.resource.selectMode(newMode);
       // 这里是判断回退动作，取消动作等的时候，回到list页面，需要重新拉取一下，激活一下轮训的状态等
+      newMode === 'list' &&
+        resourceName === 'np' &&
+        actions.projectNamespace.applyFilter({ specificName: projectName });
       newMode === 'list' &&
         actions.resource.poll({
           namespace: namespaceSelection,
@@ -160,7 +164,7 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
       );
     } else if (urlMode === 'detail') {
       return <ResourceDetail />;
-    } else if (urlMode === 'create' || urlMode === 'modify') {
+    } else if (urlMode === 'create' || urlMode === 'modify' || urlMode === 'modify-namespace') {
       return <EditResourcePanel {...this.props} />;
     } else if (urlMode === 'update') {
       return <UpdateResourcePanel />;

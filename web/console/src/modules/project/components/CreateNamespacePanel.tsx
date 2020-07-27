@@ -2,9 +2,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { FormPanel } from '@tencent/ff-component';
-import {
-    bindActionCreators, deepClone, isSuccessWorkflow, OperationState
-} from '@tencent/ff-redux';
+import { bindActionCreators, deepClone, isSuccessWorkflow, OperationState } from '@tencent/ff-redux';
 import { t } from '@tencent/tea-app/lib/i18n';
 import { Alert, Button, Modal } from '@tencent/tea-component';
 
@@ -14,7 +12,8 @@ import { namespaceActions } from '../actions/namespaceActions';
 import { resourceLimitTypeToText, resourceTypeToUnit } from '../constants/Config';
 import { ProjectResourceLimit } from '../models/Project';
 import { router } from '../router';
-import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
+// import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
+import { CreateProjectResourceLimitPanel } from '../../common/components';
 import { RootProps } from './ProjectApp';
 
 const mapDispatchToProps = dispatch =>

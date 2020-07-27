@@ -41,10 +41,10 @@ export interface ResourceListPanelProps extends RootProps {
   subRouterList: SubRouter[];
 }
 
-const mapDispatchToProps = (dispatch) =>
+const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
 
-@connect((state) => state, mapDispatchToProps)
+@connect(state => state, mapDispatchToProps)
 export class ResourceListPanel extends React.Component<ResourceListPanelProps, {}> {
   render() {
     let { subRoot, route, subRouterList } = this.props,
@@ -107,7 +107,7 @@ export class ResourceListPanel extends React.Component<ResourceListPanelProps, {
 
     return (
       <React.Fragment>
-        <ContentView>
+        <ContentView className="affix-target">
           <ContentView.Header>
             <ResourceHeaderPanel />
           </ContentView.Header>

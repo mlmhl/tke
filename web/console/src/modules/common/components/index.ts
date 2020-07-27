@@ -32,3 +32,4 @@ export { TransferTable, TransferTableProps } from './transferTable';
 export { emptyTips } from './empty';
 export { usePrevious } from './hooks';
 export { NavigateLink } from './NavigateLink';
+export { CreateProjectResourceLimitPanel, resourceTypeToUnit, ProjectResourceLimit, initProjectResourceLimit, resourceLimitTypeList } from './resourceLimit';

@@ -3,20 +3,18 @@ import { connect } from 'react-redux';
 
 import { K8SUNIT, valueLabels1000, valueLabels1024 } from '@helper/k8sUnitUtil';
 import { Bubble, Icon, Modal, TableColumn, Text } from '@tea/component';
-import {
-    bindActionCreators, isSuccessWorkflow, OperationState, WorkflowState
-} from '@tencent/ff-redux';
+import { bindActionCreators, isSuccessWorkflow, OperationState, WorkflowState } from '@tencent/ff-redux';
 import { t } from '@tencent/tea-app/lib/i18n';
 
 import { dateFormatter } from '../../../../helpers';
 import { getWorkflowError } from '../../common';
-import { GridTable, LinkButton, WorkflowDialog } from '../../common/components';
+import { GridTable, LinkButton, WorkflowDialog, CreateProjectResourceLimitPanel } from '../../common/components';
 import { DialogBodyLayout } from '../../common/layouts';
 import { allActions } from '../actions';
 import { NamespaceStatus, resourceLimitTypeToText, resourceTypeToUnit } from '../constants/Config';
 import { Namespace, NamespaceOperator } from '../models';
 import { router } from '../router';
-import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
+// import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
 import { RootProps } from './ProjectApp';
 
 const mapDispatchToProps = dispatch =>
@@ -58,14 +56,8 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
           <div>
             <span className="text-overflow">
               {x.metadata.name.includes('cls')
-                ? x.metadata.name
-                    .split('-')
-                    .splice(2)
-                    .join('-')
-                : x.metadata.name
-                    .split('-')
-                    .splice(1)
-                    .join('-')}
+                ? x.metadata.name.split('-').splice(2).join('-')
+                : x.metadata.name.split('-').splice(1).join('-')}
             </span>
           </div>
         )
