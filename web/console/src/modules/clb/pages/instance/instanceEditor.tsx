@@ -5,11 +5,15 @@ import React from 'react';
 import { Form as FinalForm, Field, useForm } from 'react-final-form';
 import setFieldData from 'final-form-set-field-data';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import { Card, Form, Input, Select, Table } from '@tencent/tea-component';
+import { Card, Form, Input, SelectMultiple, Table } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
 import AutoSave from '../../components/AutoSave';
-import { getAvailableInstancesByCluster, getNamespacesByCluster } from '../../services/api';
+import {
+  getAvailableInstancesByCluster,
+  getImportedInstancesByCluster,
+  getNamespacesByCluster,
+} from '../../services/api';
 
 const isEqual = require('lodash.isequal');
 const { sortable, filterable, scrollable, radioable, injectable } = Table.addons;
@@ -43,6 +47,8 @@ interface Instance {
   clbId: string; // CLB ID
 
   type: string; // 网络类型
+
+  imported: boolean; // 是否已导入
 }
 
 interface PropTypes {
@@ -83,13 +89,16 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
     const { clusterName } = this.props;
     let instances = await getAvailableInstancesByCluster(clusterName);
     // NOTE: 这里的接口数据是直接从公有云的接口返回的，因此跟tkestack的规范约定并不一致
+    let importedInstances = await getImportedInstancesByCluster(clusterName); // 主键clbID
+    let importedClbIDs = importedInstances.map(item => item.clbID);
+    // 给 instances 标注是否已导入
     instances = instances.map(({ LoadBalancerId, LoadBalancerName, LoadBalancerVips, LoadBalancerType }) => ({
       clbId: LoadBalancerId,
       clbName: LoadBalancerName,
       vips: LoadBalancerVips,
       type: LoadBalancerType,
+      imported: importedClbIDs.includes(LoadBalancerId),
     }));
-
     const namespaces = await getNamespacesByCluster(clusterName);
     this.setState({ instances, namespaces });
   };
@@ -145,7 +154,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
         initialValuesEqual={() => true}
         initialValues={{
           clbId: '',
-          scope: '',
+          scope: [],
         }}
         mutators={{ setFieldData }}
         subscription={{}}
@@ -178,6 +187,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                         <Table
                           verticalTop
                           records={instances}
+                          rowDisabled={record => record.imported}
                           recordKey="clbId"
                           columns={[
                             {
@@ -262,10 +272,9 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                       status={getStatus(meta, validating)}
                       message={getStatus(meta, validating) === 'error' && meta.error}
                     >
-                      <Select
+                      <SelectMultiple
                         {...input}
                         {...rest}
-                        type="simulate"
                         appearence="button"
                         size="m"
                         placeholder={t('请选择命名空间')}

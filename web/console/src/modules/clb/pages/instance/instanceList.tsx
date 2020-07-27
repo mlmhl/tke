@@ -3,67 +3,34 @@
  */
 import React, { useState, useEffect } from 'react';
 import {
-  Bubble,
   Card,
-  CardBodyProps,
-  CardProps,
   ContentView,
-  Dropdown,
+  Drawer,
   Form,
-  Icon,
   Justify,
-  JustifyProps,
-  Layout,
-  List,
   Modal,
-  Pagination,
-  PaginationProps,
   Select,
   Table,
-  TableColumn,
-  TableProps,
   Text,
   Button,
-  ExternalLink,
 } from '@tencent/tea-component';
-import {
-  expandable,
-  ExpandableAddonOptions,
-  filterable,
-  FilterableConfig,
-  FilterOption,
-  radioable,
-  RadioableOptions,
-  scrollable,
-  ScrollableAddonOptions,
-  selectable,
-  SelectableOptions,
-  sortable,
-  SortBy,
-  stylize,
-  StylizeOption,
-} from '@tencent/tea-component/lib/table/addons';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
-import { StatusTip } from '@tencent/tea-component/lib/tips';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import InstanceEditor from './InstanceEditor';
-import { getAllClusters, getImportedInstancesByCluster, importInstance } from '../../services/api';
+import InstanceEditor from './instanceEditor';
+import {
+  getAllClusters,
+  getImportedInstancesByCluster,
+  importInstance,
+  disableInstance,
+  enableInstance,
+  removeInstance,
+} from '../../services/api';
+import { InstanceDetail } from './detail';
 
 const { at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
 const { Body, Header } = ContentView;
 
 const convert = item => ({ ...item });
-// const convert = item => ({
-//   name: get(item, 'metadata.name', stubString()), // 取值
-//   type: findKey(
-//     { pods: has(item, 'spec.pods'), service: has(item, 'spec.service'), static: has(item, 'spec.static') },
-//     item => item
-//   ), // 通过path是否存在判断消息内容的类型
-//   clbId: get(item, 'status.backends', 0),
-//   clbName: get(item, 'status.registeredBackends', 0),
-//   vip: max([get(item, 'spec.loadBalancers', 0), get(item, 'spec.lbName', 0), 0]),
-//   disabled: false,
-// });
 
 interface Project {
   id: string;
@@ -85,11 +52,17 @@ export class InstanceList extends React.Component<PropTypes> {
     clusters: [],
     instanceList: [],
     dialogVisible: false,
+    alertVisible: false,
     currentItem: {
       clbId: '',
       scope: [],
     },
     valid: false,
+    detailVisible: false,
+    selectedItem: {
+      name: '',
+      clbID: '',
+    },
   };
 
   componentDidMount() {
@@ -98,8 +71,12 @@ export class InstanceList extends React.Component<PropTypes> {
 
   loadData = async () => {
     let clusters = await getAllClusters();
-    console.log('clusters@getClusterList = ', clusters);
     this.setState({ clusters });
+    // 缓存处理
+    let selectedClusterName = window.localStorage.getItem('selectedClusterName');
+    if (clusters.map(item => (item.name)).includes(selectedClusterName)) {
+      this.handleClusterChanged(selectedClusterName);
+    }
   };
 
   /**
@@ -117,9 +94,10 @@ export class InstanceList extends React.Component<PropTypes> {
    * @param clusterName 集群名称
    */
   handleClusterChanged = async clusterName => {
-    console.log('clusterName = ', clusterName);
     this.setState({ clusterName, instanceList: [] }, () => {
       this.getList(clusterName);
+      // 缓存选择的集群
+      window.localStorage.setItem('selectedClusterName', clusterName);
     });
   };
 
@@ -127,14 +105,28 @@ export class InstanceList extends React.Component<PropTypes> {
     this.setState({ dialogVisible: visible });
   };
 
+  showDetail = visible => {
+    this.setState({ detailVisible: visible });
+  };
+
+  alertSuccess = () => {
+    this.setState({ alertVisible: true });
+  }
+
   handleInstanceChanged = ({ values, valid }) => {
-    console.log('values = ', values, ', valid = ', valid);
     this.setState({ currentItem: { ...values }, valid });
     // setValid(valid);
   };
 
   handleCancelItem = () => {
     this.showModal(false);
+  };
+
+  /**
+   * 关闭详情窗口
+   */
+  handleCloseDetail = () => {
+    this.showDetail(false);
   };
 
   handleSubmitItem = async () => {
@@ -144,7 +136,7 @@ export class InstanceList extends React.Component<PropTypes> {
     try {
       const payload = {
         lbID: clbId,
-        scope: [scope],
+        scope,
       };
       // if (!isEdit) {
       await importInstance(clusterName, payload);
@@ -173,19 +165,93 @@ export class InstanceList extends React.Component<PropTypes> {
     });
   };
 
+  /**
+   * 查看实例详情
+   * @param item
+   */
+  handleViewItem = item => {
+    return (e) => {
+      let { name } = item;
+      this.setState({ selectedItem: item, detailVisible: true });
+    };
+  };
+
+  /**
+   * 启用实例
+   * @param clbID
+   */
+  handleEnableInstance = async clbID => {
+    let { clusterName } = this.state;
+    let response = await enableInstance(clusterName, clbID);
+    if (response.code === 0 && response.message === 'OK') {
+      this.alertSuccess();
+    }
+  };
+
+  /**
+   * 禁用实例
+   * @param clbID
+   */
+  handleDisableInstance = async clbID => {
+    let { clusterName } = this.state;
+    let response = await disableInstance(clusterName, clbID);
+    if (response.code === 0 && response.message === 'OK') {
+      this.alertSuccess();
+    }
+  };
+
+  /**
+   * 删除实例
+   * @param clbID
+   */
+  handleRemoveInstance = async clbID => {
+    let { clusterName } = this.state;
+    let response = await removeInstance(clusterName, clbID);
+    if (response.code === 0 && response.message === 'OK') {
+      this.alertSuccess();
+    }
+  };
+
+  close = () => {
+    let { clusterName } = this.state;
+    this.setState({ alertVisible: false });
+    this.getList(clusterName);
+  };
+
   render() {
-    let { clusterName, clusters, instanceList, dialogVisible, currentItem } = this.state;
+    let { clusterName, clusters, instanceList, dialogVisible, currentItem, alertVisible, detailVisible, selectedItem } = this.state;
     let { projects } = this.props;
     let clusterList = clusters.map(({ name, displayName }) => ({
       value: name,
       text: `${displayName}(${name})`,
     }));
-    console.log('clusterList = ', clusterList);
+
+    let renderOperationColumn = () => {
+      return ({ disabled, clbID }) => {
+        return (
+          <>
+            <Button
+              type="link"
+              onClick={() => (disabled ? this.handleEnableInstance(clbID) : this.handleDisableInstance(clbID))}
+            >
+              <strong>{disabled ? '启用' : '禁用'}</strong>
+            </Button>
+            <Button
+              type="link"
+              onClick={() => {
+                this.handleRemoveInstance(clbID);
+              }}
+            >
+              <strong>删除</strong>
+            </Button>
+          </>
+        );
+      };
+    };
 
     return (
-      <ContentView>
-        <Header title={t('CLB实例')} />
-        <Body>
+      <Card>
+        <Card.Body>
           <Table.ActionPanel>
             <Justify
               left={
@@ -193,8 +259,8 @@ export class InstanceList extends React.Component<PropTypes> {
                   <Button type="primary" onClick={this.handleNewItem}>
                     导入实例
                   </Button>
-                  <Button>禁用实例</Button>
-                  <Button>删除实例</Button>
+                  {/*<Button>禁用实例</Button>*/}
+                  {/*<Button>删除实例</Button>*/}
                 </>
               }
               right={
@@ -236,23 +302,12 @@ export class InstanceList extends React.Component<PropTypes> {
                   key: 'name',
                   header: '名称',
                   render: instance => (
-                    <>
-                      <p>
-                        <a>{instance.name}</a>
-                      </p>
-                    </>
+                    <Button type="link" onClick={this.handleViewItem(instance)}>{instance.name}</Button>
                   ),
                 },
                 {
                   key: 'clbID',
-                  header: 'CLBID',
-                  render: instance => (
-                    <>
-                      <p>
-                        <a>{instance.clbID}</a>
-                      </p>
-                    </>
-                  ),
+                  header: 'CLB ID',
                 },
                 {
                   key: 'clbName',
@@ -282,6 +337,21 @@ export class InstanceList extends React.Component<PropTypes> {
                     </>
                   ),
                 },
+                {
+                  key: 'disabled',
+                  header: '状态',
+                  render: instance => (
+                    <>
+                      {instance.disabled ? <Text theme="warning">已禁用</Text> : <Text theme="success">允许使用</Text>}
+                    </>
+                  ),
+                },
+                {
+                  key: 'settings',
+                  header: '操作',
+                  width: 100,
+                  render: renderOperationColumn(),
+                },
               ]}
               addons={[
                 autotip({
@@ -308,9 +378,45 @@ export class InstanceList extends React.Component<PropTypes> {
                 </Button>
               </Modal.Footer>
             </Modal>
+            <Modal visible={alertVisible} disableCloseIcon onClose={this.close}>
+              <Modal.Body>
+                <Modal.Message
+                  icon="success"
+                  message="操作成功"
+                  description="列表将自动刷新"
+                />
+              </Modal.Body>
+              <Modal.Footer>
+                <Button type="primary" onClick={this.close}>
+                  确定
+                </Button>
+                {/*<Button type="weak" onClick={this.close}>*/}
+                {/*  取消*/}
+                {/*</Button>*/}
+              </Modal.Footer>
+            </Modal>
+            <Drawer
+              visible={detailVisible}
+              title="查看实例详情"
+              outerClickClosable={false}
+              onClose={this.handleCloseDetail}
+              size="l"
+              footer={
+                <>
+                  <Button type="primary" onClick={this.handleCloseDetail}>
+                    确定
+                  </Button>
+                </>
+              }
+            >
+              <InstanceDetail
+                clusterName={clusterName}
+                name={selectedItem.clbID}
+              />
+            </Drawer>
           </Card>
-        </Body>
-      </ContentView>
+        </Card.Body>
+      </Card>
     );
   }
 }

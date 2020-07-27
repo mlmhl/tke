@@ -249,11 +249,11 @@ const businessCommonRouterConfig: RouterConfig[] = [
     title: '服务',
     watchModule: [ConsoleModuleEnum.Business],
     subRouterConfig: [
-      {
-        url: '/tkestack-project/clb-instance',
-        title: 'CLB管理',
-        watchModule: ConsoleModuleEnum.Business,
-      },
+      // {
+      //   url: '/tkestack-project/clb-instance',
+      //   title: 'CLB管理',
+      //   watchModule: ConsoleModuleEnum.Business,
+      // },
       {
         url: '/tkestack-project/clb-rule',
         title: 'CLB规则',

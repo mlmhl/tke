@@ -5,6 +5,7 @@ import {
   CardBodyProps,
   CardProps,
   ContentView,
+  Drawer,
   Dropdown,
   Form,
   Icon,
@@ -42,8 +43,10 @@ import {
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 import { StatusTip } from '@tencent/tea-component/lib/tips';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
+
 import { getAllClusters, getBackendsList, getNamespacesByCluster, getNamespacesByProject } from '../../services/api';
-import { BackendsGroupEditor } from '@src/modules/clb/pages/server/editor';
+import { BackendsGroupEditor } from './editor';
+import { ServerDetail } from './detail';
 
 const { at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
 const { Body, Header } = ContentView;
@@ -78,8 +81,13 @@ export class ServerList extends React.Component<PropTypes> {
     clusterName: '',
     namespace: '',
     namespaces: [],
-    backendsList: [],
-    dialogVisible: true,
+    backendGroups: [],
+    dialogVisible: false,
+    drawerVisible: false,
+    detailVisible: false,
+    selectedItem: {
+      name: '',
+    },
   };
 
   componentDidMount() {
@@ -91,8 +99,12 @@ export class ServerList extends React.Component<PropTypes> {
    */
   loadData = async () => {
     let clusters = await getAllClusters();
-    console.log('clusters@loadData = ', clusters);
     this.setState({ clusters });
+    // 缓存处理
+    let selectedClusterName = window.localStorage.getItem('selectedClusterName');
+    if (clusters.map(item => (item.name)).includes(selectedClusterName)) {
+      this.handleClusterChanged(selectedClusterName);
+    }
   };
 
   /**
@@ -100,21 +112,24 @@ export class ServerList extends React.Component<PropTypes> {
    * @param clusterName 集群名称
    */
   handleClusterChanged = async clusterName => {
-    console.log('clusterName = ', clusterName);
+    // 缓存选择的集群
+    window.localStorage.setItem('selectedClusterName', clusterName);
+
     let namespaces = await getNamespacesByCluster(clusterName);
-    this.setState({ clusterName, namespaces });
-    // this.setState({ clusterName }, () => {
-    //   this.getList(clusterName);
-    // });
+    let selectedNamespace = window.localStorage.getItem('selectedNamespace');
+    this.setState({ clusterName, namespaces }, () => {
+      if (namespaces.map(item => (item.name)).includes(selectedNamespace)) {
+        this.handleNamespaceChanged(selectedNamespace);
+      }
+    });
   };
 
   /**
    * 获取服务器组列表数据
    */
   getList = async (clusterName, namespace) => {
-    let backends = await getBackendsList(clusterName, namespace);
-    let backendsList = backends.map(item => convert(item));
-    this.setState({ backendsList: backends });
+    let backendGroups = await getBackendsList(clusterName, namespace);
+    this.setState({ backendGroups });
   };
 
   reloadList = () => {
@@ -126,6 +141,10 @@ export class ServerList extends React.Component<PropTypes> {
 
   showModal = visible => {
     this.setState({ dialogVisible: visible });
+  };
+
+  showDrawer = visible => {
+    this.setState({ drawerVisible: visible });
   };
 
   /**
@@ -144,16 +163,25 @@ export class ServerList extends React.Component<PropTypes> {
    * @param namespace
    */
   handleNamespaceChanged = namespace => {
-    console.log('namespace = ', namespace);
     let { namespaces } = this.state;
     let { clusterName } = namespaces.find(item => item.name === namespace);
     this.setState({ namespace, clusterName }, () => {
       this.getList(clusterName, namespace);
+      // 缓存命名空间下拉列表选择
+      window.localStorage.setItem('selectedNamespace', namespace);
     });
   };
 
   handleCancelItem = () => {
     this.showModal(false);
+  };
+
+  handleCloseDrawer = () => {
+    this.showDrawer(false);
+  };
+
+  handleCloseDetail = () => {
+    this.setState({ detailVisible: false });
   };
 
   stateToPayload = data => {
@@ -165,29 +193,25 @@ export class ServerList extends React.Component<PropTypes> {
 
   handleSubmitItem = async () => {
     document.getElementById('backendsGroupForm').dispatchEvent(new Event('submit', { cancelable: true }));
+    this.showModal(false);
   };
 
   handleNewItem = () => {
     this.setState({
-      dialogVisible: true,
-      // isEdit: false,
-      // currentItem: {
-      //   name: '', // 规则名称
-      //   isSharedRule: false,
-      //   project: '',
-      //   namespace: '', // 规则所在命名空间
-      //   clusterName: '',
-      //   scope: [], // 共享的命名空间
-      //   lbID: '', // CLB 实例
-      //   useListener: 'new', // 使用监听器
-      //   listener: {
-      //     protocol: '',
-      //     port: '',
-      //     host: '',
-      //     path: '',
-      //   },
-      // },
+      drawerVisible: true,
     });
+  };
+
+  /**
+   * 查看服务器组详情
+   * @param item
+   */
+  handleViewItem = item => {
+    return (e) => {
+      let { name } = item;
+      let { clusterName, namespace } = this.state;
+      this.setState({ selectedItem: item, detailVisible: true });
+    };
   };
 
   render() {
@@ -197,9 +221,12 @@ export class ServerList extends React.Component<PropTypes> {
       clusters,
       namespace,
       namespaces,
-      backendsList,
+      backendGroups,
       dialogVisible,
+      drawerVisible,
+      detailVisible,
       isPlatform,
+      selectedItem,
     } = this.state;
     let { projects, context } = this.props;
     let projectList = projects.map(({ id, name }) => ({
@@ -217,6 +244,7 @@ export class ServerList extends React.Component<PropTypes> {
       value: name,
       text: name,
     }));
+    let backendGroupList = backendGroups.map(item => convert(item));
 
     return (
       <ContentView>
@@ -282,18 +310,14 @@ export class ServerList extends React.Component<PropTypes> {
           <Card>
             <Table
               verticalTop
-              records={backendsList}
+              records={backendGroupList}
               recordKey="name"
               columns={[
                 {
                   key: 'name',
                   header: '名称',
-                  render: ({ name }) => (
-                    <>
-                      <p>
-                        <a>{name}</a>
-                      </p>
-                    </>
+                  render: (backendGroup) => (
+                    <Button type="link" onClick={this.handleViewItem(backendGroup)}>{backendGroup.name}</Button>
                   ),
                 },
                 {
@@ -331,19 +355,46 @@ export class ServerList extends React.Component<PropTypes> {
                 }),
               ]}
             />
-            <Modal visible={dialogVisible} caption="新建服务器组" onClose={this.handleCancelItem} size="l">
-              <Modal.Body>
-                <BackendsGroupEditor projects={projects} context={this.props.context} />
-              </Modal.Body>
-              <Modal.Footer>
-                <Button type="primary" onClick={this.handleSubmitItem}>
-                  确定
-                </Button>
-                <Button type="weak" onClick={this.handleCancelItem}>
-                  取消
-                </Button>
-              </Modal.Footer>
-            </Modal>
+            <Drawer
+              visible={drawerVisible}
+              title="新建服务器组"
+              outerClickClosable={false}
+              onClose={this.handleCloseDrawer}
+              size="l"
+              footer={
+                <>
+                  <Button type="primary" onClick={this.handleSubmitItem}>
+                    确定
+                  </Button>
+                  <Button type="weak" onClick={this.handleCloseDrawer}>
+                    取消
+                  </Button>
+                </>
+              }
+            >
+              <BackendsGroupEditor projects={projects} context={this.props.context} />
+            </Drawer>
+            <Drawer
+              visible={detailVisible}
+              title="服务器组详情"
+              outerClickClosable={false}
+              onClose={this.handleCloseDetail}
+              size="l"
+              footer={
+                <>
+                  <Button type="primary" onClick={this.handleCloseDetail}>
+                    确定
+                  </Button>
+                </>
+              }
+            >
+              <ServerDetail
+                context={this.props.context}
+                clusterName={clusterName}
+                namespace={namespace}
+                name={selectedItem.name}
+              />
+            </Drawer>
           </Card>
         </Body>
       </ContentView>

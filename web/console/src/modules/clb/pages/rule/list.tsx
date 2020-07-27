@@ -1,73 +1,32 @@
 /**
- * CLB 规则列表页（业务侧）
+ * CLB 规则列表页
  */
 import React, { useState, useEffect } from 'react';
 import {
   Bubble,
   Card,
-  CardBodyProps,
-  CardProps,
   ContentView,
-  Dropdown,
+  Drawer,
   Form,
-  Icon,
   Justify,
-  JustifyProps,
-  Layout,
-  List,
   Modal,
-  Pagination,
-  PaginationProps,
   Select,
   Table,
-  TableColumn,
-  TableProps,
-  Text,
   Button,
-  ExternalLink,
 } from '@tencent/tea-component';
-import {
-  expandable,
-  ExpandableAddonOptions,
-  filterable,
-  FilterableConfig,
-  FilterOption,
-  radioable,
-  RadioableOptions,
-  scrollable,
-  ScrollableAddonOptions,
-  selectable,
-  SelectableOptions,
-  sortable,
-  SortBy,
-  stylize,
-  StylizeOption,
-} from '@tencent/tea-component/lib/table/addons';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
-import { StatusTip } from '@tencent/tea-component/lib/tips';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import {
   getAllClusters,
   getRuleList,
   getNamespacesByProject,
-  createRule,
   getNamespacesByCluster,
 } from '../../services/api';
-import { RuleEditor } from './RuleEditor';
+import { Editor } from './editor';
+import { RuleDetail } from './detail';
 
 const { at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
 const { Body, Header } = ContentView;
-
-const convert = item => ({
-  name: get(item, 'metadata.name', stubString()), // 取值
-  type: findKey(
-    { pods: has(item, 'spec.pods'), service: has(item, 'spec.service'), static: has(item, 'spec.static') },
-    item => item
-  ), // 通过path是否存在判断消息内容的类型
-  backends: get(item, 'status.backends', 0),
-  registeredBackends: get(item, 'status.registeredBackends', 0),
-  relatedRules: max([get(item, 'spec.loadBalancers', 0), get(item, 'spec.lbName', 0), 0]), // 两个路径的对象会且只会存在一个，取出它的值来
-});
 
 interface Project {
   id: string;
@@ -90,9 +49,9 @@ export class RuleList extends React.Component<PropTypes> {
     clusterName: '', // 选中业务所属的集群
     namespace: '', // 当前选中的命名空间
     namespaces: [], // 命名空间选择器的数据源
-    backendsList: [], // 所选业务和命名空间下的规则列表
+    rules: [], // 所选业务和命名空间下的规则列表
     // dialogVisible: false,
-    dialogVisible: true,
+    dialogVisible: false,
     currentItem: {
       name: '', // 规则名称
       isSharedRule: false,
@@ -110,6 +69,10 @@ export class RuleList extends React.Component<PropTypes> {
       },
     },
     valid: false,
+    drawerVisible: false,
+    selectedItem: {
+      name: '',
+    },
   };
 
   componentDidMount() {
@@ -122,12 +85,20 @@ export class RuleList extends React.Component<PropTypes> {
    */
   loadData = async () => {
     let clusters = await getAllClusters();
-    console.log('clusters@getClusterList = ', clusters);
     this.setState({ clusters });
+    // 缓存处理
+    let selectedClusterName = window.localStorage.getItem('selectedClusterName');
+    if (clusters.map(item => (item.name)).includes(selectedClusterName)) {
+      this.handleClusterChanged(selectedClusterName);
+    }
   };
 
   showModal = visible => {
     this.setState({ dialogVisible: visible });
+  };
+
+  showDrawer = visible => {
+    this.setState({ drawerVisible: visible });
   };
 
   /**
@@ -135,20 +106,23 @@ export class RuleList extends React.Component<PropTypes> {
    * @param clusterName 集群名称
    */
   handleClusterChanged = async clusterName => {
-    console.log('clusterName = ', clusterName);
+    // 缓存选择的集群
+    window.localStorage.setItem('selectedClusterName', clusterName);
+
     let namespaces = await getNamespacesByCluster(clusterName);
-    this.setState({ clusterName, namespaces });
-    // this.setState({ clusterName }, () => {
-    //   this.getList(clusterName);
-    // });
+    let selectedNamespace = window.localStorage.getItem('selectedNamespace');
+    this.setState({ clusterName, namespaces }, () => {
+      if (namespaces.map(item => (item.name)).includes(selectedNamespace)) {
+        this.handleNamespaceChanged(selectedNamespace);
+      }
+    });
   };
 
   getList = async (clusterName, namespace) => {
     // let { clusterName, namespace } = this.state;
-    let backends = await getRuleList(clusterName, namespace);
-    console.log('backends@getList = ', backends);
-    let backendsList = backends.map(item => convert(item));
-    this.setState({ backendsList: backends });
+    let rules = await getRuleList(clusterName, namespace);
+    // let backendsList = backends.map(item => convert(item));
+    this.setState({ rules });
   };
 
   /**
@@ -168,9 +142,10 @@ export class RuleList extends React.Component<PropTypes> {
    * @param projectId 业务id
    */
   handleProjectChanged = async projectId => {
-    console.log('project = ', projectId);
     let namespaces = await getNamespacesByProject(projectId);
     this.setState({ projectId, namespaces });
+    // 缓存选中的业务下拉列表
+    window.localStorage.setItem('selectedProject', projectId);
   };
 
   /**
@@ -178,17 +153,16 @@ export class RuleList extends React.Component<PropTypes> {
    * @param namespace
    */
   handleNamespaceChanged = namespace => {
-    console.log('namespace = ', namespace);
     let { namespaces } = this.state;
     let { clusterName } = namespaces.find(item => item.name === namespace);
-    console.log('clusterName = ', clusterName);
     this.setState({ namespace, clusterName }, () => {
       this.getList(clusterName, namespace);
+      // 缓存命名空间下拉列表选择
+      window.localStorage.setItem('selectedNamespace', namespace);
     });
   };
 
   handleEditorChanged = ({ values, valid }) => {
-    console.log('values = ', values, ', valid = ', valid);
     this.setState({ currentItem: { ...values }, valid });
     // setValid(valid);
   };
@@ -197,11 +171,14 @@ export class RuleList extends React.Component<PropTypes> {
     this.showModal(false);
   };
 
+  handleCloseDrawer = () => {
+    this.showDrawer(false);
+  };
+
   stateToPayload = data => {
     // let { currentItem } = this.state;
     // let { name, isSharedRule, namespace, scope, lbID, listener } = data;
     let payload = { ...pick(data, ['name', 'namespace', 'scope', 'lbID']), ...data.listener };
-    console.log('payload = ', payload);
 
     return payload;
   };
@@ -234,6 +211,18 @@ export class RuleList extends React.Component<PropTypes> {
     });
   };
 
+  /**
+   * 查看规则详情
+   * @param item
+   */
+  handleViewItem = item => {
+    return (e) => {
+      let { name } = item;
+      let { clusterName, namespace } = this.state;
+      this.setState({ selectedItem: item, drawerVisible: true });
+    };
+  };
+
   render() {
     let {
       projectId,
@@ -241,23 +230,22 @@ export class RuleList extends React.Component<PropTypes> {
       clusterName,
       namespace,
       namespaces,
-      backendsList,
+      rules,
       dialogVisible,
       currentItem,
       isPlatform,
+      drawerVisible,
+      selectedItem,
     } = this.state;
     let { projects, context } = this.props;
     let projectList = projects.map(({ id, name }) => ({
       value: id,
       text: name,
     }));
-    console.log('projectList = ', projectList);
     let clusterList = clusters.map(({ name, displayName }) => ({
       value: name,
       text: `${displayName}(${name})`,
     }));
-    console.log('clusterList = ', clusterList);
-    console.log('namespaces = ', namespaces);
     let namespaceList = namespaces.map(({ name }) => ({
       value: name,
       text: name,
@@ -327,18 +315,14 @@ export class RuleList extends React.Component<PropTypes> {
           <Card>
             <Table
               verticalTop
-              records={backendsList}
+              records={rules}
               recordKey="name"
               columns={[
                 {
                   key: 'name',
                   header: '规则名称',
                   render: rule => (
-                    <>
-                      <p>
-                        <a>{rule.name}</a>
-                      </p>
-                    </>
+                    <Button type="link" onClick={this.handleViewItem(rule)}>{rule.name}</Button>
                   ),
                 },
                 {
@@ -401,7 +385,7 @@ export class RuleList extends React.Component<PropTypes> {
             />
             <Modal visible={dialogVisible} caption="新建CLB规则" onClose={this.handleCancelItem} size="l">
               <Modal.Body>
-                <RuleEditor
+                <Editor
                   projects={projects}
                   value={currentItem}
                   onChange={this.handleEditorChanged}
@@ -409,7 +393,7 @@ export class RuleList extends React.Component<PropTypes> {
                 />
               </Modal.Body>
               <Modal.Footer>
-                <Button type="primary" disabled={!this.state.valid} onClick={this.handleSubmitItem}>
+                <Button type="primary" onClick={this.handleSubmitItem}>
                   确定
                 </Button>
                 <Button type="weak" onClick={this.handleCancelItem}>
@@ -417,6 +401,26 @@ export class RuleList extends React.Component<PropTypes> {
                 </Button>
               </Modal.Footer>
             </Modal>
+            <Drawer
+              visible={drawerVisible}
+              title="CLB规则详情"
+              outerClickClosable={false}
+              onClose={this.handleCloseDrawer}
+              size="l"
+              footer={
+                <>
+                  <Button type="primary" onClick={this.handleCloseDrawer}>
+                    确定
+                  </Button>
+                </>
+              }
+            >
+              <RuleDetail
+                clusterName={clusterName}
+                namespace={namespace}
+                ruleName={selectedItem.name}
+              />
+            </Drawer>
           </Card>
         </Body>
       </ContentView>

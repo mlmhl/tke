@@ -1,48 +1,13 @@
-import {
-  Bubble,
-  Card,
-  CardBodyProps,
-  CardProps,
-  ContentView,
-  Dropdown,
-  Form,
-  Icon,
-  Justify,
-  JustifyProps,
-  Layout,
-  List,
-  Pagination,
-  PaginationProps,
-  Select,
-  Table,
-  TableColumn,
-  TableProps,
-  Text,
-  Button,
-  ExternalLink,
-} from '@tencent/tea-component';
-import {
-  expandable,
-  ExpandableAddonOptions,
-  filterable,
-  FilterableConfig,
-  FilterOption,
-  radioable,
-  RadioableOptions,
-  scrollable,
-  ScrollableAddonOptions,
-  selectable,
-  SelectableOptions,
-  sortable,
-  SortBy,
-  stylize,
-  StylizeOption,
-} from '@tencent/tea-component/lib/table/addons';
-import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
-import { StatusTip } from '@tencent/tea-component/lib/tips';
-import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import { getAllClusters, getRulesByCluster } from '../../services/api';
+/**
+ * CLB实例使用情况
+ * 规则列表
+ */
 import React from 'react';
+import { Button, Card, ContentView, Drawer, Form, Justify, Select, Table } from '@tencent/tea-component';
+import { t, Trans } from '@tencent/tea-app/lib/i18n';
+import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
+import { getAllClusters, getRulesByCluster } from '../../services/api';
+import { RuleDetail } from '../rule/detail';
 
 const { at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
 const { Body, Header } = ContentView;
@@ -63,16 +28,30 @@ export class RuleList extends React.Component<PropTypes> {
     clusterName: '',
     clusters: [],
     ruleList: [],
+    detailVisible: false,
+    selectedItem: {
+      name: '',
+      namespace: '',
+    },
   };
 
   componentDidMount() {
     this.getClusterList();
   }
 
+  showDetail = visible => {
+    this.setState({ detailVisible: visible });
+  };
+
   getClusterList = async () => {
     let clusters = await getAllClusters();
     console.log('clusters@getClusterList = ', clusters);
     this.setState({ clusters });
+    // 缓存处理
+    let selectedClusterName = window.localStorage.getItem('selectedClusterName');
+    if (clusters.map(item => item.name).includes(selectedClusterName)) {
+      this.handleClusterChanged(selectedClusterName);
+    }
   };
 
   /**
@@ -93,31 +72,31 @@ export class RuleList extends React.Component<PropTypes> {
     console.log('clusterName = ', clusterName);
     this.setState({ clusterName }, () => {
       this.getList(clusterName);
+      // 缓存选择的集群
+      window.localStorage.setItem('selectedClusterName', clusterName);
     });
   };
 
+  handleViewItem = item => {
+    return e => {
+      let { name } = item;
+      this.setState({ selectedItem: item, detailVisible: true });
+    };
+  };
+
   render() {
-    let { clusterName, clusters, ruleList } = this.state;
+    let { clusterName, clusters, ruleList, detailVisible, selectedItem } = this.state;
     let { projects } = this.props;
     let clusterList = clusters.map(({ name, displayName }) => ({
       value: name,
       text: `${displayName}(${name})`,
     }));
-    console.log('clusterList = ', clusterList);
 
     return (
-      <ContentView>
-        <Header title={t('CLB实例')} />
-        <Body>
+      <Card>
+        <Card.Body>
           <Table.ActionPanel>
             <Justify
-              left={
-                <>
-                  <Button type="primary">导入实例</Button>
-                  <Button>禁用实例</Button>
-                  <Button>删除实例</Button>
-                </>
-              }
               right={
                 <Form layout="inline">
                   <Form.Item label={t('集群')}>
@@ -146,11 +125,7 @@ export class RuleList extends React.Component<PropTypes> {
                   key: 'name',
                   header: '规则名称',
                   render: rule => (
-                    <>
-                      <p>
-                        <a>{rule.name}</a>
-                      </p>
-                    </>
+                    <Button type="link" onClick={this.handleViewItem(rule)}>{rule.name}</Button>
                   ),
                 },
                 {
@@ -188,8 +163,12 @@ export class RuleList extends React.Component<PropTypes> {
                   header: 'Path',
                 },
                 {
-                  key: 'backendGroups',
+                  key: 'namespace',
                   header: '命名空间',
+                },
+                {
+                  key: 'backendGroups',
+                  header: '服务器组',
                   render: rule => (
                     <>
                       <p>{rule.backendGroups.map(item => item.namespace).join(', ')}</p>
@@ -197,10 +176,31 @@ export class RuleList extends React.Component<PropTypes> {
                   ),
                 },
               ]}
+              addons={[
+                autotip({
+                  emptyText: '暂无数据',
+                }),
+              ]}
             />
+            <Drawer
+              visible={detailVisible}
+              title="CLB规则详情"
+              outerClickClosable={false}
+              onClose={() => this.showDetail(false)}
+              size="l"
+              footer={
+                <>
+                  <Button type="primary" onClick={() => this.showDetail(false)}>
+                    确定
+                  </Button>
+                </>
+              }
+            >
+              <RuleDetail clusterName={clusterName} namespace={selectedItem.namespace} ruleName={selectedItem.name} />
+            </Drawer>
           </Card>
-        </Body>
-      </ContentView>
+        </Card.Body>
+      </Card>
     );
   }
 }
