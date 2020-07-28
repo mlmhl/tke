@@ -184,22 +184,22 @@ const commonRouterConfig: RouterConfig[] = [
     ],
   },
   {
-    title: '服务',
+    title: '负载均衡',
     watchModule: [ConsoleModuleEnum.PLATFORM],
     subRouterConfig: [
       {
         url: '/tkestack/clb-instance',
-        title: 'CLB管理',
+        title: '实例',
         watchModule: ConsoleModuleEnum.PLATFORM,
       },
       {
         url: '/tkestack/clb-rule',
-        title: 'CLB规则',
+        title: '规则',
         watchModule: ConsoleModuleEnum.PLATFORM,
       },
       {
         url: '/tkestack/clb-backendsgroup',
-        title: 'CLB服务器组',
+        title: '服务器组',
         watchModule: ConsoleModuleEnum.PLATFORM,
       },
     ],
@@ -246,7 +246,7 @@ const businessCommonRouterConfig: RouterConfig[] = [
     ],
   },
   {
-    title: '服务',
+    title: '负载均衡',
     watchModule: [ConsoleModuleEnum.Business],
     subRouterConfig: [
       // {
@@ -256,12 +256,12 @@ const businessCommonRouterConfig: RouterConfig[] = [
       // },
       {
         url: '/tkestack-project/clb-rule',
-        title: 'CLB规则',
+        title: '规则',
         watchModule: ConsoleModuleEnum.Business,
       },
       {
         url: '/tkestack-project/clb-backendsgroup',
-        title: 'CLB服务器组',
+        title: '服务器组',
         watchModule: ConsoleModuleEnum.Business,
       },
     ],

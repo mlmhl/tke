@@ -253,7 +253,6 @@ class Names extends React.Component<PropTypes, StateTypes> {
 
   render = () => {
     const { loading, data } = this.state;
-    console.log('data@Names = ', data);
 
     return (
       <Card bordered>

@@ -5,11 +5,9 @@ import React from 'react';
 import { Bubble, Button, Card, Form, Justify, Select, Switch, Table, Text } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
-import { getEventList } from '../../../services/api';
+import { getEventListByRule } from '../../../services/api';
 import { BackendsGroupInfo } from './index';
 import { dateFormatter } from '@helper';
-import { Event } from '@src/modules/cluster/models';
-import * as classnames from 'classnames';
 import { Clip } from '@src/modules/common';
 
 const { isEqual, isEmpty, pick } = require('lodash');
@@ -140,13 +138,12 @@ class EventsPanel extends React.Component<PropTypes, StateTypes> {
   };
 
   getList = async (clusterName, namespace, ruleName) => {
-    let events = await getEventList(clusterName, namespace, ruleName);
+    let events = await getEventListByRule(clusterName, namespace, ruleName);
     this.setState({ events });
   };
 
   /**
    * 增加一个刷新图标按钮用来刷新列表数据
-   * TODO: 把操作区做成一个小的表单处理
    */
   reloadList = () => {
     let { clusterName, namespace, ruleName } = this.state;

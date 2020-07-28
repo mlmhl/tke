@@ -366,7 +366,6 @@ class InfoPanel extends React.Component<PropTypes, StateTypes> {
     let backendsGroup = convert(backendsGroupInfo);
     let { name, namespace, loadBalancers, podChoice, pods } = backendsGroup;
     let { byLabel, byName, ports } = pods;
-    console.log('name = ', name);
 
     return (
       <FinalForm

@@ -1,22 +1,11 @@
 /**
  * CLB 实例管理 - 实例列表页
  */
-import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  ContentView,
-  Drawer,
-  Form,
-  Justify,
-  Modal,
-  Select,
-  Table,
-  Text,
-  Button,
-} from '@tencent/tea-component';
+import React from 'react';
+import { Card, ContentView, Drawer, Form, Justify, Modal, Select, Table, Text, Button } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
-import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import InstanceEditor from './instanceEditor';
+import { InstanceEditor } from './instanceEditor';
+import { InstanceDetail } from './detail';
 import {
   getAllClusters,
   getImportedInstancesByCluster,
@@ -25,7 +14,6 @@ import {
   enableInstance,
   removeInstance,
 } from '../../services/api';
-import { InstanceDetail } from './detail';
 
 const { at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
 const { Body, Header } = ContentView;
@@ -74,7 +62,7 @@ export class InstanceList extends React.Component<PropTypes> {
     this.setState({ clusters });
     // 缓存处理
     let selectedClusterName = window.localStorage.getItem('selectedClusterName');
-    if (clusters.map(item => (item.name)).includes(selectedClusterName)) {
+    if (clusters.map(item => item.name).includes(selectedClusterName)) {
       this.handleClusterChanged(selectedClusterName);
     }
   };
@@ -111,7 +99,7 @@ export class InstanceList extends React.Component<PropTypes> {
 
   alertSuccess = () => {
     this.setState({ alertVisible: true });
-  }
+  };
 
   handleInstanceChanged = ({ values, valid }) => {
     this.setState({ currentItem: { ...values }, valid });
@@ -170,7 +158,7 @@ export class InstanceList extends React.Component<PropTypes> {
    * @param item
    */
   handleViewItem = item => {
-    return (e) => {
+    return e => {
       let { name } = item;
       this.setState({ selectedItem: item, detailVisible: true });
     };
@@ -219,7 +207,16 @@ export class InstanceList extends React.Component<PropTypes> {
   };
 
   render() {
-    let { clusterName, clusters, instanceList, dialogVisible, currentItem, alertVisible, detailVisible, selectedItem } = this.state;
+    let {
+      clusterName,
+      clusters,
+      instanceList,
+      dialogVisible,
+      currentItem,
+      alertVisible,
+      detailVisible,
+      selectedItem,
+    } = this.state;
     let { projects } = this.props;
     let clusterList = clusters.map(({ name, displayName }) => ({
       value: name,
@@ -227,9 +224,14 @@ export class InstanceList extends React.Component<PropTypes> {
     }));
 
     let renderOperationColumn = () => {
-      return ({ disabled, clbID }) => {
+      return item => {
+        let { disabled, clbID } = item;
+
         return (
           <>
+            <Button type="link" onClick={this.handleViewItem(item)}>
+              <strong>详情</strong>
+            </Button>
             <Button
               type="link"
               onClick={() => (disabled ? this.handleEnableInstance(clbID) : this.handleDisableInstance(clbID))}
@@ -255,17 +257,13 @@ export class InstanceList extends React.Component<PropTypes> {
           <Table.ActionPanel>
             <Justify
               left={
-                <>
-                  <Button type="primary" onClick={this.handleNewItem}>
-                    导入实例
-                  </Button>
-                  {/*<Button>禁用实例</Button>*/}
-                  {/*<Button>删除实例</Button>*/}
-                </>
+                <Button type="primary" onClick={this.handleNewItem}>
+                  导入实例
+                </Button>
               }
               right={
                 <Form layout="inline">
-                  <Form.Item label={t('集群')}>
+                  <Form.Item align="middle" label="集群">
                     <Select
                       searchable
                       boxSizeSync
@@ -276,8 +274,6 @@ export class InstanceList extends React.Component<PropTypes> {
                       value={clusterName}
                       onChange={value => this.handleClusterChanged(value)}
                     />
-                  </Form.Item>
-                  <Form.Item>
                     <Button
                       icon="refresh"
                       onClick={() => {
@@ -292,129 +288,104 @@ export class InstanceList extends React.Component<PropTypes> {
               }
             />
           </Table.ActionPanel>
-          <Card>
-            <Table
-              verticalTop
-              records={instanceList}
-              recordKey="name"
-              columns={[
-                {
-                  key: 'name',
-                  header: '名称',
-                  render: instance => (
-                    <Button type="link" onClick={this.handleViewItem(instance)}>{instance.name}</Button>
-                  ),
-                },
-                {
-                  key: 'clbID',
-                  header: 'CLB ID',
-                },
-                {
-                  key: 'clbName',
-                  header: 'CLB名称',
-                },
-                {
-                  key: 'vip',
-                  header: 'VIP',
-                },
-                {
-                  key: 'type',
-                  header: '网络类型',
-                  render: instance => (
-                    <>
-                      <p>{instance.type}</p>
-                    </>
-                  ),
-                },
-                {
-                  key: 'scope',
-                  header: '命名空间',
-                  render: instance => (
-                    <>
-                      {instance.scope.map(item => (
-                        <p key={item}>{item}</p>
-                      ))}
-                    </>
-                  ),
-                },
-                {
-                  key: 'disabled',
-                  header: '状态',
-                  render: instance => (
-                    <>
-                      {instance.disabled ? <Text theme="warning">已禁用</Text> : <Text theme="success">允许使用</Text>}
-                    </>
-                  ),
-                },
-                {
-                  key: 'settings',
-                  header: '操作',
-                  width: 100,
-                  render: renderOperationColumn(),
-                },
-              ]}
-              addons={[
-                autotip({
-                  // isLoading: loading,
-                  // isError: Boolean(error),
-                  // isFound: Boolean(keyword),
-                  // onClear: () => setKeyword(""),
-                  // onRetry: load,
-                  // foundKeyword: keyword,
-                  emptyText: '暂无数据',
-                }),
-              ]}
-            />
-            <Modal visible={dialogVisible} caption="导入CLB实例" onClose={this.handleCancelItem} size="l">
-              <Modal.Body>
-                <InstanceEditor clusterName={clusterName} value={currentItem} onChange={this.handleInstanceChanged} />
-              </Modal.Body>
-              <Modal.Footer>
-                <Button type="primary" disabled={!this.state.valid} onClick={this.handleSubmitItem}>
-                  确定
-                </Button>
-                <Button type="weak" onClick={this.handleCancelItem}>
-                  取消
-                </Button>
-              </Modal.Footer>
-            </Modal>
-            <Modal visible={alertVisible} disableCloseIcon onClose={this.close}>
-              <Modal.Body>
-                <Modal.Message
-                  icon="success"
-                  message="操作成功"
-                  description="列表将自动刷新"
-                />
-              </Modal.Body>
-              <Modal.Footer>
-                <Button type="primary" onClick={this.close}>
-                  确定
-                </Button>
-                {/*<Button type="weak" onClick={this.close}>*/}
-                {/*  取消*/}
-                {/*</Button>*/}
-              </Modal.Footer>
-            </Modal>
-            <Drawer
-              visible={detailVisible}
-              title="查看实例详情"
-              outerClickClosable={false}
-              onClose={this.handleCloseDetail}
-              size="l"
-              footer={
-                <>
-                  <Button type="primary" onClick={this.handleCloseDetail}>
-                    确定
+          <Table
+            verticalTop
+            disableTextOverflow={true}
+            records={instanceList}
+            recordKey="name"
+            columns={[
+              {
+                key: 'name',
+                header: '名称',
+                render: instance => (
+                  <Button type="link" onClick={this.handleViewItem(instance)}>
+                    {instance.name}
                   </Button>
-                </>
-              }
-            >
-              <InstanceDetail
-                clusterName={clusterName}
-                name={selectedItem.clbID}
-              />
-            </Drawer>
-          </Card>
+                ),
+              },
+              {
+                key: 'clbID',
+                header: 'CLB ID',
+              },
+              {
+                key: 'clbName',
+                header: 'CLB名称',
+              },
+              {
+                key: 'vip',
+                header: 'VIP',
+              },
+              {
+                key: 'type',
+                header: '网络类型',
+                render: instance => <p>{instance.type}</p>,
+              },
+              {
+                key: 'scope',
+                header: '命名空间',
+                render: instance => (
+                  <>
+                    {instance.scope.map(item => (
+                      <p key={item}>{item}</p>
+                    ))}
+                  </>
+                ),
+              },
+              {
+                key: 'disabled',
+                header: '状态',
+                render: instance => (
+                  <>{instance.disabled ? <Text theme="warning">已禁用</Text> : <Text theme="success">允许使用</Text>}</>
+                ),
+              },
+              {
+                key: 'settings',
+                header: '操作',
+                render: renderOperationColumn(),
+              },
+            ]}
+            addons={[
+              autotip({
+                emptyText: '暂无数据',
+              }),
+            ]}
+          />
+          <Modal visible={dialogVisible} caption="导入CLB实例" onClose={this.handleCancelItem} size="l">
+            <Modal.Body>
+              <InstanceEditor clusterName={clusterName} value={currentItem} onChange={this.handleInstanceChanged} />
+            </Modal.Body>
+            <Modal.Footer>
+              <Button type="primary" disabled={!this.state.valid} onClick={this.handleSubmitItem}>
+                确定
+              </Button>
+              <Button type="weak" onClick={this.handleCancelItem}>
+                取消
+              </Button>
+            </Modal.Footer>
+          </Modal>
+          <Modal visible={alertVisible} disableCloseIcon onClose={this.close}>
+            <Modal.Body>
+              <Modal.Message icon="success" message="操作成功" description="列表将自动刷新" />
+            </Modal.Body>
+            <Modal.Footer>
+              <Button type="primary" onClick={this.close}>
+                确定
+              </Button>
+            </Modal.Footer>
+          </Modal>
+          <Drawer
+            visible={detailVisible}
+            title="查看实例详情"
+            onClose={this.handleCloseDetail}
+            size="l"
+            footer={
+              <Button type="primary" onClick={this.handleCloseDetail}>
+                确定
+              </Button>
+            }
+          >
+            <InstanceDetail clusterName={clusterName} name={selectedItem.clbID} />
+          </Drawer>
         </Card.Body>
       </Card>
     );

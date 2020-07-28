@@ -1019,10 +1019,10 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
       spec: {
         loadBalancers,
         pods,
-        parameters,
-        // parameters: {
-        //   weight: '50',
-        // },
+        // parameters,
+        parameters: {
+          weight: String(parameters.weight),
+        },
       },
     };
 

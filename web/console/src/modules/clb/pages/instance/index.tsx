@@ -10,7 +10,7 @@ import { RuleList } from './ruleList';
 
 const { Body, Content } = Layout;
 
-export default function CLBInstance(props) {
+export function CLBInstance(props) {
   const tabs = [
     { id: 'instance', label: '已导入实例' },
     { id: 'rule', label: '实例使用情况' },

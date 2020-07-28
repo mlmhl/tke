@@ -1,31 +1,35 @@
 /**
  * CLB 规则列表页
  */
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
-  Bubble,
+  Alert,
+  Button,
   Card,
   ContentView,
   Drawer,
   Form,
   Justify,
   Modal,
+  PopConfirm,
   Select,
   Table,
-  Button,
+  Text,
 } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
-import { t, Trans } from '@tencent/tea-app/lib/i18n';
+import { injectable } from '@tencent/tea-component/lib/table/addons/injectable';
 import {
   getAllClusters,
   getRuleList,
   getNamespacesByProject,
   getNamespacesByCluster,
+  removeRule,
 } from '../../services/api';
 import { Editor } from './editor';
 import { RuleDetail } from './detail';
+import { EventList } from './events';
 
-const { at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
+const { isEmpty, pick } = require('lodash');
 const { Body, Header } = ContentView;
 
 interface Project {
@@ -52,6 +56,7 @@ export class RuleList extends React.Component<PropTypes> {
     rules: [], // 所选业务和命名空间下的规则列表
     // dialogVisible: false,
     dialogVisible: false,
+    alertVisible: false,
     currentItem: {
       name: '', // 规则名称
       isSharedRule: false,
@@ -73,6 +78,7 @@ export class RuleList extends React.Component<PropTypes> {
     selectedItem: {
       name: '',
     },
+    eventsVisible: false,
   };
 
   componentDidMount() {
@@ -88,7 +94,7 @@ export class RuleList extends React.Component<PropTypes> {
     this.setState({ clusters });
     // 缓存处理
     let selectedClusterName = window.localStorage.getItem('selectedClusterName');
-    if (clusters.map(item => (item.name)).includes(selectedClusterName)) {
+    if (clusters.map(item => item.name).includes(selectedClusterName)) {
       this.handleClusterChanged(selectedClusterName);
     }
   };
@@ -99,6 +105,10 @@ export class RuleList extends React.Component<PropTypes> {
 
   showDrawer = visible => {
     this.setState({ drawerVisible: visible });
+  };
+
+  showEvents = visible => {
+    this.setState({ eventsVisible: visible });
   };
 
   /**
@@ -112,22 +122,19 @@ export class RuleList extends React.Component<PropTypes> {
     let namespaces = await getNamespacesByCluster(clusterName);
     let selectedNamespace = window.localStorage.getItem('selectedNamespace');
     this.setState({ clusterName, namespaces }, () => {
-      if (namespaces.map(item => (item.name)).includes(selectedNamespace)) {
+      if (namespaces.map(item => item.name).includes(selectedNamespace)) {
         this.handleNamespaceChanged(selectedNamespace);
       }
     });
   };
 
   getList = async (clusterName, namespace) => {
-    // let { clusterName, namespace } = this.state;
     let rules = await getRuleList(clusterName, namespace);
-    // let backendsList = backends.map(item => convert(item));
     this.setState({ rules });
   };
 
   /**
    * 增加一个刷新图标按钮用来刷新列表数据
-   * TODO: 把操作区做成一个小的表单处理
    */
   reloadList = () => {
     let { clusterName, namespace } = this.state;
@@ -175,6 +182,10 @@ export class RuleList extends React.Component<PropTypes> {
     this.showDrawer(false);
   };
 
+  handleCloseEvents = () => {
+    this.showEvents(false);
+  };
+
   stateToPayload = data => {
     // let { currentItem } = this.state;
     // let { name, isSharedRule, namespace, scope, lbID, listener } = data;
@@ -216,11 +227,38 @@ export class RuleList extends React.Component<PropTypes> {
    * @param item
    */
   handleViewItem = item => {
-    return (e) => {
-      let { name } = item;
-      let { clusterName, namespace } = this.state;
+    return e => {
       this.setState({ selectedItem: item, drawerVisible: true });
     };
+  };
+
+  /**
+   * 查看该条规则的事件
+   * @param item
+   */
+  handleViewEvents = item => {
+    return e => {
+      this.setState({ selectedItem: item, eventsVisible: true });
+    };
+  };
+
+  alertSuccess = () => {
+    this.setState({ alertVisible: true });
+  };
+
+  close = () => {
+    let { clusterName, namespace } = this.state;
+    this.setState({ alertVisible: false });
+    this.getList(clusterName, namespace);
+  };
+
+  handleRemoveItem = async rule => {
+    let { clusterName, namespace } = this.state;
+    let { name: ruleName } = rule;
+    let response = await removeRule(clusterName, namespace, ruleName);
+    if (response.code === 0 && response.message === 'OK') {
+      this.alertSuccess();
+    }
   };
 
   render() {
@@ -232,9 +270,11 @@ export class RuleList extends React.Component<PropTypes> {
       namespaces,
       rules,
       dialogVisible,
+      alertVisible,
       currentItem,
       isPlatform,
       drawerVisible,
+      eventsVisible,
       selectedItem,
     } = this.state;
     let { projects, context } = this.props;
@@ -251,23 +291,49 @@ export class RuleList extends React.Component<PropTypes> {
       text: name,
     }));
 
+    let renderOperationColumn = () => {
+      return item => {
+        return (
+          <>
+            <Button type="link" onClick={this.handleViewItem(item)}>
+              <strong>详情</strong>
+            </Button>
+            <Button type="link" onClick={this.handleViewEvents(item)}>
+              <strong>事件</strong>
+            </Button>
+            <Button
+              disabled={item.share && namespace !== 'kube-system'}
+              type="link"
+              onClick={() => {
+                this.handleRemoveItem(item);
+              }}
+            >
+              <strong>删除</strong>
+            </Button>
+          </>
+        );
+      };
+    };
+
     return (
       <ContentView>
-        <Header title={t('CLB规则')} />
+        <Header title="CLB规则" />
         <Body>
+          <Alert defaultVisible type="warning">
+            <h4 style={{ marginBottom: 8 }}>重要声明</h4>
+            <p>删除规则会导致规则下所有容器被解绑</p>
+          </Alert>
           <Table.ActionPanel>
             <Justify
               left={
-                <Bubble placement="right">
-                  <Button type="primary" onClick={this.handleNewItem}>
-                    {t('新建')}
-                  </Button>
-                </Bubble>
+                <Button type="primary" onClick={this.handleNewItem}>
+                  新建
+                </Button>
               }
               right={
                 <Form layout="inline">
                   {isPlatform ? (
-                    <Form.Item label={t('集群')}>
+                    <Form.Item align="middle" label="集群">
                       <Select
                         searchable
                         boxSizeSync
@@ -280,7 +346,7 @@ export class RuleList extends React.Component<PropTypes> {
                       />
                     </Form.Item>
                   ) : (
-                    <Form.Item label={t('业务')}>
+                    <Form.Item align="middle" label="业务">
                       <Select
                         searchable
                         boxSizeSync
@@ -293,7 +359,7 @@ export class RuleList extends React.Component<PropTypes> {
                       />
                     </Form.Item>
                   )}
-                  <Form.Item label={t('命名空间')}>
+                  <Form.Item align="middle" label="命名空间">
                     <Select
                       searchable
                       boxSizeSync
@@ -304,8 +370,6 @@ export class RuleList extends React.Component<PropTypes> {
                       value={namespace}
                       onChange={value => this.handleNamespaceChanged(value)}
                     />
-                  </Form.Item>
-                  <Form.Item>
                     <Button icon="refresh" onClick={this.reloadList} />
                   </Form.Item>
                 </Form>
@@ -313,114 +377,131 @@ export class RuleList extends React.Component<PropTypes> {
             />
           </Table.ActionPanel>
           <Card>
-            <Table
-              verticalTop
-              records={rules}
-              recordKey="name"
-              columns={[
-                {
-                  key: 'name',
-                  header: '规则名称',
-                  render: rule => (
-                    <Button type="link" onClick={this.handleViewItem(rule)}>{rule.name}</Button>
-                  ),
-                },
-                {
-                  key: 'type',
-                  header: '网络类型',
-                  align: 'center',
-                  render: rule => (
-                    <>
-                      <p>{rule.type}</p>
-                    </>
-                  ),
-                },
-                {
-                  key: 'vip',
-                  header: 'VIP',
-                },
-                {
-                  key: 'port',
-                  header: '端口',
-                  width: 100,
-                  render: rule => (
-                    <>
-                      <p>
+            <Card.Body>
+              <Table
+                verticalTop
+                disableTextOverflow={true}
+                records={rules}
+                recordKey="name"
+                columns={[
+                  {
+                    key: 'name',
+                    header: '规则名称',
+                    render: rule => (
+                      <Button type="link" onClick={this.handleViewItem(rule)}>
+                        {rule.name}
+                      </Button>
+                    ),
+                  },
+                  {
+                    key: 'type',
+                    header: '网络类型',
+                    render: rule => rule.type,
+                  },
+                  {
+                    key: 'vip',
+                    header: 'VIP',
+                  },
+                  {
+                    key: 'port',
+                    header: '端口',
+                    render: rule => (
+                      <Text>
                         {rule.protocol}:{rule.port}
-                      </p>
-                    </>
-                  ),
-                },
-                {
-                  key: 'host',
-                  header: 'Host',
-                },
-                {
-                  key: 'path',
-                  header: 'Path',
-                },
-                {
-                  key: 'backendGroups',
-                  header: '服务器组',
-                  render: rule => (
-                    <>
-                      <p>
-                        <a>{rule.backendGroups.length}</a>
-                      </p>
-                    </>
-                  ),
-                },
-              ]}
-              addons={[
-                autotip({
-                  // isLoading: loading,
-                  // isError: Boolean(error),
-                  // isFound: Boolean(keyword),
-                  // onClear: () => setKeyword(""),
-                  // onRetry: load,
-                  // foundKeyword: keyword,
-                  emptyText: '暂无数据',
-                }),
-              ]}
-            />
-            <Modal visible={dialogVisible} caption="新建CLB规则" onClose={this.handleCancelItem} size="l">
-              <Modal.Body>
-                <Editor
-                  projects={projects}
-                  value={currentItem}
-                  onChange={this.handleEditorChanged}
-                  context={this.props.context}
-                />
-              </Modal.Body>
-              <Modal.Footer>
-                <Button type="primary" onClick={this.handleSubmitItem}>
-                  确定
-                </Button>
-                <Button type="weak" onClick={this.handleCancelItem}>
-                  取消
-                </Button>
-              </Modal.Footer>
-            </Modal>
-            <Drawer
-              visible={drawerVisible}
-              title="CLB规则详情"
-              outerClickClosable={false}
-              onClose={this.handleCloseDrawer}
-              size="l"
-              footer={
-                <>
+                      </Text>
+                    ),
+                  },
+                  {
+                    key: 'host',
+                    header: 'Host',
+                  },
+                  {
+                    key: 'path',
+                    header: 'Path',
+                  },
+                  {
+                    key: 'backendGroups',
+                    header: '服务器组',
+                    align: 'right',
+                    render: rule => rule.backendGroups.length,
+                  },
+                  {
+                    key: 'settings',
+                    header: '操作',
+                    render: renderOperationColumn(),
+                  },
+                ]}
+                addons={[
+                  autotip({
+                    emptyText: '暂无数据',
+                  }),
+                  // vip字段为空表示规则创建失败，需要进行强调以引起用户关注，并引导用户进行处理（比如查看事件）
+                  injectable({
+                    row: (props, context) => ({
+                      style: {
+                        ...(props.style || {}),
+                        background: isEmpty(context.record.vip) ? '#ffcaca' : undefined,
+                      },
+                    }),
+                  }),
+                ]}
+              />
+              <Modal visible={dialogVisible} caption="新建CLB规则" onClose={this.handleCancelItem} size="l">
+                <Modal.Body>
+                  <Editor
+                    projects={projects}
+                    value={currentItem}
+                    onChange={this.handleEditorChanged}
+                    context={this.props.context}
+                  />
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button type="primary" onClick={this.handleSubmitItem}>
+                    确定
+                  </Button>
+                  <Button type="weak" onClick={this.handleCancelItem}>
+                    取消
+                  </Button>
+                </Modal.Footer>
+              </Modal>
+              <Modal visible={alertVisible} disableCloseIcon onClose={this.close}>
+                <Modal.Body>
+                  <Modal.Message icon="success" message="操作成功" description="列表将自动刷新" />
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button type="primary" onClick={this.close}>
+                    确定
+                  </Button>
+                </Modal.Footer>
+              </Modal>
+              <Drawer
+                visible={drawerVisible}
+                title="规则详情"
+                onClose={this.handleCloseDrawer}
+                size="l"
+                footer={
                   <Button type="primary" onClick={this.handleCloseDrawer}>
                     确定
                   </Button>
-                </>
-              }
-            >
-              <RuleDetail
-                clusterName={clusterName}
-                namespace={namespace}
-                ruleName={selectedItem.name}
-              />
-            </Drawer>
+                }
+              >
+                <RuleDetail clusterName={clusterName} namespace={namespace} ruleName={selectedItem.name} />
+              </Drawer>
+              <Drawer
+                visible={eventsVisible}
+                title="规则事件"
+                subtitle={`${clusterName}/${namespace}/${selectedItem.name}`}
+                onClose={this.handleCloseEvents}
+                size="l"
+                footer={
+                  <Button type="primary" onClick={this.handleCloseEvents}>
+                    确定
+                  </Button>
+                }
+              >
+                <EventList clusterName={clusterName} namespace={namespace} ruleName={selectedItem.name} />
+              </Drawer>
+            </Card.Body>
           </Card>
         </Body>
       </ContentView>
