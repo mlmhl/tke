@@ -1,18 +1,16 @@
 import { Modal } from '@tea/component';
-import {
-  Method,
-  reduceNetworkRequest,
-} from '@helper/index';
+import { Method, reduceNetworkRequest } from '@helper/index';
 import { RequestParams } from '../../common/models';
 
+const _ = require('lodash');
 const { get, isEmpty } = require('lodash');
 
 function alertError(error, url) {
-  console.log('error@alertError = ', error);
   let message = `错误码：${error.response.status}，错误描述：${error.response.statusText}`;
   let description = `${error.message}，请求路径：: ${url}`;
   if (error.response.status === 500) {
-    description += `, 异常消息：${error.response.data}`;
+    // 内部异常的response可能是文本也可能是错误对象
+    description += `, 异常消息：${_(error.response.data).value()}`;
   }
   Modal.error({
     message,
@@ -370,7 +368,7 @@ export async function getRuleList(clusterName, namespace) {
  * @param ruleName 规则名称
  */
 export async function removeRule(clusterName, namespace, ruleName) {
-  let result = [];
+  let result;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbs?namespace=${namespace}&name=${ruleName}`;
   let params: RequestParams = {
     method: Method.delete,
@@ -483,7 +481,6 @@ export async function getAvailableListeners(clusterName, clbId) {
         result = [...list.Response.Listeners];
       }
     }
-    console.log('listeners@getAvailableListeners = ', result);
   } catch (error) {
     alertError(error, url);
   }
@@ -717,24 +714,28 @@ export async function getBackendsInfo(clusterName, namespace, backendGroupName, 
     let response = await reduceNetworkRequest(params, clusterName);
     if (response.code === 0) {
       let { items } = response.data;
-      result = { ...items };
+      result = [...items];
     }
   } catch (error) {
     alertError(error, url);
+    return [];
   }
 
   return result;
 }
 
 /**
- * 获取服务器组事件
+ * 获取规则事件
+ * 以lbcf-开头的规则使用kube-system命名空间
  * @param clusterName
  * @param namespace
  * @param ruleName
  */
-export async function getEventList(clusterName, namespace, ruleName) {
+export async function getEventListByRule(clusterName, namespace, ruleName) {
   let result;
-  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbs?namespace=${namespace}&name=${ruleName}&action=events`;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbs?namespace=${
+    /lbcf-*/.test(ruleName) ? 'kube-system' : namespace
+  }&name=${ruleName}&action=events`;
   let params: RequestParams = {
     method: Method.get,
     url,
@@ -747,6 +748,34 @@ export async function getEventList(clusterName, namespace, ruleName) {
     }
   } catch (error) {
     alertError(error, url);
+    return [];
+  }
+
+  return result;
+}
+
+/**
+ * 获取服务器组事件
+ * @param clusterName
+ * @param namespace
+ * @param backendsGroupName
+ */
+export async function getEventListByBackendsGroup(clusterName, namespace, backendsGroupName) {
+  let result;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendrecords?namespace=${namespace}&name=${backendsGroupName}&action=events`;
+  let params: RequestParams = {
+    method: Method.get,
+    url,
+  };
+  try {
+    let response = await reduceNetworkRequest(params, clusterName);
+    if (response.code === 0) {
+      let { items } = response.data;
+      result = [...items];
+    }
+  } catch (error) {
+    alertError(error, url);
+    return [];
   }
 
   return result;
@@ -762,7 +791,7 @@ export async function getRuleYamlContent(clusterName, namespace, ruleName) {
   let result = '';
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbs?namespace=${namespace}&name=${ruleName}`;
   let userDefinedHeader = {
-    Accept: 'application/yaml'
+    Accept: 'application/yaml',
   };
   let params: RequestParams = {
     method: Method.get,

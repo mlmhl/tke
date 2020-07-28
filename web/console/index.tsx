@@ -18,7 +18,7 @@ import { AlarmRecord } from './src/modules/alarmRecord';
 import { Notify } from './src/modules/notify';
 import { LogStash } from './src/modules/logStash';
 import { Helm } from './src/modules/helm';
-import CLBInstance from './src/modules/clb/pages/instance';
+import { CLBInstance } from './src/modules/clb/pages/instance';
 import { CLBServer } from './src/modules/clb/pages/server';
 import { CLBRule } from './src/modules/clb/pages/rule';
 import { TipDialog } from './src/modules/common';

@@ -45,7 +45,6 @@ export class RuleList extends React.Component<PropTypes> {
 
   getClusterList = async () => {
     let clusters = await getAllClusters();
-    console.log('clusters@getClusterList = ', clusters);
     this.setState({ clusters });
     // 缓存处理
     let selectedClusterName = window.localStorage.getItem('selectedClusterName');
@@ -69,7 +68,6 @@ export class RuleList extends React.Component<PropTypes> {
    * @param clusterName 集群名称
    */
   handleClusterChanged = async clusterName => {
-    console.log('clusterName = ', clusterName);
     this.setState({ clusterName }, () => {
       this.getList(clusterName);
       // 缓存选择的集群
@@ -99,7 +97,7 @@ export class RuleList extends React.Component<PropTypes> {
             <Justify
               right={
                 <Form layout="inline">
-                  <Form.Item label={t('集群')}>
+                  <Form.Item align="middle" label="集群">
                     <Select
                       searchable
                       boxSizeSync
@@ -110,95 +108,87 @@ export class RuleList extends React.Component<PropTypes> {
                       value={clusterName}
                       onChange={value => this.handleClusterChanged(value)}
                     />
+                    <Button
+                      icon="refresh"
+                      onClick={() => {
+                        let { clusterName } = this.state;
+                        if (clusterName) {
+                          this.getList(clusterName);
+                        }
+                      }}
+                    />
                   </Form.Item>
                 </Form>
               }
             />
           </Table.ActionPanel>
-          <Card>
-            <Table
-              verticalTop
-              records={ruleList}
-              recordKey="name"
-              columns={[
-                {
-                  key: 'name',
-                  header: '规则名称',
-                  render: rule => (
-                    <Button type="link" onClick={this.handleViewItem(rule)}>{rule.name}</Button>
-                  ),
-                },
-                {
-                  key: 'vip',
-                  header: 'VIP',
-                },
-                {
-                  key: 'type',
-                  header: '网络类型',
-                  align: 'center',
-                  render: rule => (
-                    <>
-                      <p>{rule.type}</p>
-                    </>
-                  ),
-                },
-                {
-                  key: 'port',
-                  header: '端口',
-                  width: 100,
-                  render: rule => (
-                    <>
-                      <p>
-                        {rule.protocol}:{rule.port}
-                      </p>
-                    </>
-                  ),
-                },
-                {
-                  key: 'host',
-                  header: 'Host',
-                },
-                {
-                  key: 'path',
-                  header: 'Path',
-                },
-                {
-                  key: 'namespace',
-                  header: '命名空间',
-                },
-                {
-                  key: 'backendGroups',
-                  header: '服务器组',
-                  render: rule => (
-                    <>
-                      <p>{rule.backendGroups.map(item => item.namespace).join(', ')}</p>
-                    </>
-                  ),
-                },
-              ]}
-              addons={[
-                autotip({
-                  emptyText: '暂无数据',
-                }),
-              ]}
-            />
-            <Drawer
-              visible={detailVisible}
-              title="CLB规则详情"
-              outerClickClosable={false}
-              onClose={() => this.showDetail(false)}
-              size="l"
-              footer={
-                <>
-                  <Button type="primary" onClick={() => this.showDetail(false)}>
-                    确定
+          <Table
+            verticalTop
+            disableTextOverflow={true}
+            records={ruleList}
+            recordKey="name"
+            columns={[
+              {
+                key: 'name',
+                header: '规则名称',
+                render: rule => (
+                  <Button type="link" onClick={this.handleViewItem(rule)}>
+                    {rule.name}
                   </Button>
-                </>
-              }
-            >
-              <RuleDetail clusterName={clusterName} namespace={selectedItem.namespace} ruleName={selectedItem.name} />
-            </Drawer>
-          </Card>
+                ),
+              },
+              {
+                key: 'vip',
+                header: 'VIP',
+              },
+              {
+                key: 'type',
+                header: '网络类型',
+                align: 'center',
+                render: rule => <p>{rule.type}</p>,
+              },
+              {
+                key: 'port',
+                header: '端口',
+                width: 100,
+                render: rule => (
+                  <p>
+                    {rule.protocol}:{rule.port}
+                  </p>
+                ),
+              },
+              {
+                key: 'host',
+                header: 'Host',
+              },
+              {
+                key: 'path',
+                header: 'Path',
+              },
+              {
+                key: 'namespace',
+                header: '命名空间',
+              },
+            ]}
+            addons={[
+              autotip({
+                emptyText: '暂无数据',
+              }),
+            ]}
+          />
+          <Drawer
+            visible={detailVisible}
+            title="CLB规则详情"
+            onClose={() => this.showDetail(false)}
+            size="l"
+            footer={
+              <Button type="primary" onClick={() => this.showDetail(false)}>
+                确定
+              </Button>
+            }
+          >
+            <RuleDetail clusterName={clusterName} namespace={selectedItem.namespace} ruleName={selectedItem.name} />
+          </Drawer>
         </Card.Body>
       </Card>
     );

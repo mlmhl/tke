@@ -102,7 +102,7 @@ export class ServerList extends React.Component<PropTypes> {
     this.setState({ clusters });
     // 缓存处理
     let selectedClusterName = window.localStorage.getItem('selectedClusterName');
-    if (clusters.map(item => (item.name)).includes(selectedClusterName)) {
+    if (clusters.map(item => item.name).includes(selectedClusterName)) {
       this.handleClusterChanged(selectedClusterName);
     }
   };
@@ -118,7 +118,7 @@ export class ServerList extends React.Component<PropTypes> {
     let namespaces = await getNamespacesByCluster(clusterName);
     let selectedNamespace = window.localStorage.getItem('selectedNamespace');
     this.setState({ clusterName, namespaces }, () => {
-      if (namespaces.map(item => (item.name)).includes(selectedNamespace)) {
+      if (namespaces.map(item => item.name).includes(selectedNamespace)) {
         this.handleNamespaceChanged(selectedNamespace);
       }
     });
@@ -152,7 +152,6 @@ export class ServerList extends React.Component<PropTypes> {
    * @param projectId 业务id
    */
   handleProjectChanged = async projectId => {
-    console.log('project = ', projectId);
     let namespaces = await getNamespacesByProject(projectId);
     this.setState({ projectId, namespaces });
   };
@@ -186,7 +185,6 @@ export class ServerList extends React.Component<PropTypes> {
 
   stateToPayload = data => {
     let payload = { ...pick(data, ['name', 'namespace', 'scope', 'lbID']), ...data.listener };
-    console.log('payload = ', payload);
 
     return payload;
   };
@@ -207,7 +205,7 @@ export class ServerList extends React.Component<PropTypes> {
    * @param item
    */
   handleViewItem = item => {
-    return (e) => {
+    return e => {
       let { name } = item;
       let { clusterName, namespace } = this.state;
       this.setState({ selectedItem: item, detailVisible: true });
@@ -233,13 +231,10 @@ export class ServerList extends React.Component<PropTypes> {
       value: id,
       text: name,
     }));
-    console.log('projectList = ', projectList);
     let clusterList = clusters.map(({ name, displayName }) => ({
       value: name,
       text: `${displayName}(${name})`,
     }));
-    console.log('clusterList = ', clusterList);
-    console.log('namespaces = ', namespaces);
     let namespaceList = namespaces.map(({ name }) => ({
       value: name,
       text: name,
@@ -308,93 +303,96 @@ export class ServerList extends React.Component<PropTypes> {
             />
           </Table.ActionPanel>
           <Card>
-            <Table
-              verticalTop
-              records={backendGroupList}
-              recordKey="name"
-              columns={[
-                {
-                  key: 'name',
-                  header: '名称',
-                  render: (backendGroup) => (
-                    <Button type="link" onClick={this.handleViewItem(backendGroup)}>{backendGroup.name}</Button>
-                  ),
-                },
-                {
-                  key: 'type',
-                  header: '类型',
-                },
-                {
-                  key: 'backends',
-                  header: '服务器数量',
-                  align: 'center',
-                  render: ({ backends }) => (
-                    <>
-                      <p>{backends}</p>
-                    </>
-                  ),
-                },
-                {
-                  key: 'registeredBackends',
-                  header: '已绑定数量',
-                  width: 100,
-                  render: ({ registeredBackends }) => (
-                    <>
-                      <p>{registeredBackends}</p>
-                    </>
-                  ),
-                },
-                {
-                  key: 'relatedRules',
-                  header: '关联规则',
-                },
-              ]}
-              addons={[
-                autotip({
-                  emptyText: '暂无数据',
-                }),
-              ]}
-            />
-            <Drawer
-              visible={drawerVisible}
-              title="新建服务器组"
-              outerClickClosable={false}
-              onClose={this.handleCloseDrawer}
-              size="l"
-              footer={
-                <>
-                  <Button type="primary" onClick={this.handleSubmitItem}>
-                    确定
-                  </Button>
-                  <Button type="weak" onClick={this.handleCloseDrawer}>
-                    取消
-                  </Button>
-                </>
-              }
-            >
-              <BackendsGroupEditor projects={projects} context={this.props.context} />
-            </Drawer>
-            <Drawer
-              visible={detailVisible}
-              title="服务器组详情"
-              outerClickClosable={false}
-              onClose={this.handleCloseDetail}
-              size="l"
-              footer={
-                <>
-                  <Button type="primary" onClick={this.handleCloseDetail}>
-                    确定
-                  </Button>
-                </>
-              }
-            >
-              <ServerDetail
-                context={this.props.context}
-                clusterName={clusterName}
-                namespace={namespace}
-                name={selectedItem.name}
+            <Card.Body>
+              <Table
+                verticalTop
+                records={backendGroupList}
+                recordKey="name"
+                columns={[
+                  {
+                    key: 'name',
+                    header: '名称',
+                    render: backendGroup => (
+                      <Button type="link" onClick={this.handleViewItem(backendGroup)}>
+                        {backendGroup.name}
+                      </Button>
+                    ),
+                  },
+                  {
+                    key: 'type',
+                    header: '类型',
+                  },
+                  {
+                    key: 'backends',
+                    header: '服务器数量',
+                    align: 'center',
+                    render: ({ backends }) => (
+                      <>
+                        <p>{backends}</p>
+                      </>
+                    ),
+                  },
+                  {
+                    key: 'registeredBackends',
+                    header: '已绑定数量',
+                    width: 100,
+                    render: ({ registeredBackends }) => (
+                      <>
+                        <p>{registeredBackends}</p>
+                      </>
+                    ),
+                  },
+                  {
+                    key: 'relatedRules',
+                    header: '关联规则',
+                  },
+                ]}
+                addons={[
+                  autotip({
+                    emptyText: '暂无数据',
+                  }),
+                ]}
               />
-            </Drawer>
+              <Drawer
+                visible={drawerVisible}
+                title="新建服务器组"
+                outerClickClosable={false}
+                onClose={this.handleCloseDrawer}
+                size="l"
+                footer={
+                  <>
+                    <Button type="primary" onClick={this.handleSubmitItem}>
+                      确定
+                    </Button>
+                    <Button type="weak" onClick={this.handleCloseDrawer}>
+                      取消
+                    </Button>
+                  </>
+                }
+              >
+                <BackendsGroupEditor projects={projects} context={this.props.context} />
+              </Drawer>
+              <Drawer
+                visible={detailVisible}
+                title="服务器组详情"
+                onClose={this.handleCloseDetail}
+                size="l"
+                footer={
+                  <>
+                    <Button type="primary" onClick={this.handleCloseDetail}>
+                      确定
+                    </Button>
+                  </>
+                }
+              >
+                <ServerDetail
+                  context={this.props.context}
+                  clusterName={clusterName}
+                  namespace={namespace}
+                  name={selectedItem.name}
+                />
+              </Drawer>
+            </Card.Body>
           </Card>
         </Body>
       </ContentView>

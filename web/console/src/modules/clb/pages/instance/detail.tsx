@@ -167,6 +167,8 @@ class InstanceDetail extends React.Component<PropTypes, StateTypes> {
             <Form.Item label="允许使用本实例的命名空间">
               <Table
                 compact
+                bordered
+                hideHeader
                 verticalTop
                 records={namespaceList}
                 recordKey="namespace"

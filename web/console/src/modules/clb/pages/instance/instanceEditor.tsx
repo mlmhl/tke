@@ -78,7 +78,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
   };
 
   componentDidMount() {
-    console.log('集群: ', this.props.clusterName);
     this.loadData();
   }
 
@@ -112,11 +111,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
 
     const save = form => {
       return values => {
-        console.log('values = ', values);
-        console.log('form.getState() = ', form.getState());
-        // if (onChange) {
-        //   onChange(form.getState());
-        // }
       };
     };
 
@@ -124,7 +118,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
       let { onChange } = this.props;
       let { data } = this.state;
       let { clbId, scope } = data;
-      console.log('formState = ', formState);
       if (onChange) {
         onChange({ values: formState.values, valid: formState.valid });
       }
@@ -172,7 +165,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                       clbId: value,
                       scope: form.getFieldState('scope').value,
                     });
-                    console.log('validate result = ', result);
                     return result;
                   }}
                 >
@@ -240,8 +232,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                               value: selectedCLB, // 取的是 recordKey 字段的值
                               rowSelect: true,
                               onChange: (value, context) => {
-                                console.log(value, context);
-                                // setSelected(value);
                                 onChange(value);
                                 this.setState({ selectedCLB: value });
                               },
@@ -261,7 +251,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                   // validateOnBlur
                   // validateFields={[]}
                   validate={value => {
-                    console.log('scope value = ', value);
                     return !value ? t('请选择命名空间') : undefined;
                   }}
                 >
@@ -292,4 +281,4 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
   };
 }
 
-export default InstanceEditor;
+export { InstanceEditor };

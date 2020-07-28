@@ -120,17 +120,17 @@ class RuleDetail extends React.Component<PropTypes, StateTypes> {
     this.loadData();
   }
 
-  componentWillReceiveProps(nextProps, nextContext) {
-    const { clusterName, namespace, ruleName } = this.state;
-
-    if (!isEqual(nextProps.clusterName, clusterName) || !isEqual(nextProps.namespace, namespace) || !isEqual(nextProps.ruleName, ruleName)) {
-      this.setState({ clusterName: nextProps.clusterName, namespace: nextProps.namespace, ruleName: nextProps.ruleName }, () => {
-        if (nextProps.clusterName && nextProps.namespace && nextProps.ruleName) {
-          this.loadData();
-        }
-      });
-    }
-  }
+  // componentWillReceiveProps(nextProps, nextContext) {
+  //   const { clusterName, namespace, ruleName } = this.state;
+  //
+  //   if (!isEqual(nextProps.clusterName, clusterName) || !isEqual(nextProps.namespace, namespace) || !isEqual(nextProps.ruleName, ruleName)) {
+  //     this.setState({ clusterName: nextProps.clusterName, namespace: nextProps.namespace, ruleName: nextProps.ruleName }, () => {
+  //       if (nextProps.clusterName && nextProps.namespace && nextProps.ruleName) {
+  //         this.loadData();
+  //       }
+  //     });
+  //   }
+  // }
 
   /**
    * 加载初始化数据
@@ -151,68 +151,67 @@ class RuleDetail extends React.Component<PropTypes, StateTypes> {
     let { name, namespace, share, type, clbID, clbName, vip, port, protocol, host, path, backendGroups } = ruleInfo;
 
     return (
-      <Card>
-        <Card.Body
-          title="规则信息"
-          // operation={<Button type="link">修改命名空间</Button>}
-        >
-          <Form>
-            <Form.Item label="命名空间">
-              <Form.Text>{namespace}</Form.Text>
-            </Form.Item>
-            <Form.Item label="规则名称">
-              <Form.Text>{name}</Form.Text>
-            </Form.Item>
-            <Form.Item label="CLB名称">
-              <Form.Text>{clbName}</Form.Text>
-            </Form.Item>
-            <Form.Item label="CLB ID">
-              <Form.Text>{clbID}</Form.Text>
-            </Form.Item>
-            <Form.Item label="网络类型">
-              <Form.Text>{type}</Form.Text>
-            </Form.Item>
-            <Form.Item label="VIP">
-              <Form.Text>{vip}</Form.Text>
-            </Form.Item>
-            <Form.Item label="端口号">
-              <Form.Text>{protocol}:{port}</Form.Text>
-            </Form.Item>
-            <Form.Item label="Host">
-              <Form.Text>{host}</Form.Text>
-            </Form.Item>
-            <Form.Item label="Path">
-              <Form.Text>{path}</Form.Text>
-            </Form.Item>
-            {/*<Form.Item label="用户名">*/}
-            {/*<Form.Text>{share}</Form.Text>*/}
-            {/*</Form.Item>*/}
-            <Form.Item label="已关联的服务器组">
-              <Table
-                compact
-                verticalTop
-                records={backendGroups}
-                recordKey="name"
-                columns={[
-                  {
-                    key: 'namespace',
-                    header: '命名空间',
-                  },
-                  {
-                    key: 'name',
-                    header: '服务器组',
-                  },
-                ]}
-                addons={[
-                  autotip({
-                    emptyText: '暂无数据',
-                  }),
-                ]}
-              />
-            </Form.Item>
-          </Form>
-        </Card.Body>
-      </Card>
+      <div>
+        <Form>
+          <Form.Item label="集群">
+            <Form.Text>{clusterName}</Form.Text>
+          </Form.Item>
+          <Form.Item label="命名空间">
+            <Form.Text>{namespace}</Form.Text>
+          </Form.Item>
+          <Form.Item label="规则名称">
+            <Form.Text>{name}</Form.Text>
+          </Form.Item>
+          <Form.Item label="CLB名称">
+            <Form.Text>{clbName}</Form.Text>
+          </Form.Item>
+          <Form.Item label="CLB ID">
+            <Form.Text>{clbID}</Form.Text>
+          </Form.Item>
+          <Form.Item label="网络类型">
+            <Form.Text>{type}</Form.Text>
+          </Form.Item>
+          <Form.Item label="VIP">
+            <Form.Text>{vip}</Form.Text>
+          </Form.Item>
+          <Form.Item label="端口号">
+            <Form.Text>{protocol}:{port}</Form.Text>
+          </Form.Item>
+          <Form.Item label="Host">
+            <Form.Text>{host}</Form.Text>
+          </Form.Item>
+          <Form.Item label="Path">
+            <Form.Text>{path}</Form.Text>
+          </Form.Item>
+          {/*<Form.Item label="用户名">*/}
+          {/*<Form.Text>{share}</Form.Text>*/}
+          {/*</Form.Item>*/}
+          <Form.Item label="已关联的服务器组">
+            <Table
+              compact
+              bordered
+              verticalTop
+              records={backendGroups}
+              recordKey="name"
+              columns={[
+                {
+                  key: 'namespace',
+                  header: '命名空间',
+                },
+                {
+                  key: 'name',
+                  header: '服务器组',
+                },
+              ]}
+              addons={[
+                autotip({
+                  emptyText: '暂无数据',
+                }),
+              ]}
+            />
+          </Form.Item>
+        </Form>
+      </div>
     );
   };
 }

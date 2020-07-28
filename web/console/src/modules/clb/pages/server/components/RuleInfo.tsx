@@ -2,13 +2,7 @@
  * 规则信息
  */
 import React from 'react';
-import {
-  Button,
-  Card,
-  Form,
-  SelectMultiple,
-  Table,
-} from '@tencent/tea-component';
+import { Button, Card, Form, SelectMultiple, Table } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
 import { getRuleInfo, getBackendsInfo } from '../../../services/api';
@@ -136,12 +130,19 @@ class RuleInfo extends React.Component<PropTypes, StateTypes> {
   componentWillReceiveProps(nextProps, nextContext) {
     const { clusterName, namespace, ruleName } = this.state;
 
-    if (!isEqual(nextProps.clusterName, clusterName) || !isEqual(nextProps.namespace, namespace) || !isEqual(nextProps.ruleName, ruleName)) {
-      this.setState({ clusterName: nextProps.clusterName, namespace: nextProps.namespace, ruleName: nextProps.ruleName }, () => {
-        if (nextProps.clusterName && nextProps.namespace && nextProps.ruleName) {
-          this.loadData();
+    if (
+      !isEqual(nextProps.clusterName, clusterName) ||
+      !isEqual(nextProps.namespace, namespace) ||
+      !isEqual(nextProps.ruleName, ruleName)
+    ) {
+      this.setState(
+        { clusterName: nextProps.clusterName, namespace: nextProps.namespace, ruleName: nextProps.ruleName },
+        () => {
+          if (nextProps.clusterName && nextProps.namespace && nextProps.ruleName) {
+            this.loadData();
+          }
         }
-      });
+      );
     }
   }
 
@@ -168,7 +169,7 @@ class RuleInfo extends React.Component<PropTypes, StateTypes> {
     let backendsInfo = await getBackendsInfo(clusterName, namespace, backendGroupName, ruleName);
     let backends = backendsInfo.map(item => ({
       serverId: item.metadata.name,
-      serviceAddress: item.status.backendAddr,
+      serverAddress: item.status.backendAddr,
       status: `${item.status.conditions[0]['type']}:${item.status.conditions[0]['status']}`,
     }));
     this.setState({ backends });
@@ -200,7 +201,9 @@ class RuleInfo extends React.Component<PropTypes, StateTypes> {
             <Form.Text>{vip}</Form.Text>
           </Form.Item>
           <Form.Item label="端口号">
-            <Form.Text>{protocol}:{port}</Form.Text>
+            <Form.Text>
+              {protocol}:{port}
+            </Form.Text>
           </Form.Item>
           <Form.Item label="Host">
             <Form.Text>{host}</Form.Text>
@@ -212,6 +215,8 @@ class RuleInfo extends React.Component<PropTypes, StateTypes> {
             <Table
               compact
               verticalTop
+              disableTextOverflow
+              bordered
               records={backends}
               recordKey="name"
               columns={[

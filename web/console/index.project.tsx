@@ -7,6 +7,7 @@ import * as React from 'react';
 import { Entry, insertCSS } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import { Application } from './src/modules/cluster/index.project';
+import { CLBInstance } from './src/modules/clb/pages/instance';
 import { CLBRule } from './src/modules/clb/pages/rule';
 import { CLBServer } from './src/modules/clb/pages/server';
 import { Wrapper, PlatformTypeEnum } from './Wrapper';
@@ -21,7 +22,6 @@ import { AlarmPolicy } from '@src/modules/alarmPolicy';
 import { Notify } from '@src/modules/notify';
 // 公有云的图表组件为异步加载，这里为了减少路径配置，还是保留为同步加载，预先import即可变成不split
 import '@tencent/tchart/build/ChartsComponents';
-import CLBInstance from '@src/modules/clb/pages/instance';
 insertCSS(
   'myTagSearchBox',
   `.myTagSearchBox{ width:100% !important; background-color: #fff; }

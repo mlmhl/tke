@@ -297,7 +297,6 @@ const Namespace = ({ name, label, options, onChange }) => (
   <Field
     name={`${name}`}
     validate={value => {
-      console.log('namespace value = ', value);
       return !value ? t('请选择命名空间') : undefined;
     }}
   >
@@ -333,7 +332,6 @@ const Scope = ({ name, label, options }) => (
   <Field
     name={`${name}`}
     validate={value => {
-      console.log('scope value = ', value);
       return !value ? t('请选择共享的命名空间') : undefined;
     }}
   >
@@ -420,7 +418,6 @@ const LBID = ({
                 ...input,
                 rowSelect: true,
                 onChange: (value, context) => {
-                  console.log(value, context);
                   input.onChange(value);
                   if (onChange) {
                     onChange(value);
@@ -440,7 +437,6 @@ const ListenerChoice = ({ name, label, onChange }) => (
   <Field
     name={`${name}`}
     validate={value => {
-      console.log('useListener value = ', value);
       return !value ? t('使用监听器') : undefined;
     }}
   >
@@ -560,7 +556,6 @@ const ListenerList = ({
             rowDisabled={record => Boolean(record.rules)}
             recordKey={record => {
               let recordKey = `${record.listenerId}-${record['protocol'] || 'protocol'}-${record['port'] || 'port'}-${record['domain'] || 'domain'}-${record['url'] || 'url'}`;
-              console.log('recordKey = ', recordKey);
               return recordKey;
             }}
             columns={[
@@ -614,7 +609,6 @@ const ListenerList = ({
                 value: `${input.value.listenerId}-${input.value['protocol'] || 'protocol'}-${input.value['port'] || 'port'}-${input.value['domain'] || 'domain'}-${input.value['url'] || 'url'}`, // 取的是 recordKey 字段的值
                 rowSelect: true,
                 onChange: (value, context) => {
-                  console.log(value, context, ', input.value = ', input.value);
                   // context对象中有个record字段，从中获取port和protocol，再读取该记录是否有rules
                   let { record } = context;
                   let { listenerId, protocol, port, domain: host = '', url: path = '' } = record;
@@ -735,7 +729,6 @@ class Editor extends React.Component<PropTypes, StateTypes> {
       }
       return data;
     });
-    console.log('listenerList = ', listenerList);
     this.setState({ listenerList });
   };
 
@@ -807,13 +800,11 @@ class Editor extends React.Component<PropTypes, StateTypes> {
       ...data.listener,
       port: Number(data.listener.port),
     });
-    console.log('payload = ', payload);
 
     return payload;
   };
 
   submit = async values => {
-    console.log('values = ', values);
     // console.log('form.getState() = ', form.getState());
     // if (onChange) {
     //   onChange(form.getState());
@@ -827,7 +818,6 @@ class Editor extends React.Component<PropTypes, StateTypes> {
       let payload = this.stateToPayload(values);
       // if (!isEdit) {
       let response = await createRule(clusterName, payload);
-      console.log('response@save = ', response);
       // message.info('网络策略已创建')
       // } else {
       // await updateNetworkPolicy(cluster, name, payload)
@@ -842,7 +832,6 @@ class Editor extends React.Component<PropTypes, StateTypes> {
   };
 
   render = () => {
-    console.log('render@RuleEditor');
     let { onChange, projects } = this.props;
     let {
       instances,
@@ -865,7 +854,6 @@ class Editor extends React.Component<PropTypes, StateTypes> {
       value: name,
       text: `${displayName}(${name})`,
     }));
-    console.log('clusterList = ', clusterList);
     let projectList = projects.map(({ id, name }) => ({
       value: id,
       text: name,
