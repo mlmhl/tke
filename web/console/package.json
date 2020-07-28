@@ -7,16 +7,15 @@
     "node": ">=10.3.0"
   },
   "scripts": {
-    "common_pre": "npm i",
     "preinstall": "rm -rf ./node_modules",
     "postinstall": "npm run unzip_third_party",
     "unzip_third_party": "unzip -n -d ./node_modules ../../third_party/fe_node_modules.zip",
     "dev": "cross-env NODE_ENV=development Version=tke node ./develop/index.ts",
     "cp_public": "mkdir -p build && cp -r public/* build",
-    "prebuild_console": "npm run cp_public && npm run common_pre",
+    "prebuild_console": "npm run cp_public && npm install",
     "build_console": "cross-env NODE_ENV=production Version=tke webpack --config webpack/webpack.prod.js",
     "dev_project": "cross-env NODE_ENV=development node ./develop/index.ts project zh",
-    "prebuild_project": "npm run cp_public && npm run common_pre",
+    "prebuild_project": "npm run cp_public && npm install",
     "build_project": "cross-env NODE_ENV=production  webpack --config webpack/webpack.prod.js --version=project --lng=zh --filename=project",
     "build": "npm run build_console && npm run build_project",
     "eslint": "eslint src --ext .ts,.tsx",
