@@ -146,13 +146,13 @@ class ServerPanel extends React.Component<PropTypes, StateTypes> {
   render = () => {
     let { clusterName, backendsGroupInfo } = this.state;
     let backendsGroup = convert(backendsGroupInfo);
-    let { name, namespace, loadBalancers } = backendsGroup;
+    let { name, namespace, loadBalancers = [] } = backendsGroup;
 
     return (
       <div>
         {loadBalancers.map(item => (
           <Card key={item}>
-            <Card.Body title={`规则名称:${item}`}>
+            <Card.Body title={`规则名称 - ${item}`}>
               <RuleInfo
                 context={this.props.context}
                 clusterName={clusterName}

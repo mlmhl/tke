@@ -216,7 +216,6 @@ class RuleInfo extends React.Component<PropTypes, StateTypes> {
               compact
               verticalTop
               disableTextOverflow
-              bordered
               records={backends}
               recordKey="name"
               columns={[

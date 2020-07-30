@@ -2,17 +2,10 @@
  * 规则详情页
  */
 import React from 'react';
-import {
-  Button,
-  Card,
-  Form,
-  SelectMultiple,
-  Table,
-} from '@tencent/tea-component';
+import { Button, Card, Form, SelectMultiple, Table } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
-import AutoSave from '../../components/AutoSave';
-import { getRuleInfo, modifyRuleNamespace } from '../../services/api';
+import { getNamespacesByCluster, getRuleInfo, modifyRuleNamespace } from '../../services/api';
 
 const { isEqual, isEmpty, pick } = require('lodash');
 const { sortable, filterable, scrollable, radioable, injectable } = Table.addons;
@@ -105,6 +98,12 @@ interface StateTypes {
   ruleName: string;
 
   ruleInfo: RuleInfo;
+
+  mode: string;
+
+  scope: string[];
+
+  namespaces: String[]; // 可共享的的命名空间
 }
 
 class RuleDetail extends React.Component<PropTypes, StateTypes> {
@@ -114,6 +113,9 @@ class RuleDetail extends React.Component<PropTypes, StateTypes> {
     namespace: this.props.namespace,
     ruleName: this.props.ruleName,
     ruleInfo: {} as RuleInfo,
+    mode: 'view', // view: 查看，edit：编辑
+    scope: [],
+    namespaces: [],
   };
 
   componentDidMount() {
@@ -146,13 +148,59 @@ class RuleDetail extends React.Component<PropTypes, StateTypes> {
     this.setState({ ruleInfo });
   };
 
+  handleEditScope = async () => {
+    let { clusterName } = this.state;
+    const namespaces = await getNamespacesByCluster(clusterName);
+    this.setState({ namespaces, mode: 'edit' });
+  };
+
+  handleScopeChanged = value => {
+    this.setState({ scope: value });
+  };
+
+  handleSubmitScope = async () => {
+    let {
+      clusterName,
+      namespace,
+      ruleInfo: { name },
+      scope,
+    } = this.state;
+    let response = await modifyRuleNamespace(clusterName, namespace, name, scope);
+    if (response && response.code === 0 && response.message === 'OK') {
+      this.setState({ mode: 'view' }, () => {
+        this.getRuleInfo();
+      });
+    }
+  };
+
   render = () => {
-    let { clusterName, ruleInfo } = this.state;
-    let { name, namespace, share, type, clbID, clbName, vip, port, protocol, host, path, backendGroups } = ruleInfo;
+    let { clusterName, ruleInfo, namespaces, mode, scope: newScope } = this.state;
+    let {
+      name,
+      namespace,
+      share,
+      type,
+      clbID,
+      clbName,
+      vip,
+      port,
+      protocol,
+      host,
+      path,
+      backendGroups,
+      scope = [],
+    } = ruleInfo;
+    let namespaceList = [];
+    if (mode === 'view') {
+      namespaceList = scope.map(item => ({ namespace: item }));
+    } else {
+      namespaceList = namespaces.map(item => ({ text: item.name, value: item.name }));
+      namespaceList.unshift({ text: '*(任意命名空间)', value: '*' });
+    }
 
     return (
       <div>
-        <Form>
+        <Form style={{ marginBottom: 16 }}>
           <Form.Item label="集群">
             <Form.Text>{clusterName}</Form.Text>
           </Form.Item>
@@ -175,7 +223,9 @@ class RuleDetail extends React.Component<PropTypes, StateTypes> {
             <Form.Text>{vip}</Form.Text>
           </Form.Item>
           <Form.Item label="端口号">
-            <Form.Text>{protocol}:{port}</Form.Text>
+            <Form.Text>
+              {protocol}:{port}
+            </Form.Text>
           </Form.Item>
           <Form.Item label="Host">
             <Form.Text>{host}</Form.Text>
@@ -183,9 +233,6 @@ class RuleDetail extends React.Component<PropTypes, StateTypes> {
           <Form.Item label="Path">
             <Form.Text>{path}</Form.Text>
           </Form.Item>
-          {/*<Form.Item label="用户名">*/}
-          {/*<Form.Text>{share}</Form.Text>*/}
-          {/*</Form.Item>*/}
           <Form.Item label="已关联的服务器组">
             <Table
               compact
@@ -210,7 +257,64 @@ class RuleDetail extends React.Component<PropTypes, StateTypes> {
               ]}
             />
           </Form.Item>
+          {share && (
+            <Form.Item label="规则在以下命名空间可用">
+              {mode === 'view' ? (
+                <Table
+                  compact
+                  bordered
+                  hideHeader
+                  verticalTop
+                  records={namespaceList}
+                  recordKey="namespace"
+                  columns={[
+                    {
+                      key: 'namespace',
+                      header: '命名空间',
+                    },
+                  ]}
+                  addons={[
+                    autotip({
+                      emptyText: '暂无数据',
+                    }),
+                  ]}
+                />
+              ) : (
+                <SelectMultiple
+                  value={newScope}
+                  onChange={this.handleScopeChanged}
+                  // staging={false}
+                  appearence="button"
+                  size="l"
+                  placeholder="请选择命名空间"
+                  options={namespaceList}
+                />
+              )}
+            </Form.Item>
+          )}
         </Form>
+        {share && (
+          <Form.Action>
+            {mode === 'view' ? (
+              <Button type="primary" onClick={this.handleEditScope}>
+                修改命名空间
+              </Button>
+            ) : (
+              <>
+                <Button type="primary" onClick={this.handleSubmitScope}>
+                  保存
+                </Button>
+                <Button
+                  onClick={() => {
+                    this.setState({ mode: 'view' });
+                  }}
+                >
+                  取消
+                </Button>
+              </>
+            )}
+          </Form.Action>
+        )}
       </div>
     );
   };

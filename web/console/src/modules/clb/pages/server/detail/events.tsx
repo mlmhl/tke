@@ -132,7 +132,8 @@ class EventsPanel extends React.Component<PropTypes, StateTypes> {
     let { backendsGroupInfo } = this.state;
     let options;
     if (source === 'lbcf') {
-      options = backendsGroupInfo['spec']['loadBalancers'].map(item => ({ text: item, value: item }));
+      // 要处理loadBalancers不存在的情况
+      options = (backendsGroupInfo['spec']['loadBalancers'] || []).map(item => ({ text: item, value: item }));
     }
     this.setState({ source, ruleList: options });
   };
@@ -184,30 +185,25 @@ class EventsPanel extends React.Component<PropTypes, StateTypes> {
       {
         key: 'firstTimestamp',
         header: '首次出现时间',
-        // width: '10%',
         render: record => reduceTime(record.firstTimestamp),
       },
       {
         key: 'lastTimestamp',
         header: '最后出现时间',
-        // width: '10%',
         render: record => reduceTime(record.lastTimestamp),
       },
       {
         key: 'type',
         header: '级别',
-        // width: '8%',
         render: record => <Text theme={record.type === 'Warning' ? 'warning' : 'text'}>{record.type}</Text>,
       },
       {
         key: 'kind',
         header: '资源类型',
-        // width: '8%',
       },
       {
         key: 'name',
         header: '资源名称',
-        // width: '12%',
         render: record => (
           <div>
             <span id={'eventName' + record.uid} title={record.name} className="text-overflow m-width">
@@ -220,89 +216,66 @@ class EventsPanel extends React.Component<PropTypes, StateTypes> {
       {
         key: 'reason',
         header: '内容',
-        // width: '12%',
         render: record => (
-          <Text theme="text" tooltip={record.message}>{record.reason}</Text>
-        )
+          <Text theme="text" tooltip={record.message}>
+            {record.reason}
+          </Text>
+        ),
       },
-      // {
-      //   key: 'message',
-      //   header: '详细描述',
-      //   // width: '15%',
-      //   render: record => (
-      //     <Text theme="text" tooltip={record.message}>{record.message}</Text>
-      //   )
-      // },
       {
         key: 'count',
         header: '出现次数',
-        // width: '6%',
-        // render: x => (
-        //   <div>
-        //     <Text parent="div" overflow>
-        //       {x.count}
-        //     </Text>
-        //   </div>
-        // ),
       },
     ];
 
     return (
-      <Card>
-        <Card.Body title="事件">
-          <Table.ActionPanel>
-            <Justify
-              left={
-                <Form layout="inline">
-                  <Form.Item label={'对象选择'}>
-                    <Select
-                      boxSizeSync
-                      size="m"
-                      type="simulate"
-                      appearence="button"
-                      options={sourceOptions}
-                      value={source}
-                      onChange={value => this.handleSourceChanged(value)}
-                    />
-                  </Form.Item>
-                  <Form.Item>
-                    <Select
-                      boxSizeSync
-                      size="m"
-                      type="simulate"
-                      appearence="button"
-                      options={ruleList}
-                      value={ruleName}
-                      onChange={value => this.handleRuleChanged(value)}
-                    />
-                  </Form.Item>
-                  <Form.Item>
-                    <Button icon="refresh" onClick={this.reloadList} />
-                  </Form.Item>
-                </Form>
-              }
-              // right={
-              //   <Bubble placement="right">
-              //     <Switch value={timingReload} onClick={this.handleReloadSwitch}>自动刷新</Switch>
-              //   </Bubble>
-              // }
-            />
-          </Table.ActionPanel>
-          <Card>
-            <Table
-              verticalTop
-              records={eventList}
-              recordKey="uid"
-              columns={columns}
-              addons={[
-                autotip({
-                  emptyText: '暂无数据',
-                }),
-              ]}
-            />
-          </Card>
-        </Card.Body>
-      </Card>
+      <div>
+        <Table.ActionPanel>
+          <Justify
+            left={
+              <Form layout="inline">
+                <Form.Item label="对象选择">
+                  <Select
+                    boxSizeSync
+                    size="m"
+                    type="simulate"
+                    appearence="button"
+                    options={sourceOptions}
+                    value={source}
+                    onChange={value => this.handleSourceChanged(value)}
+                  />
+                </Form.Item>
+                <Form.Item>
+                  <Select
+                    searchable
+                    boxSizeSync
+                    size="m"
+                    type="simulate"
+                    appearence="button"
+                    options={ruleList}
+                    value={ruleName}
+                    onChange={value => this.handleRuleChanged(value)}
+                  />
+                </Form.Item>
+                <Form.Item>
+                  <Button icon="refresh" onClick={this.reloadList} />
+                </Form.Item>
+              </Form>
+            }
+          />
+        </Table.ActionPanel>
+        <Table
+          verticalTop
+          records={eventList}
+          recordKey="uid"
+          columns={columns}
+          addons={[
+            autotip({
+              emptyText: '暂无数据',
+            }),
+          ]}
+        />
+      </div>
     );
   };
 }

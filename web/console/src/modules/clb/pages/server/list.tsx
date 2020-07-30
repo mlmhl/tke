@@ -2,26 +2,15 @@ import React, { useState, useEffect } from 'react';
 import {
   Bubble,
   Card,
-  CardBodyProps,
-  CardProps,
   ContentView,
   Drawer,
-  Dropdown,
   Form,
-  Icon,
   Justify,
-  JustifyProps,
-  List,
   Modal,
-  Pagination,
-  PaginationProps,
   Select,
   Table,
-  TableColumn,
-  TableProps,
   Text,
   Button,
-  ExternalLink,
 } from '@tencent/tea-component';
 import {
   expandable,
@@ -41,10 +30,15 @@ import {
   StylizeOption,
 } from '@tencent/tea-component/lib/table/addons';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
-import { StatusTip } from '@tencent/tea-component/lib/tips';
-import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
-import { getAllClusters, getBackendsList, getNamespacesByCluster, getNamespacesByProject } from '../../services/api';
+import {
+  createBackendsGroup,
+  getAllClusters,
+  getBackendsList,
+  getNamespacesByCluster,
+  getNamespacesByProject,
+  removeBackendsGroup,
+} from '../../services/api';
 import { BackendsGroupEditor } from './editor';
 import { ServerDetail } from './detail';
 
@@ -82,11 +76,17 @@ export class ServerList extends React.Component<PropTypes> {
     namespace: '',
     namespaces: [],
     backendGroups: [],
+    alertVisible: false,
     dialogVisible: false,
     drawerVisible: false,
     detailVisible: false,
     selectedItem: {
       name: '',
+    },
+    valid: false,
+    currentItem: {
+      clusterName: '',
+      namespace: '',
     },
   };
 
@@ -135,7 +135,9 @@ export class ServerList extends React.Component<PropTypes> {
   reloadList = () => {
     let { clusterName, namespace } = this.state;
     if (clusterName && namespace) {
-      this.getList(clusterName, namespace);
+      this.setState({ backendGroups: [] }, () => {
+        this.getList(clusterName, namespace);
+      });
     }
   };
 
@@ -183,20 +185,69 @@ export class ServerList extends React.Component<PropTypes> {
     this.setState({ detailVisible: false });
   };
 
-  stateToPayload = data => {
-    let payload = { ...pick(data, ['name', 'namespace', 'scope', 'lbID']), ...data.listener };
+  handleEditorChanged = ({ values, valid }) => {
+    this.setState({ currentItem: { ...values }, valid });
+    // setValid(valid);
+  };
+
+  stateToPayload = values => {
+    let { name, namespace, loadBalancers, ports, podChoice, byLabel, byName, parameters } = values;
+    let pods = Object.assign({}, podChoice === 'byLabel' ? { byLabel } : { byName: byName.map(item => item.name) }, {
+      ports: ports.map(({ protocol, port }) => ({ protocol, port })),
+    });
+    let payload = {
+      apiVersion: 'lbcf.tkestack.io/v1beta1',
+      kind: 'BackendGroup',
+      metadata: { name, namespace },
+      spec: {
+        loadBalancers,
+        pods,
+        // parameters,
+        parameters: {
+          weight: String(parameters.weight),
+        },
+      },
+    };
 
     return payload;
   };
 
+  alertSuccess = () => {
+    this.setState({ alertVisible: true });
+  };
+
+  close = () => {
+    let { clusterName, namespace } = this.state;
+    this.setState({ alertVisible: false });
+    this.getList(clusterName, namespace);
+  };
+
   handleSubmitItem = async () => {
-    document.getElementById('backendsGroupForm').dispatchEvent(new Event('submit', { cancelable: true }));
-    this.showModal(false);
+    // document.getElementById('backendsGroupForm').dispatchEvent(new Event('submit', { cancelable: true }));
+    // this.showDrawer(false);
+    let { currentItem } = this.state;
+    let { clusterName, namespace } = currentItem;
+
+    try {
+      let payload = this.stateToPayload(currentItem);
+      let response = await createBackendsGroup(clusterName, namespace, payload);
+      if (response && response.code === 0 && response.message === 'Created') {
+        this.showDrawer(false);
+        this.alertSuccess();
+        this.loadData();
+      }
+    } catch (err) {
+      // message.error(err)
+    }
   };
 
   handleNewItem = () => {
     this.setState({
       drawerVisible: true,
+      currentItem: {
+        clusterName: '',
+        namespace: '',
+      },
     });
   };
 
@@ -206,9 +257,18 @@ export class ServerList extends React.Component<PropTypes> {
    */
   handleViewItem = item => {
     return e => {
-      let { name } = item;
-      let { clusterName, namespace } = this.state;
       this.setState({ selectedItem: item, detailVisible: true });
+    };
+  };
+
+  handleRemoveItem = item => {
+    return async () => {
+      let { clusterName, namespace } = this.state;
+      let { name } = item;
+      let response = await removeBackendsGroup(clusterName, namespace, name);
+      if (response && response.code === 0 && response.message === 'OK') {
+        this.alertSuccess();
+      }
     };
   };
 
@@ -223,6 +283,8 @@ export class ServerList extends React.Component<PropTypes> {
       dialogVisible,
       drawerVisible,
       detailVisible,
+      alertVisible,
+      currentItem,
       isPlatform,
       selectedItem,
     } = this.state;
@@ -241,27 +303,45 @@ export class ServerList extends React.Component<PropTypes> {
     }));
     let backendGroupList = backendGroups.map(item => convert(item));
 
+    let renderOperationColumn = () => {
+      return item => {
+        return (
+          <>
+            <Button type="link" onClick={this.handleViewItem(item)}>
+              <strong>详情</strong>
+            </Button>
+            <Button
+              type="link"
+              onClick={this.handleRemoveItem(item)}
+            >
+              <strong>删除</strong>
+            </Button>
+          </>
+        );
+      };
+    };
+
     return (
       <ContentView>
-        <Header title={t('CLB服务器组')} />
+        <Header title="CLB服务器组" />
         <Body>
           <Table.ActionPanel>
             <Justify
               left={
                 <Bubble placement="right">
                   <Button type="primary" onClick={this.handleNewItem}>
-                    {t('新建')}
+                    新建
                   </Button>
                 </Bubble>
               }
               right={
                 <Form layout="inline">
                   {isPlatform ? (
-                    <Form.Item label={t('集群')}>
+                    <Form.Item label="集群">
                       <Select
                         searchable
                         boxSizeSync
-                        size="m"
+                        size="l"
                         type="simulate"
                         appearence="button"
                         options={clusterList}
@@ -270,7 +350,7 @@ export class ServerList extends React.Component<PropTypes> {
                       />
                     </Form.Item>
                   ) : (
-                    <Form.Item label={t('业务')}>
+                    <Form.Item label="业务">
                       <Select
                         searchable
                         boxSizeSync
@@ -283,7 +363,7 @@ export class ServerList extends React.Component<PropTypes> {
                       />
                     </Form.Item>
                   )}
-                  <Form.Item label={t('命名空间')}>
+                  <Form.Item label="命名空间">
                     <Select
                       searchable
                       boxSizeSync
@@ -325,26 +405,21 @@ export class ServerList extends React.Component<PropTypes> {
                   {
                     key: 'backends',
                     header: '服务器数量',
-                    align: 'center',
-                    render: ({ backends }) => (
-                      <>
-                        <p>{backends}</p>
-                      </>
-                    ),
+                    align: 'right',
                   },
                   {
                     key: 'registeredBackends',
                     header: '已绑定数量',
-                    width: 100,
-                    render: ({ registeredBackends }) => (
-                      <>
-                        <p>{registeredBackends}</p>
-                      </>
-                    ),
+                    align: 'right',
                   },
                   {
                     key: 'relatedRules',
                     header: '关联规则',
+                  },
+                  {
+                    key: 'settings',
+                    header: '操作',
+                    render: renderOperationColumn(),
                   },
                 ]}
                 addons={[
@@ -353,25 +428,24 @@ export class ServerList extends React.Component<PropTypes> {
                   }),
                 ]}
               />
-              <Drawer
-                visible={drawerVisible}
-                title="新建服务器组"
-                outerClickClosable={false}
-                onClose={this.handleCloseDrawer}
-                size="l"
-                footer={
-                  <>
-                    <Button type="primary" onClick={this.handleSubmitItem}>
-                      确定
-                    </Button>
-                    <Button type="weak" onClick={this.handleCloseDrawer}>
-                      取消
-                    </Button>
-                  </>
-                }
-              >
-                <BackendsGroupEditor projects={projects} context={this.props.context} />
-              </Drawer>
+              <Modal visible={drawerVisible} caption="新建服务器组" onClose={this.handleCloseDrawer} size="l">
+                <Modal.Body>
+                  <BackendsGroupEditor
+                    projects={projects}
+                    context={this.props.context}
+                    // value={currentItem}
+                    onChange={this.handleEditorChanged}
+                  />
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button type="primary" disabled={!this.state.valid} onClick={this.handleSubmitItem}>
+                    确定
+                  </Button>
+                  <Button type="weak" onClick={this.handleCloseDrawer}>
+                    取消
+                  </Button>
+                </Modal.Footer>
+              </Modal>
               <Drawer
                 visible={detailVisible}
                 title="服务器组详情"
@@ -380,7 +454,7 @@ export class ServerList extends React.Component<PropTypes> {
                 footer={
                   <>
                     <Button type="primary" onClick={this.handleCloseDetail}>
-                      确定
+                      关闭
                     </Button>
                   </>
                 }
@@ -392,6 +466,16 @@ export class ServerList extends React.Component<PropTypes> {
                   name={selectedItem.name}
                 />
               </Drawer>
+              <Modal visible={alertVisible} disableCloseIcon onClose={this.close}>
+                <Modal.Body>
+                  <Modal.Message icon="success" message="操作成功" description="列表将自动刷新" />
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button type="primary" onClick={this.close}>
+                    确定
+                  </Button>
+                </Modal.Footer>
+              </Modal>
             </Card.Body>
           </Card>
         </Body>

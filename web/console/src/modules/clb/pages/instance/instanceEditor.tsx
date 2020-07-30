@@ -2,14 +2,15 @@
  * 实例编辑器（导入实例）
  */
 import React from 'react';
-import { Form as FinalForm, Field, useForm } from 'react-final-form';
+import { Form as FinalForm, Field } from 'react-final-form';
 import setFieldData from 'final-form-set-field-data';
-import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import { Card, Form, Input, SelectMultiple, Table } from '@tencent/tea-component';
+import { Card, Form, Select, SelectMultiple, Table } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
+import { Cluster as ClusterType } from '../../models';
 import AutoSave from '../../components/AutoSave';
 import {
+  getAllClusters,
   getAvailableInstancesByCluster,
   getImportedInstancesByCluster,
   getNamespacesByCluster,
@@ -19,6 +20,7 @@ const isEqual = require('lodash.isequal');
 const { sortable, filterable, scrollable, radioable, injectable } = Table.addons;
 
 const labels = {
+  cluster: '选择集群',
   ruleName: '规则名称',
   clbName: 'CLB名称',
   clbId: 'CLB ID',
@@ -29,15 +31,17 @@ const labels = {
   instance: '选择实例',
 };
 
-function getStatus(meta, validating) {
-  if (meta.active && validating) {
+const required = value => (value ? undefined : 'Required');
+
+const getStatus = meta => {
+  if (meta.active && meta.validating) {
     return 'validating';
   }
   if (!meta.touched) {
     return null;
   }
   return meta.error ? 'error' : 'success';
-}
+};
 
 interface Instance {
   ruleName?: string; // 规则名称
@@ -60,20 +64,58 @@ interface PropTypes {
 }
 
 interface StateTypes {
+  clusterName: string; // 集群名称
+
   data?: any;
+
+  clusters: ClusterType[];
 
   instances: Instance[]; // 可用实例
 
-  namespaces: String[]; // 可用实例
+  namespaces: String[]; // 可使用该实例的命名空间
 
   selectedCLB: any; // 编辑器中选中的clb实例行
 }
 
+// 集群下拉选择框
+const Cluster = ({ name, label, options, onChange }) => (
+  <Field name={`${name}`} validate={required}>
+    {({ input, meta, ...rest }) => (
+      <Form.Item
+        label={`${label}`}
+        required
+        status={getStatus(meta)}
+        message={getStatus(meta) === 'error' && meta.error}
+      >
+        <Select
+          {...input}
+          {...rest}
+          onChange={value => {
+            input.onChange(value);
+            if (onChange) {
+              onChange(value);
+            }
+          }}
+          searchable
+          type="simulate"
+          appearence="button"
+          size="l"
+          boxSizeSync
+          placeholder="选择集群"
+          options={options}
+        />
+      </Form.Item>
+    )}
+  </Field>
+);
+
 class InstanceEditor extends React.Component<PropTypes, StateTypes> {
   state = {
     data: this.props.value,
-    instances: [],
+    clusterName: this.props.clusterName || '', // 如果提供了的话可以从props中获取
+    clusters: [], // 平台侧下的集群列表
     namespaces: [],
+    instances: [],
     selectedCLB: '',
   };
 
@@ -82,10 +124,20 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
   }
 
   /**
-   * 加载初始化数据：可选CLB实例列表和命名空间列表
+   * 在平台侧时，获取全部集群列表
    */
   loadData = async () => {
-    const { clusterName } = this.props;
+    let { clusterName } = this.state;
+    let clusters = await getAllClusters();
+    this.setState({ clusters });
+    // 缓存处理（如果没有从父组件传入clusterName的话使用缓存中的）
+    let selectedClusterName = clusterName || window.localStorage.getItem('selectedClusterName');
+    if (clusters.map(item => item.name).includes(selectedClusterName)) {
+      this.handleClusterChanged(selectedClusterName);
+    }
+  };
+
+  handleClusterChanged = async clusterName => {
     let instances = await getAvailableInstancesByCluster(clusterName);
     // NOTE: 这里的接口数据是直接从公有云的接口返回的，因此跟tkestack的规范约定并不一致
     let importedInstances = await getImportedInstancesByCluster(clusterName); // 主键clbID
@@ -99,13 +151,17 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
       imported: importedClbIDs.includes(LoadBalancerId),
     }));
     const namespaces = await getNamespacesByCluster(clusterName);
-    this.setState({ instances, namespaces });
+    this.setState({ clusterName, instances, namespaces });
   };
 
   render = () => {
     let { onChange } = this.props;
-    let { data, instances, namespaces, selectedCLB } = this.state;
+    let { data, clusters, instances, namespaces, selectedCLB, clusterName } = this.state;
     let { clbId = '', scope = [] } = data;
+    let clusterList = clusters.map(({ name, displayName }) => ({
+      value: name,
+      text: `${displayName}(${name})`,
+    }));
     let namespaceList = namespaces.map(item => ({ text: item.name, value: item.name }));
     namespaceList.unshift({ text: '*(任意命名空间)', value: '*' });
 
@@ -125,7 +181,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
 
     const validate = async ({ clbId, scope }) => {
       if (!clbId) {
-        return t('请选择一个实例');
+        return '请选择一个实例';
       }
       // if (!/(?!^[._-].*)(?!.*[._-]$)(?!.*[._-]{2,}.*)(?=^[0-9a-z._-]{2,26}$)[0-9a-z._-]+/.test(repo_name)) {
       //   return t('长度2-26个字符，只能包含小写字母、数字及分隔符("."、"_"、"-")，且不能以分隔符开头、结尾或连续');
@@ -146,6 +202,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
         onSubmit={save}
         initialValuesEqual={() => true}
         initialValues={{
+          clusterName,
           clbId: '',
           scope: [],
         }}
@@ -157,6 +214,12 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
             <form id="repoForm" onSubmit={handleSubmit}>
               <AutoSave setFieldData={form.mutators.setFieldData} save={save(form)} onChange={onFormChange} />
               <Form layout="vertical">
+                <Cluster
+                  name="clusterName"
+                  label={labels.cluster}
+                  options={clusterList}
+                  onChange={this.handleClusterChanged}
+                />
                 <Field
                   name="clbId"
                   required
@@ -170,10 +233,10 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                 >
                   {({ input: { onChange, value }, meta, ...rest }) => (
                     <Form.Item
-                      label={t('选择实例')}
+                      label="选择实例"
                       required
-                      status={getStatus(meta, validating)}
-                      message={getStatus(meta, validating) === 'error' ? meta.error : t('选择一个希望导入的 CLB 实例')}
+                      status={getStatus(meta)}
+                      message={getStatus(meta) === 'error' ? meta.error : '选择一个希望导入的 CLB 实例'}
                     >
                       <Card>
                         <Table
@@ -251,22 +314,22 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                   // validateOnBlur
                   // validateFields={[]}
                   validate={value => {
-                    return !value ? t('请选择命名空间') : undefined;
+                    return !value ? '请选择命名空间' : undefined;
                   }}
                 >
                   {({ input, meta, ...rest }) => (
                     <Form.Item
-                      label={t('允许使用实例的命名空间')}
+                      label="允许使用实例的命名空间"
                       required
-                      status={getStatus(meta, validating)}
-                      message={getStatus(meta, validating) === 'error' && meta.error}
+                      status={getStatus(meta)}
+                      message={getStatus(meta) === 'error' && meta.error}
                     >
                       <SelectMultiple
                         {...input}
                         {...rest}
                         appearence="button"
-                        size="m"
-                        placeholder={t('请选择命名空间')}
+                        size="l"
+                        placeholder="请选择命名空间"
                         options={namespaceList}
                       />
                     </Form.Item>

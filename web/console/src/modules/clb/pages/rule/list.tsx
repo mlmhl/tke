@@ -11,7 +11,6 @@ import {
   Form,
   Justify,
   Modal,
-  PopConfirm,
   Select,
   Table,
   Text,
@@ -23,9 +22,10 @@ import {
   getRuleList,
   getNamespacesByProject,
   getNamespacesByCluster,
+  createRule,
   removeRule,
 } from '../../services/api';
-import { Editor } from './editor';
+import { RuleEditor } from './editor';
 import { RuleDetail } from './detail';
 import { EventList } from './events';
 
@@ -139,7 +139,9 @@ export class RuleList extends React.Component<PropTypes> {
   reloadList = () => {
     let { clusterName, namespace } = this.state;
     if (clusterName && namespace) {
-      this.getList(clusterName, namespace);
+      this.setState({ rules: [] }, () => {
+        this.getList(clusterName, namespace);
+      });
     }
   };
 
@@ -187,16 +189,34 @@ export class RuleList extends React.Component<PropTypes> {
   };
 
   stateToPayload = data => {
-    // let { currentItem } = this.state;
-    // let { name, isSharedRule, namespace, scope, lbID, listener } = data;
-    let payload = { ...pick(data, ['name', 'namespace', 'scope', 'lbID']), ...data.listener };
+    let payload = Object.assign(
+      {},
+      pick(data, ['name', 'namespace', 'lbID']),
+      {
+        ...data.listener,
+        port: Number(data.listener.port),
+      },
+      { scope: data.isSharedRule ? data.scope : [] }
+    );
 
     return payload;
   };
 
   handleSubmitItem = async () => {
-    document.getElementById('ruleForm').dispatchEvent(new Event('submit', { cancelable: true }));
-    this.showModal(false);
+    let { currentItem } = this.state;
+    let { clusterName } = currentItem;
+
+    try {
+      let payload = this.stateToPayload(currentItem);
+      let response = await createRule(clusterName, payload);
+      if (response && response.code === 0 && response.message === 'OK') {
+        this.showModal(false);
+        this.alertSuccess();
+        this.loadData();
+      }
+    } catch (err) {
+      // message.error(err)
+    }
   };
 
   handleNewItem = () => {
@@ -337,7 +357,7 @@ export class RuleList extends React.Component<PropTypes> {
                       <Select
                         searchable
                         boxSizeSync
-                        size="m"
+                        size="l"
                         type="simulate"
                         appearence="button"
                         options={clusterList}
@@ -448,7 +468,7 @@ export class RuleList extends React.Component<PropTypes> {
               />
               <Modal visible={dialogVisible} caption="新建CLB规则" onClose={this.handleCancelItem} size="l">
                 <Modal.Body>
-                  <Editor
+                  <RuleEditor
                     projects={projects}
                     value={currentItem}
                     onChange={this.handleEditorChanged}
@@ -456,7 +476,7 @@ export class RuleList extends React.Component<PropTypes> {
                   />
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button type="primary" onClick={this.handleSubmitItem}>
+                  <Button type="primary" disabled={!this.state.valid} onClick={this.handleSubmitItem}>
                     确定
                   </Button>
                   <Button type="weak" onClick={this.handleCancelItem}>
@@ -480,8 +500,8 @@ export class RuleList extends React.Component<PropTypes> {
                 onClose={this.handleCloseDrawer}
                 size="l"
                 footer={
-                  <Button type="primary" onClick={this.handleCloseDrawer}>
-                    确定
+                  <Button onClick={this.handleCloseDrawer}>
+                    关闭
                   </Button>
                 }
               >

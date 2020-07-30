@@ -42,6 +42,7 @@ export class InstanceList extends React.Component<PropTypes> {
     dialogVisible: false,
     alertVisible: false,
     currentItem: {
+      clusterName: '',
       clbId: '',
       scope: [],
     },
@@ -118,8 +119,8 @@ export class InstanceList extends React.Component<PropTypes> {
   };
 
   handleSubmitItem = async () => {
-    let { data, currentItem, clusterName } = this.state;
-    let { clbId, scope } = currentItem;
+    let { data, currentItem } = this.state;
+    let { clusterName, clbId, scope } = currentItem;
 
     try {
       const payload = {
@@ -147,6 +148,7 @@ export class InstanceList extends React.Component<PropTypes> {
       isEdit: false,
       currentItem: {
         key: `NEW_ITEMID_${this.index++}`,
+        clusterName: '',
         clbId: '',
         scope: [],
       },
@@ -159,7 +161,6 @@ export class InstanceList extends React.Component<PropTypes> {
    */
   handleViewItem = item => {
     return e => {
-      let { name } = item;
       this.setState({ selectedItem: item, detailVisible: true });
     };
   };
@@ -267,7 +268,7 @@ export class InstanceList extends React.Component<PropTypes> {
                     <Select
                       searchable
                       boxSizeSync
-                      size="m"
+                      size="l"
                       type="simulate"
                       appearence="button"
                       options={clusterList}
@@ -279,7 +280,9 @@ export class InstanceList extends React.Component<PropTypes> {
                       onClick={() => {
                         let { clusterName } = this.state;
                         if (clusterName) {
-                          this.getList(clusterName);
+                          this.setState({ instanceList: [] }, () => {
+                            this.getList(clusterName);
+                          });
                         }
                       }}
                     />
@@ -375,12 +378,12 @@ export class InstanceList extends React.Component<PropTypes> {
           </Modal>
           <Drawer
             visible={detailVisible}
-            title="查看实例详情"
+            title="查看详情"
             onClose={this.handleCloseDetail}
             size="l"
             footer={
-              <Button type="primary" onClick={this.handleCloseDetail}>
-                确定
+              <Button onClick={this.handleCloseDetail}>
+                关闭
               </Button>
             }
           >

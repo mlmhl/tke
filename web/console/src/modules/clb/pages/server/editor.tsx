@@ -6,6 +6,7 @@ import { Form as FinalForm, Field, useForm } from 'react-final-form';
 import setFieldData from 'final-form-set-field-data';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import {
+  Bubble,
   Button,
   Card,
   ExternalLink,
@@ -24,6 +25,7 @@ import {
 } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
+import { Cluster as ClusterType } from '../../models';
 import { Ports } from './components/Ports';
 import { Names } from './components/Names';
 import { Selector } from './components/Selector';
@@ -94,53 +96,6 @@ const getStatus = meta => {
 //   relatedRules: max([get(item, 'spec.loadBalancers', 0), get(item, 'spec.lbName', 0), 0]), // 两个路径的对象会且只会存在一个，取出它的值来
 // });
 
-// 咋名为tfan的命名空间下面给名为tfan-statefulset的一个pod指定一个名为test的负载均衡规则
-const payload_bylabel = {
-  apiVersion: 'lbcf.tkestack.io/v1beta1',
-  kind: 'BackendGroup',
-  metadata: { name: 'test-bylabel', namespace: 'tfan' },
-  spec: {
-    loadBalancers: ['tfan-rule'],
-    pods: {
-      ports: [
-        { protocol: 'TCP', port: 8088 },
-        { protocol: 'TCP', port: 8089 },
-      ],
-      byLabel: {
-        selector: {
-          'k8s-app': 'tfan-statefulset',
-          'qcloud-app': 'tfan-statefulset',
-        },
-        // except: [],
-      },
-    },
-    parameters: {
-      weight: '50',
-    },
-  },
-};
-
-const payload_byname = {
-  apiVersion: 'lbcf.tkestack.io/v1beta1',
-  kind: 'BackendGroup',
-  metadata: { name: 'test-bylabel', namespace: 'tfan' },
-  spec: {
-    loadBalancers: ['tfan-rule'],
-    pods: {
-      ports: [
-        { protocol: 'TCP', port: 8088 },
-        { protocol: 'TCP', port: 8089 },
-      ],
-      byName: ['tfan-statefulset-0'],
-    },
-    parameters: {
-      weight: '50',
-    },
-  },
-};
-
-const payload_deregister = {};
-
 interface Project {
   id: string;
   name: string;
@@ -201,7 +156,7 @@ interface BackendGroup {
 
   deregisterWebhook?: DeregisterWebhookSpec; // 通过Webhook判断Pod是否解绑，仅当deregisterPolicy为Webhook时有效。详见文档自定义解绑条件设计
 
-  ensurePolicy: EnsurePolicy; // 与LoadBalancer中的ensurePolicy相同
+  // ensurePolicy: EnsurePolicy; // 与LoadBalancer中的ensurePolicy相同
 }
 
 interface PropTypes {
@@ -209,24 +164,16 @@ interface PropTypes {
 
   projects: Project[]; // 业务列表
 
-  // value?: RuleType; // value 属性，和 onChange 对应的
+  // value?: BackendGroup; // value 属性，和 onChange 对应的
   //
-  // onChange?: (value) => void;
+  onChange?: (value) => void;
+
   context: string; // 业务侧/平台侧
 }
 
 interface Rule {
   name: string; // 规则名称
 
-  // project: string; // 所属业务
-  //
-  // namespace: string; // 规则所在命名空间
-  //
-  // scope: string[]; // 共享的命名空间
-  //
-  // lbID: string; // CLB 实例
-  //
-  // useListener: string; // 使用监听器
   type: string; // 类型
 
   vip: string;
@@ -238,14 +185,6 @@ interface Rule {
   host: string;
 
   path: string;
-}
-
-interface Cluster {
-  name: string;
-
-  displayName: string;
-
-  phase: string;
 }
 
 interface Namespace {
@@ -268,7 +207,7 @@ interface Webhook {
 interface StateTypes {
   isPlatform: boolean;
 
-  clusters: Cluster[]; // 集群列表
+  clusters: ClusterType[]; // 集群列表
 
   namespaces: Namespace[];
 
@@ -288,9 +227,13 @@ interface StateTypes {
 
   loadBalancers: string[]; // 规则名称数组
 
-  byName: Name[]; // Pod名称数组
+  byName?: Name[]; // Pod名称数组
 
-  except: Name[]; // Pod名称数组
+  byLabel?: SelectPodByLabel;
+
+  // except: Name[]; // Pod名称数组
+
+  parameters: object; // { weigth: number }
 
   ports: any[]; // Pod端口
 
@@ -370,10 +313,12 @@ const Cluster = ({ name, label, options, onChange }) => (
               onChange(value);
             }
           }}
+          searchable
           type="simulate"
           appearence="button"
-          size="m"
-          placeholder={t('选择集群')}
+          size="l"
+          boxSizeSync
+          placeholder="选择集群"
           options={options}
         />
       </Form.Item>
@@ -406,10 +351,12 @@ const Project = ({ name, label, options, onChange }) => (
               onChange(value);
             }
           }}
+          searchable
           type="simulate"
           appearence="button"
-          size="m"
-          placeholder={t('选择业务')}
+          size="l"
+          boxSizeSync
+          placeholder="选择业务"
           options={options}
         />
       </Form.Item>
@@ -441,10 +388,12 @@ const Namespace = ({ name, label, options, onChange }) => (
               onChange(value);
             }
           }}
+          searchable
           type="simulate"
           appearence="button"
-          size="m"
-          placeholder={t('请选择命名空间')}
+          size="l"
+          boxSizeSync
+          placeholder="请选择命名空间"
           options={options}
         />
       </Form.Item>
@@ -468,62 +417,59 @@ const LoadBalancers = ({ name, label, records }: { name: string; label: string; 
         status={getStatus(meta)}
         message={getStatus(meta) === 'error' ? meta.error : t('选择至少一个要应用的规则')}
       >
-        <Card bordered>
-          <Card.Body>
-            <Table
-              verticalTop
-              records={records}
-              recordKey="name"
-              columns={[
-                {
-                  key: 'name',
-                  header: '规则名称',
-                },
-                {
-                  key: 'type',
-                  header: '网络类型',
-                },
-                {
-                  key: 'vip',
-                  header: 'VIP',
-                },
-                {
-                  key: 'port',
-                  header: '端口',
-                  render: rule => (
-                    <p>
-                      {rule.protocol}:{rule.port}
-                    </p>
-                  ),
-                },
-                {
-                  key: 'host',
-                  header: 'Host',
-                },
-                {
-                  key: 'path',
-                  header: 'Path',
-                },
-              ]}
-              addons={[
-                autotip({
-                  emptyText: '暂无数据',
-                }),
-                selectable({
-                  // 选框放在「消息类型」列上
-                  targetColumnKey: 'name',
-                  // 禁用全选
-                  all: false,
-                  // 已选中的键值
-                  ...input,
-                  // value: selectedKeys,
-                  // // 选中键值发生变更
-                  // onChange: value => setSelectedKeys(value),
-                }),
-              ]}
-            />
-          </Card.Body>
-        </Card>
+        <Table
+          verticalTop
+          compact
+          records={records}
+          recordKey="name"
+          columns={[
+            {
+              key: 'name',
+              header: '规则名称',
+            },
+            {
+              key: 'type',
+              header: '网络类型',
+            },
+            {
+              key: 'vip',
+              header: 'VIP',
+            },
+            {
+              key: 'port',
+              header: '端口',
+              render: rule => (
+                <p>
+                  {rule.protocol}:{rule.port}
+                </p>
+              ),
+            },
+            {
+              key: 'host',
+              header: 'Host',
+            },
+            {
+              key: 'path',
+              header: 'Path',
+            },
+          ]}
+          addons={[
+            autotip({
+              emptyText: '暂无数据',
+            }),
+            selectable({
+              // 选框放在「消息类型」列上
+              targetColumnKey: 'name',
+              // 禁用全选
+              all: false,
+              // 已选中的键值
+              ...input,
+              // value: selectedKeys,
+              // // 选中键值发生变更
+              // onChange: value => setSelectedKeys(value),
+            }),
+          ]}
+        />
       </Form.Item>
     )}
   </Field>
@@ -534,7 +480,7 @@ const PodChoice = ({ name, label, onChange }) => (
   <Field
     name={`${name}`}
     validate={value => {
-      return !value ? t('选择类型') : undefined;
+      return !value ? '选择类型' : undefined;
     }}
   >
     {({ input, meta, ...rest }) => (
@@ -552,10 +498,10 @@ const PodChoice = ({ name, label, onChange }) => (
               onChange(value);
             }
           }}
-          layout="column"
+          // layout="column"
         >
-          <Radio name="byLabel">按Label</Radio>
-          <Radio name="byName">按Pod名</Radio>
+          <Radio name="byLabel">按 Label</Radio>
+          <Radio name="byName">按 Pod 名</Radio>
         </Radio.Group>
       </Form.Item>
     )}
@@ -566,7 +512,7 @@ const SelectorAdaptor = ({ name, label, clusterName, namespace }) => (
   <Field
     name={`${name}`}
     validate={value => {
-      return !value ? t('请选择selector') : undefined;
+      return !value ? '请选择selector' : undefined;
     }}
   >
     {({ input, meta, ...rest }) => (
@@ -582,25 +528,25 @@ const SelectorAdaptor = ({ name, label, clusterName, namespace }) => (
   </Field>
 );
 
-const Except = ({ name, label }) => (
-  <Field
-    name={`${name}`}
-    validate={value => {
-      return !value ? t('请设置except') : undefined;
-    }}
-  >
-    {({ input, meta, ...rest }) => (
-      <Form.Item
-        label={`${label}`}
-        required
-        status={getStatus(meta)}
-        message={getStatus(meta) === 'error' && meta.error}
-      >
-        <Input {...input} />
-      </Form.Item>
-    )}
-  </Field>
-);
+// const Except = ({ name, label }) => (
+//   <Field
+//     name={`${name}`}
+//     validate={value => {
+//       return !value ? t('请设置except') : undefined;
+//     }}
+//   >
+//     {({ input, meta, ...rest }) => (
+//       <Form.Item
+//         label={`${label}`}
+//         required
+//         status={getStatus(meta)}
+//         message={getStatus(meta) === 'error' && meta.error}
+//       >
+//         <Input {...input} />
+//       </Form.Item>
+//     )}
+//   </Field>
+// );
 
 // 选择pod - 按Label
 const SelectPodByLabel = ({ name, label, clusterName, namespace }) => (
@@ -620,72 +566,13 @@ const SelectPodByLabel = ({ name, label, clusterName, namespace }) => (
               clusterName={clusterName}
               namespace={namespace}
             />
-            <NamesAdaptor name={`${name}.except`} label="排除Pod" />
+            <NamesAdaptor name={`${name}.except`} label="排除 Pod" />
           </Card.Body>
         </Card>
       </Form.Item>
     )}
   </Field>
 );
-
-// 选择pod - 按Pod名称，字符串数组
-// const SelectPodByName = ({ name, label }) => {
-//   // const [tags, setTags] = useState([]);
-//   return (
-//     <Field
-//       name={`${name}`}
-//       validate={value => {
-//         console.log('SelectPodByName value = ', value);
-//         return !value ? t('请输入pod名称') : undefined;
-//       }}
-//     >
-//       {({ input: { value, onChange }, meta, ...rest }) => (
-//         <Form.Item
-//           label={`${label}`}
-//           required
-//           status={getStatus(meta)}
-//           message={getStatus(meta) === 'error' && meta.error}
-//         >
-//           <Input
-//             placeholder="输完按回车键生成一条新记录"
-//             onKeyDown={e => {
-//               if (e.keyCode === 13 && e.currentTarget.value.trim()) {
-//                 let tags = [...value, { id: Date.now(), text: e.currentTarget.value.trim() }];
-//                 // let value = data.map(item => item.text);
-//                 // setTags(data);
-//                 onChange(tags);
-//               }
-//             }}
-//           />
-//           <section>
-//             {value.map(({ text, id }) => (
-//               <Tag
-//                 key={id}
-//                 onClose={() => {
-//                   let tags = value.filter(tag => tag.id !== id);
-//                   // let value = data.map(item => item.text);
-//                   // setTags(data);
-//                   onChange(tags);
-//                 }}
-//               >
-//                 {text}
-//               </Tag>
-//             ))}
-//           </section>
-//         </Form.Item>
-//       )}
-//     </Field>
-//   );
-// };
-
-// 选择Pod
-// const PodSelector = ({ name, label, namespace }) => (
-//   <>
-//     <PodChoice name="podChoice" label="选择Pod" />
-//     <SelectPodByLabel name="byLabel" label="" namespace={namespace} />
-//     <SelectPodByName name="byName" label="" />
-//   </>
-// );
 
 // 选择pod - 按Pod名称，字符串数组
 const PortSelector = ({ name, label }) => (
@@ -703,7 +590,7 @@ const PortSelector = ({ name, label }) => (
             type="simulate"
             appearence="button"
             size="m"
-            placeholder={t('请选择网络协议')}
+            placeholder="请选择网络协议"
             options={ProtocolList}
           />
         </Form.Item>
@@ -747,7 +634,6 @@ const NamesAdaptor = ({ name, label }) => (
     {({ input, meta, ...rest }) => (
       <Form.Item
         label={`${label}`}
-        required
         showStatusIcon={false}
         status={getStatus(meta)}
         message={getStatus(meta) === 'error' && meta.error}
@@ -762,12 +648,7 @@ const NamesAdaptor = ({ name, label }) => (
 const Weight = ({ name, label }) => (
   <Field name={`${name}`}>
     {({ input, meta, ...rest }) => (
-      <Form.Item
-        label={t('权重')}
-        required
-        status={getStatus(meta)}
-        message={getStatus(meta) === 'error' && meta.error}
-      >
+      <Form.Item label={t('权重')} status={getStatus(meta)} message={getStatus(meta) === 'error' && meta.error}>
         <InputNumber min={0} max={100} {...input} />
       </Form.Item>
     )}
@@ -777,16 +658,16 @@ const Weight = ({ name, label }) => (
 // 参数
 const Parameters = () => (
   <>
-    <Weight name="parameters.weight" label={t('权重')} />
+    <Weight name="parameters.weight" label="权重" />
   </>
 );
 
 // Pod解绑条件，仅当pods不为nil时有效，可选的值为IfNotReady、IfNotRunning、Webhook。不填时默认为IfNotReady。详见文档自定义解绑条件设计
 const DeregisterPolicy = ({ name, label, onChange }) => (
   <Field
-    name="deregisterPolicy"
+    name={`${name}`}
     validate={value => {
-      return !value ? t('请选择Pod解绑条件') : undefined;
+      return !value ? '请选择Pod解绑条件' : undefined;
     }}
   >
     {({ input, meta, ...rest }) => (
@@ -804,24 +685,16 @@ const DeregisterPolicy = ({ name, label, onChange }) => (
               onChange(value);
             }
           }}
+          layout="column"
         >
           <Radio name="IfNotReady">
-            <span>IfNotReady</span>
-            <Tooltip title={t('K8S默认条件，Pod不再Ready时解绑')}>
-              <Icon type="info" />
-            </Tooltip>
+            IfNotReady<Text theme="weak">K8S默认条件，Pod不再Ready时解绑</Text>
           </Radio>
           <Radio name="IfNotRunning">
-            <span>IfNotRunning</span>
-            <Tooltip title={t('Pod不再Running时解绑（绑定条件依旧为Pod Ready）')}>
-              <Icon type="info" />
-            </Tooltip>
+            IfNotRunning<Text theme="weak">Pod不再Running时解绑（绑定条件依旧为Pod Ready）</Text>
           </Radio>
           <Radio name="Webhook">
-            <span>自定义</span>
-            <Tooltip title={t('当Pod不再Ready，且非deleting状态时，通过webhook自定义解绑条件')}>
-              <Icon type="info" />
-            </Tooltip>
+            自定义<Text theme="weak">当Pod不再Ready，且非deleting状态时，通过webhook自定义解绑条件</Text>
           </Radio>
         </Radio.Group>
       </Form.Item>
@@ -863,11 +736,7 @@ const DeregisterWebhook = () => (
         }}
       >
         {({ input, meta, ...rest }) => (
-          <Form.Item
-            label="failurePolicy"
-            status={getStatus(meta)}
-            message={getStatus(meta) === 'error' && meta.error}
-          >
+          <Form.Item label="failurePolicy" status={getStatus(meta)} message={getStatus(meta) === 'error' && meta.error}>
             <Input {...input} />
             <span>参见</span>
             <ExternalLink
@@ -919,8 +788,15 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
     namespace: '', // 所在命名空间
     loadBalancers: [], // 规则名称数组
     byName: [], // 规则名称数组
-    except: [], // 排除Pod数组
+    byLabel: {
+      selector: {},
+      except: [],
+    },
+    // except: [], // 排除Pod数组
     ports: [], // Pod 端口
+    parameters: {
+      // weight: 0,
+    },
     deregisterPolicy: 'IfNotReady',
     deregisterWebhook: {
       driverName: '',
@@ -963,6 +839,12 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
   getClusterList = async () => {
     let clusters = await getAllClusters();
     this.setState({ clusters });
+    // 缓存处理（如果没有从父组件传入clusterName的话使用缓存中的）
+    let { clusterName } = this.state;
+    let selectedClusterName = clusterName || window.localStorage.getItem('selectedClusterName');
+    if (clusters.map(item => item.name).includes(selectedClusterName)) {
+      this.handleClusterChanged(selectedClusterName);
+    }
   };
 
   /**
@@ -986,6 +868,12 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
   handleClusterChanged = async clusterName => {
     let namespaces = await getNamespacesByCluster(clusterName);
     this.setState({ clusterName, namespaces });
+    // 缓存处理（如果没有从父组件传入clusterName的话使用缓存中的）
+    let { namespace } = this.state;
+    let selectedNamespace = namespace || window.localStorage.getItem('selectedNamespace');
+    if (namespaces.map(item => item.name).includes(selectedNamespace)) {
+      this.handleNamespaceChanged(selectedNamespace);
+    }
   };
 
   /**
@@ -994,7 +882,9 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
    * @param project 业务id
    */
   handleProjectChanged = project => {
-    this.getNamespaceList();
+    this.setState({ project }, () => {
+      this.getNamespaceList();
+    });
   };
 
   /**
@@ -1011,7 +901,9 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
 
   stateToPayload = values => {
     let { name, namespace, loadBalancers, ports, podChoice, byLabel, byName, parameters } = values;
-    let pods = Object.assign({}, podChoice === 'byLabel' ? { byLabel } : { byName }, { ports: ports.map(({ protocol, port }) => ({ protocol, port })) });
+    let pods = Object.assign({}, podChoice === 'byLabel' ? { byLabel } : { byName }, {
+      ports: ports.map(({ protocol, port }) => ({ protocol, port })),
+    });
     let payload = {
       apiVersion: 'lbcf.tkestack.io/v1beta1',
       kind: 'BackendGroup',
@@ -1054,8 +946,9 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
       namespace,
       loadBalancers,
       byName,
-      except,
+      byLabel,
       ports,
+      parameters,
       deregisterPolicy,
       deregisterWebhook,
       isPlatform,
@@ -1084,12 +977,32 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
     };
 
     const onFormChange = formState => {
-      // let { onChange } = this.props;
-      // let { data } = this.state;
-      // let { clbId, scope } = data;
-      // if (onChange) {
-      //   onChange({ values: formState.values, valid: formState.valid });
-      // }
+      let { onChange } = this.props;
+      let {
+        name,
+        typeChoice,
+        loadBalancers,
+        byLabel,
+        byName,
+        ports,
+        parameters,
+        deregisterPolicy,
+        deregisterWebhook,
+      } = formState.values;
+      this.setState({
+        name,
+        typeChoice,
+        loadBalancers,
+        byLabel,
+        byName,
+        ports,
+        parameters,
+        deregisterPolicy,
+        deregisterWebhook,
+      });
+      if (onChange) {
+        onChange({ values: formState.values, valid: formState.valid });
+      }
     };
 
     const validate = async ({ clbId, scope }) => {
@@ -1113,28 +1026,30 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
     return (
       <FinalForm
         onSubmit={this.submit}
-        initialValuesEqual={() => true}
+        // initialValuesEqual={() => true}
         initialValues={{
           name,
           project,
+          clusterName,
           namespace,
           typeChoice,
           podChoice,
           loadBalancers,
           byName,
-          except,
+          byLabel,
           ports,
+          parameters,
           deregisterPolicy,
           deregisterWebhook,
         }}
-        mutators={{ setFieldData }}
-        subscription={{}}
+        // mutators={{ setFieldData }}
+        // subscription={{}}
       >
         {({ form, handleSubmit, validating, submitting, values, valid }) => {
           return (
             <form id="backendsGroupForm" onSubmit={handleSubmit}>
-              <AutoSave setFieldData={form.mutators.setFieldData} save={save(form)} onChange={onFormChange} />
-              <Form>
+              <AutoSave setFieldData={form.mutators.setFieldData} onChange={onFormChange} />
+              <Form layout="vertical">
                 <Name name="name" label={labels.name} />
                 <TypeChoice name="typeChoice" label={labels.typeChoice} />
                 {isPlatform ? (
@@ -1159,7 +1074,7 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
                   onChange={this.handleNamespaceChanged}
                 />
                 <LoadBalancers name="loadBalancers" label={labels.loadBalancers} records={rules} />
-                <PodChoice name="podChoice" label="选择Pod" onChange={value => this.setState({ podChoice: value })} />
+                <PodChoice name="podChoice" label="选择 Pod" onChange={value => this.setState({ podChoice: value })} />
                 {podChoice === 'byLabel' ? (
                   <SelectPodByLabel
                     name="byLabel"
@@ -1176,7 +1091,9 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
                 <DeregisterPolicy
                   name="deregisterPolicy"
                   label={labels.deregisterPolicy}
-                  onChange={value => this.setState({ deregisterPolicy: value })}
+                  onChange={value => {
+                    // this.setState({ deregisterPolicy: value });
+                  }}
                 />
                 {deregisterPolicy === 'Webhook' && (
                   <DeregisterWebhookAdaptor name="deregisterWebhook" label={labels.deregisterPolicy} />

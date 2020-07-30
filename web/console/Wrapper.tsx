@@ -184,7 +184,7 @@ const commonRouterConfig: RouterConfig[] = [
     ],
   },
   {
-    title: '负载均衡',
+    title: 'CLB管理',
     watchModule: [ConsoleModuleEnum.PLATFORM],
     subRouterConfig: [
       {
@@ -246,7 +246,7 @@ const businessCommonRouterConfig: RouterConfig[] = [
     ],
   },
   {
-    title: '负载均衡',
+    title: 'CLB管理',
     watchModule: [ConsoleModuleEnum.Business],
     subRouterConfig: [
       // {

@@ -101,7 +101,7 @@ export class RuleList extends React.Component<PropTypes> {
                     <Select
                       searchable
                       boxSizeSync
-                      size="m"
+                      size="l"
                       type="simulate"
                       appearence="button"
                       options={clusterList}
@@ -113,7 +113,9 @@ export class RuleList extends React.Component<PropTypes> {
                       onClick={() => {
                         let { clusterName } = this.state;
                         if (clusterName) {
-                          this.getList(clusterName);
+                          this.setState({ ruleList: [] }, () => {
+                            this.getList(clusterName);
+                          });
                         }
                       }}
                     />

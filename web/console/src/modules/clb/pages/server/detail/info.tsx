@@ -163,9 +163,7 @@ const PodChoice = ({ name, label }) => (
 );
 
 const SelectorAdaptor = ({ name, label, clusterName, namespace }) => (
-  <Field
-    name={`${name}`}
-  >
+  <Field name={`${name}`}>
     {({ input, meta, ...rest }) => (
       <Form.Item label={`${label}`}>
         <Selector {...input} clusterName={clusterName} namespace={namespace} />
@@ -175,9 +173,7 @@ const SelectorAdaptor = ({ name, label, clusterName, namespace }) => (
 );
 
 const Except = ({ name, label }) => (
-  <Field
-    name={`${name}`}
-  >
+  <Field name={`${name}`}>
     {({ input, meta, ...rest }) => (
       <Form.Item label={`${label}`}>
         <Input {...input} />
@@ -212,15 +208,13 @@ const PortSelector = ({ name, label }) => (
   <>
     <Field name={`${name}.protocol`}>
       {({ input, meta, ...rest }) => (
-        <Form.Item
-          label={'协议'}
-        >
+        <Form.Item label={'协议'}>
           <Select
             {...input}
             type="simulate"
             appearence="button"
             size="m"
-            placeholder={'请选择网络协议'}
+            placeholder="请选择网络协议"
             options={ProtocolList}
           />
         </Form.Item>
@@ -228,9 +222,7 @@ const PortSelector = ({ name, label }) => (
     </Field>
     <Field name={`${name}.port`}>
       {({ input, meta, ...rest }) => (
-        <Form.Item
-          label={'端口'}
-        >
+        <Form.Item label={'端口'}>
           <Input {...input} />
         </Form.Item>
       )}
@@ -242,9 +234,7 @@ const PortSelector = ({ name, label }) => (
 const PortsAdaptor = ({ name, label }) => (
   <Field name={`${name}`}>
     {({ input, meta, ...rest }) => (
-      <Form.Item
-        label={`${label}`}
-      >
+      <Form.Item label={`${label}`}>
         <Ports {...input} />
       </Form.Item>
     )}
@@ -255,9 +245,7 @@ const PortsAdaptor = ({ name, label }) => (
 const NamesAdaptor = ({ name, label }) => (
   <Field name={`${name}`}>
     {({ input, meta, ...rest }) => (
-      <Form.Item
-        label={`${label}`}
-      >
+      <Form.Item label={`${label}`}>
         <Names {...input} />
       </Form.Item>
     )}
@@ -365,57 +353,69 @@ class InfoPanel extends React.Component<PropTypes, StateTypes> {
     let { clusterName, backendsGroupInfo } = this.state;
     let backendsGroup = convert(backendsGroupInfo);
     let { name, namespace, loadBalancers, podChoice, pods } = backendsGroup;
-    let { byLabel, byName, ports } = pods;
+    let { byLabel = {}, byName = [], ports = [] } = pods;
+    let { selector = {}, except = [] } = byLabel;
 
     return (
-      <FinalForm
-        onSubmit={this.submit}
-        initialValuesEqual={() => true}
-        initialValues={{
-          name,
-          namespace,
-          podChoice,
-          loadBalancers,
-          byName,
-          byLabel,
-          ports,
-        }}
-        subscription={{}}
-      >
-        {({ form, handleSubmit, validating, submitting, values, valid }) => {
-          return (
-            <form id="backendsGroupForm" onSubmit={handleSubmit}>
-              <Card>
-                <Card.Body>
-                  <Form>
-                    <Name name="name" label="名称" />
-                    <Namespace name="namespace" label="命名空间" />
-                    <PodChoice
-                      name="podChoice"
-                      label="选择Pod"
-                    />
-                    {podChoice === 'byLabel' ? (
-                      <SelectPodByLabel
-                        name="byLabel"
-                        label="按Label"
-                        clusterName={clusterName}
-                        namespace={namespace}
-                      />
-                    ) : (
-                      <NamesAdaptor name="byName" label="按Pod名" />
-                    )}
-                    <PortsAdaptor name="ports" label="Pod端口" />
-                  </Form>
-                  <Form.Action>
-                    <Button type="primary">保存</Button>
-                    <Button>取消</Button>
-                  </Form.Action>
-                </Card.Body>
-              </Card>
-            </form>
-          );
-        }}
-      </FinalForm>
+      <Form>
+        <Form.Item label="名称">
+          <Form.Text>{name}</Form.Text>
+        </Form.Item>
+        <Form.Item label="命名空间">
+          <Form.Text>{namespace}</Form.Text>
+        </Form.Item>
+        {podChoice === 'byLabel' ? (
+          <>
+            <Form.Item label="Selector">
+              <Form.Text>
+                {Object.keys(selector).map(item => (
+                  <p key={item}>{item}</p>
+                ))}
+              </Form.Text>
+            </Form.Item>
+            <Form.Item label="排除Pod">
+              <Form.Text>
+                {except.map(item => (
+                  <p key={item}>{item}</p>
+                ))}
+              </Form.Text>
+            </Form.Item>
+          </>
+        ) : (
+          <Form.Item label="按Pod名">
+            <Form.Text>
+              {byName.map(item => (
+                <p key={item}>{item}</p>
+              ))}
+            </Form.Text>
+          </Form.Item>
+        )}
+        <Form.Item label="Pod端口 ">
+          <Table
+            compact
+            verticalTop
+            columns={[
+              {
+                key: 'protocol',
+                header: '协议',
+              },
+              {
+                key: 'port',
+                header: '端口',
+              },
+              {
+                key: 'host',
+                header: '主机',
+              },
+              {
+                key: 'path',
+                header: '路径',
+              },
+            ]}
+            records={ports}
+          />
+        </Form.Item>
+      </Form>
     );
   };
 }

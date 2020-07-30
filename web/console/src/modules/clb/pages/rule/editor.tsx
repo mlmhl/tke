@@ -3,14 +3,16 @@
  */
 import React from 'react';
 import { Form as FinalForm, Field, useForm } from 'react-final-form';
-import setFieldData from 'final-form-set-field-data';
-import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import {
+  Alert,
+  Bubble,
   Button,
   Card,
+  Collapse,
   Form,
   Icon,
   Input,
+  List,
   Radio,
   Select,
   SelectMultiple,
@@ -21,7 +23,8 @@ import {
 } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
-// import AutoSave from '../../components/AutoSave';
+import { Cluster as ClusterType } from '../../models';
+import AutoSave from '../../components/AutoSave';
 import {
   createRule,
   getAllClusters,
@@ -29,6 +32,7 @@ import {
   getAvailableListeners,
   getNamespacesByCluster,
   getNamespacesByProject,
+  generateServerPort,
 } from '../../services/api';
 
 const { isEqual, isEmpty, pick } = require('lodash');
@@ -37,14 +41,14 @@ const { sortable, filterable, scrollable, radioable, injectable, expandable, ind
 const labels = {
   cluster: '选择集群',
   project: '选择业务',
-  namespace: '命名空间',
-  ruleName: '规则名称',
-  switch: '创建可共享规则',
-  sharedNamespace: '可使用本规则的命名空间',
-  clbInstance: 'CLB 实例',
-  useListener: '使用监听器',
-  showListener: '使用已有监听器',
-  newListener: '新建监听器',
+  namespace: '选择命名空间',
+  ruleName: '输入规则名称',
+  switch: '是否共享规则',
+  sharedNamespace: '选择共享的命名空间',
+  clbInstance: '选择实例',
+  useListener: '选择监听器',
+  showListener: '使用现有监听器',
+  newListener: '新建一个监听器',
 };
 /**
  * 网络协议 - 下拉选择框的数据源
@@ -158,18 +162,10 @@ interface PropTypes {
   context: string; // 业务侧/平台侧
 }
 
-interface Cluster {
-  name: string;
-
-  displayName: string;
-
-  phase: string;
-}
-
 interface StateTypes {
   // data?: RuleType;
 
-  clusters: Cluster[]; // 集群列表
+  clusters: ClusterType[]; // 集群列表
 
   instances: Instance[]; // 可用实例下拉选择数据源
 
@@ -202,7 +198,12 @@ interface StateTypes {
 
 // 规则名称文本框
 const Name = ({ name, label }) => (
-  <Field name={`${name}`} validate={value => {}}>
+  <Field
+    name={`${name}`}
+    validate={value => {
+      return !value ? '请输入名称' : undefined;
+    }}
+  >
     {({ input, meta, ...rest }) => (
       <Form.Item
         label={`${label}`}
@@ -220,13 +221,17 @@ const Name = ({ name, label }) => (
 const ShareSwitcher = ({ name, label }) => (
   <Field name={`${name}`}>
     {({ input, meta, ...rest }) => (
-      <Form.Item label={`${label}`}>
-        <Switch {...input} {...rest}>
-          {/*<span>创建可共享规则</span>*/}
-          <Tooltip title={t('可共享规则允许在多个命名空间被使用，必须拥有kube-system权限才能创建可共享规则')}>
-            <Icon type="info" />
-          </Tooltip>
-        </Switch>
+      <Form.Item
+        label={
+          <p>
+            {label}
+            <Bubble content="可共享规则允许在多个命名空间被使用，必须拥有kube-system权限才能创建可共享规则">
+              <Icon type="info" />
+            </Bubble>
+          </p>
+        }
+      >
+        <Switch {...input} {...rest}></Switch>
       </Form.Item>
     )}
   </Field>
@@ -251,10 +256,12 @@ const Cluster = ({ name, label, options, onChange }) => (
               onChange(value);
             }
           }}
+          searchable
           type="simulate"
           appearence="button"
-          size="m"
-          placeholder={t('选择集群')}
+          size="l"
+          boxSizeSync
+          placeholder="选择集群"
           options={options}
         />
       </Form.Item>
@@ -283,8 +290,9 @@ const Project = ({ name, label, options, onChange }) => (
           }}
           type="simulate"
           appearence="button"
-          size="m"
-          placeholder={t('选择业务')}
+          size="l"
+          boxSizeSync
+          placeholder="选择业务"
           options={options}
         />
       </Form.Item>
@@ -297,7 +305,7 @@ const Namespace = ({ name, label, options, onChange }) => (
   <Field
     name={`${name}`}
     validate={value => {
-      return !value ? t('请选择命名空间') : undefined;
+      return !value ? '请选择命名空间' : undefined;
     }}
   >
     {({ input, meta, ...rest }) => (
@@ -316,10 +324,12 @@ const Namespace = ({ name, label, options, onChange }) => (
               onChange(value);
             }
           }}
+          searchable
           type="simulate"
           appearence="button"
-          size="m"
-          placeholder={t('请选择命名空间')}
+          size="l"
+          boxSizeSync
+          placeholder="请选择命名空间"
           options={options}
         />
       </Form.Item>
@@ -332,7 +342,7 @@ const Scope = ({ name, label, options }) => (
   <Field
     name={`${name}`}
     validate={value => {
-      return !value ? t('请选择共享的命名空间') : undefined;
+      return !value ? '请选择共享的命名空间' : undefined;
     }}
   >
     {({ input, meta, ...rest }) => (
@@ -353,7 +363,7 @@ const Scope = ({ name, label, options }) => (
           // }}
           appearence="button"
           size="m"
-          placeholder={t('请选择命名空间')}
+          placeholder="请选择命名空间"
           options={options}
         />
       </Form.Item>
@@ -375,22 +385,19 @@ const LBID = ({
 }) => (
   <Field name={`${name}`} validate={required}>
     {({ input, meta, ...rest }) => (
-      <Form.Item
-        label={`${label}`}
-        required
-        status={getStatus(meta)}
-        message={getStatus(meta) === 'error' ? meta.error : t('选择一个希望导入的 CLB 实例')}
-      >
+      <Form.Item label={`${label}`} required>
         <Card>
           <Table
             verticalTop
+            compact
+            bordered
             records={records}
             rowDisabled={record => record.disabled}
             recordKey="clbID"
             columns={[
               {
                 key: 'name',
-                header: 'name',
+                header: '名称',
               },
               {
                 key: 'clbID',
@@ -437,7 +444,7 @@ const ListenerChoice = ({ name, label, onChange }) => (
   <Field
     name={`${name}`}
     validate={value => {
-      return !value ? t('使用监听器') : undefined;
+      return !value ? '使用监听器' : undefined;
     }}
   >
     {({ input, meta, ...rest }) => (
@@ -466,66 +473,87 @@ const ListenerChoice = ({ name, label, onChange }) => (
 );
 
 // 新建监听器字段组合
-const ListenerCreator = ({ name, onClick }) => (
+const ListenerCreator = ({ name, onClick, protocol }) => (
   <>
-    <Field name={`${name}.protocol`}>
+    <Field
+      name={`${name}.protocol`}
+      validate={value => {
+        return !value ? '请选择协议' : undefined;
+      }}
+    >
       {({ input, meta, ...rest }) => (
-        <Form.Item
-          label={t('协议')}
-          required
-          status={getStatus(meta)}
-          message={getStatus(meta) === 'error' && meta.error}
-        >
+        <Form.Item label="协议" required status={getStatus(meta)} message={getStatus(meta) === 'error' && meta.error}>
           <Select
             {...input}
             type="simulate"
             appearence="button"
             size="m"
-            placeholder={t('请选择网络协议')}
+            placeholder="请选择网络协议"
             options={ProtocolList}
           />
         </Form.Item>
       )}
     </Field>
-    <Field name={`${name}.port`}>
+    <Field
+      name={`${name}.port`}
+      validate={value => {
+        return !value ? '请输入端口' : undefined;
+      }}
+    >
       {({ input, meta, ...rest }) => (
         <Form.Item
-          label={t('端口')}
+          label="端口"
           required
           status={getStatus(meta)}
           message={getStatus(meta) === 'error' && meta.error}
         >
           <Input {...input} />
-          <Button type="weak" onClick={onClick}>
-            分配随机端口
-          </Button>
+          <Bubble content="需要根据CLB实例和网络协议分配">
+            <Button type="weak" htmlType="button" onClick={onClick} style={{ marginLeft: 8 }}>
+              分配随机端口
+            </Button>
+          </Bubble>
         </Form.Item>
       )}
     </Field>
-    <Field name={`${name}.host`}>
-      {({ input, meta, ...rest }) => (
-        <Form.Item
-          label={t('主机（host）')}
-          required
-          status={getStatus(meta)}
-          message={getStatus(meta) === 'error' && meta.error}
+    {protocol === 'HTTP' && (
+      <>
+        <Field
+          name={`${name}.host`}
+          validate={value => {
+            return !value ? '主机地址不能为空' : undefined;
+          }}
         >
-          <Input {...input} />
-        </Form.Item>
-      )}
-    </Field>
-    <Field name={`${name}.path`}>
-      {({ input, meta, ...rest }) => (
-        <Form.Item
-          label={t('路径（path）')}
-          required
-          status={getStatus(meta)}
-          message={getStatus(meta) === 'error' && meta.error}
+          {({ input, meta, ...rest }) => (
+            <Form.Item
+              label="主机(Host)"
+              required
+              status={getStatus(meta)}
+              message={getStatus(meta) === 'error' && meta.error}
+            >
+              <Input {...input} />
+            </Form.Item>
+          )}
+        </Field>
+        <Field
+          name={`${name}.path`}
+          validate={value => {
+            return !value ? '路径不能为空' : undefined;
+          }}
         >
-          <Input {...input} />
-        </Form.Item>
-      )}
-    </Field>
+          {({ input, meta, ...rest }) => (
+            <Form.Item
+              label="路径(path)"
+              required
+              status={getStatus(meta)}
+              message={getStatus(meta) === 'error' && meta.error}
+            >
+              <Input {...input} />
+            </Form.Item>
+          )}
+        </Field>
+      </>
+    )}
   </>
 );
 
@@ -544,7 +572,7 @@ const ListenerList = ({
   <Field name={`${name}`}>
     {({ input, meta, ...rest }) => (
       <Form.Item
-        label={t('选择监听器')}
+        label="选择监听器"
         required
         status={getStatus(meta)}
         message={getStatus(meta) === 'error' && meta.error}
@@ -552,10 +580,14 @@ const ListenerList = ({
         <Card>
           <Table
             verticalTop
+            compact
+            bordered
             records={records}
             rowDisabled={record => Boolean(record.rules)}
             recordKey={record => {
-              let recordKey = `${record.listenerId}-${record['protocol'] || 'protocol'}-${record['port'] || 'port'}-${record['domain'] || 'domain'}-${record['url'] || 'url'}`;
+              let recordKey = `${record.listenerId}-${record['protocol'] || 'protocol'}-${record['port'] || 'port'}-${
+                record['domain'] || 'domain'
+              }-${record['url'] || 'url'}`;
               return recordKey;
             }}
             columns={[
@@ -576,19 +608,13 @@ const ListenerList = ({
                   </p>
                 ),
               },
-              // {
-              //   key: 'Port',
-              //   header: 'Port',
-              // },
               {
                 key: 'domain',
                 header: '主机/域名',
-                // render: item => <p></p>,
               },
               {
                 key: 'url',
                 header: '路径/Url',
-                // render: item => <p></p>,
               },
             ]}
             addons={[
@@ -596,17 +622,15 @@ const ListenerList = ({
                 emptyText: '暂无数据',
               }),
               expandable({
-                // 已经展开的产品
                 expandedKeys,
-                // 产品展开为消息行
                 expand: record => record.rules || null,
-                // 发生展开行为时，回调更新展开键值
                 onExpandedKeysChange,
-                // 只有产品行允许展开
                 shouldRecordExpandable: record => Boolean(record.rules),
               }),
               radioable({
-                value: `${input.value.listenerId}-${input.value['protocol'] || 'protocol'}-${input.value['port'] || 'port'}-${input.value['domain'] || 'domain'}-${input.value['url'] || 'url'}`, // 取的是 recordKey 字段的值
+                value: `${input.value.listenerId}-${input.value['protocol'] || 'protocol'}-${
+                  input.value['port'] || 'port'
+                }-${input.value['domain'] || 'domain'}-${input.value['url'] || 'url'}`, // 取的是 recordKey 字段的值
                 rowSelect: true,
                 onChange: (value, context) => {
                   // context对象中有个record字段，从中获取port和protocol，再读取该记录是否有rules
@@ -628,9 +652,9 @@ const ListenerList = ({
   </Field>
 );
 
-class Editor extends React.Component<PropTypes, StateTypes> {
+class RuleEditor extends React.Component<PropTypes, StateTypes> {
   state = {
-    // data: this.props.value,
+    // data: this.props.value || {} as RuleType,
     isPlatform: this.props.context && this.props.context === 'platform',
     clusters: [], // 平台侧下的集群列表
     instances: [],
@@ -690,6 +714,12 @@ class Editor extends React.Component<PropTypes, StateTypes> {
   getClusterList = async () => {
     let clusters = await getAllClusters();
     this.setState({ clusters });
+    // 缓存处理（如果没有从父组件传入clusterName的话使用缓存中的）
+    let { clusterName } = this.state;
+    let selectedClusterName = clusterName || window.localStorage.getItem('selectedClusterName');
+    if (clusters.map(item => item.name).includes(selectedClusterName)) {
+      this.handleClusterChanged(selectedClusterName);
+    }
   };
 
   /**
@@ -716,27 +746,50 @@ class Editor extends React.Component<PropTypes, StateTypes> {
   getListenerList = async (clusterName, lbID) => {
     // let { clusterName, lbID } = this.state;
     let list = await getAvailableListeners(clusterName, lbID);
-    let listenerList: Listener[] = list.map(({ ListenerId: listenerId, ListenerName: listenerName, Port: port, Protocol: protocol, Rules: rules }) => {
-      let data = {
-        listenerId,
-        listenerName,
-        port,
-        protocol,
-        // rules: [],
-      };
-      if (rules) {
-        Object.assign(data, { rules: rules.map(({ Domain: domain, Url: url }) => ({ listenerId, listenerName, protocol, port, domain, url })) });
+    let listenerList: Listener[] = list.map(
+      ({ ListenerId: listenerId, ListenerName: listenerName, Port: port, Protocol: protocol, Rules: rules }) => {
+        let data = {
+          listenerId,
+          listenerName,
+          port,
+          protocol,
+          // rules: [],
+        };
+        if (rules) {
+          Object.assign(data, {
+            rules: rules.map(({ Domain: domain, Url: url }) => ({
+              listenerId,
+              listenerName,
+              protocol,
+              port,
+              domain,
+              url,
+            })),
+          });
+        }
+        return data;
       }
-      return data;
-    });
+    );
     this.setState({ listenerList });
   };
 
   /**
    * 分配随机端口
    */
-  handleGeneratePort = () => {
-    //
+  handleGeneratePort = async () => {
+    let { clusterName, lbID, listener } = this.state;
+    let { protocol } = listener;
+    if (!protocol || !lbID) {
+      return Promise.resolve();
+    }
+    let response = await generateServerPort(clusterName, lbID, protocol);
+    if (response.code === 0 && response.message === 'OK') {
+      if (response.data) {
+        // response.data 形式是 { port: 80 }
+        let newListener = { ...listener, ...response.data };
+        this.setState({ listener: newListener });
+      }
+    }
   };
 
   /**
@@ -746,6 +799,12 @@ class Editor extends React.Component<PropTypes, StateTypes> {
   handleClusterChanged = async clusterName => {
     let namespaces = await getNamespacesByCluster(clusterName);
     this.setState({ clusterName, namespaces });
+    // 缓存处理（如果没有从父组件传入clusterName的话使用缓存中的）
+    let { namespace } = this.state;
+    let selectedNamespace = namespace || window.localStorage.getItem('selectedNamespace');
+    if (namespaces.map(item => item.name).includes(selectedNamespace)) {
+      this.handleNamespaceChanged(selectedNamespace);
+    }
   };
 
   /**
@@ -779,27 +838,21 @@ class Editor extends React.Component<PropTypes, StateTypes> {
     });
   };
 
-  // handleScopeChanged = value => {
-  //   console.log('new scope = ', value);
-  //   let { data } = this.state;
-  //   let newData = Object.assign(data, { scope: value });
-  //   this.setState({ data: newData });
-  //   // this.handleDataChanged(newData);
-  // };
-
-  // handleLBIDChanged = value => {
-  //   console.log('new lbID = ', value);
-  //   let { data } = this.state;
-  //   let newData = Object.assign(data, { lbID: value });
-  //   this.setState({ data: newData });
-  //   // this.handleDataChanged(newData);
-  // };
-
+  /**
+   * 转换formstate为payload
+   * 1. port 需要是字符串；2. scope在非共享的时候置空数组
+   * @param data
+   */
   stateToPayload = data => {
-    let payload = Object.assign({}, pick(data, ['name', 'namespace', 'scope', 'lbID']), {
-      ...data.listener,
-      port: Number(data.listener.port),
-    });
+    let payload = Object.assign(
+      {},
+      pick(data, ['name', 'namespace', 'lbID']),
+      {
+        ...data.listener,
+        port: Number(data.listener.port),
+      },
+      { scope: data.isSharedRule ? data.scope : [] }
+    );
 
     return payload;
   };
@@ -864,52 +917,45 @@ class Editor extends React.Component<PropTypes, StateTypes> {
 
     // const save = form => {
     //   return async values => {
-    //     console.log('values = ', values);
-    //     console.log('form.getState() = ', form.getState());
+    //     if (onChange) {
+    //       onChange(values);
+    //     }
     //   };
     // };
 
-    // const onFormChange = formState => {
-    //   let { onChange } = this.props;
-    //   let { data } = this.state;
-    //   // let { clbId, scope } = data;
-    //   console.log('formState = ', formState);
-    //   if (onChange) {
-    //     onChange({ values: formState.values, valid: formState.valid });
-    //   }
-    // };
-
-    // const validate = async ({ clbId, scope }) => {
-    //   if (!clbId) {
-    //     return t('请选择一个实例');
-    //   }
-    // };
+    const onFormChange = formState => {
+      let { onChange } = this.props;
+      // 在这里更新一下state，使跟UI保持同步。其他几个字段都有自己的单独的onChange处理方法
+      let { isSharedRule, listener, scope, name } = formState.values;
+      this.setState({ listener, isSharedRule, scope, name });
+      if (onChange) {
+        onChange({ values: formState.values, valid: formState.valid });
+      }
+    };
 
     return (
-      <FinalForm
-        onSubmit={this.submit}
-        initialValuesEqual={() => true}
-        initialValues={{
-          name,
-          isSharedRule,
-          clusterName,
-          project,
-          namespace,
-          scope,
-          lbID,
-          useListener,
-          listener,
-        }}
-        mutators={{ setFieldData }}
-        subscription={{}}
-      >
-        {({ form, handleSubmit, validating, submitting, values, valid }) => {
-          return (
+      <div>
+        <FinalForm
+          onSubmit={this.submit}
+          // initialValuesEqual={() => true}
+          initialValues={{
+            name,
+            isSharedRule,
+            clusterName,
+            project,
+            namespace,
+            scope,
+            lbID,
+            useListener,
+            listener,
+          }}
+          // mutators={{ setFieldData }}
+          // subscription={{}}
+        >
+          {({ form, handleSubmit, validating, submitting, values, valid }) => (
             <form id="ruleForm" onSubmit={handleSubmit}>
-              {/*<AutoSave setFieldData={form.mutators.setFieldData} save={save(form)} onChange={onFormChange} />*/}
-              <Form>
-                <Name name="name" label={labels.ruleName} />
-                <ShareSwitcher name="isSharedRule" label={labels.switch} />
+              <AutoSave setFieldData={form.mutators.setFieldData} onChange={onFormChange} />
+              <Form layout="vertical">
                 {isPlatform ? (
                   <Cluster
                     name="clusterName"
@@ -931,7 +977,6 @@ class Editor extends React.Component<PropTypes, StateTypes> {
                   options={namespaceList}
                   onChange={this.handleNamespaceChanged}
                 />
-                <Scope name="scope" label={labels.sharedNamespace} options={namespaceList} />
                 <LBID
                   name="lbID"
                   label={labels.clbInstance}
@@ -944,7 +989,7 @@ class Editor extends React.Component<PropTypes, StateTypes> {
                   onChange={value => this.setState({ useListener: value })}
                 />
                 {useListener === 'new' ? (
-                  <ListenerCreator name="listener" onClick={this.handleGeneratePort} />
+                  <ListenerCreator name="listener" protocol={listener.protocol} onClick={this.handleGeneratePort} />
                 ) : (
                   <ListenerList
                     name="listener"
@@ -953,36 +998,55 @@ class Editor extends React.Component<PropTypes, StateTypes> {
                     onExpandedKeysChange={keys => this.setState({ expandedKeys: keys })}
                   />
                 )}
-                <Form.Item label="填写说明">
-                  <Form.Text>
-                    <div>
-                      <strong>规则名称说明</strong>
-                      <ul>
-                        <li>{`1. 命名空间非kube-system时，规则名称不能以"lbcf-"开头`}</li>
-                        <li>{`2. 规则名称以"lbcf-"开头时，命名空间必须是"kube-system"`}</li>
-                        <li>{`3. 创建可共享规则时，命名空间固定为'kube-system'，规则名称固定以'lbcf-'开头`}</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <strong>可共享规则说明</strong>
-                      <p>可共享规则允许在多个命名空间被使用，必须拥有kube-system权限才能创建可共享规则</p>
-                    </div>
-                    <div>
-                      <strong>监听器</strong>
-                      <p>
-                        因新建HTTPS监听器较为复杂，所以不支持创建HTTPS监听器。HTTPS监听器必须由管理员在云上创建好，然后用户在“使用已有监听器”中选择。
-                      </p>
-                      <p>host禁止填写泛域名，如需要，请联系管理员在云控制台创建好，再通过“使用已有监听器”选择。</p>
-                    </div>
-                  </Form.Text>
-                </Form.Item>
+                <ShareSwitcher name="isSharedRule" label={labels.switch} />
+                {isSharedRule && <Scope name="scope" label={labels.sharedNamespace} options={namespaceList} />}
+                <Name name="name" label={labels.ruleName} />
               </Form>
             </form>
-          );
-        }}
-      </FinalForm>
+          )}
+        </FinalForm>
+        <Collapse style={{ marginTop: 8 }}>
+          <Collapse.Panel
+            id="1"
+            title="填写说明"
+            content={
+              <Alert>
+                <List>
+                  <List.Item>
+                    规则名称
+                    <List type="number">
+                      <List.Item>{`命名空间非kube-system时，规则名称不能以"lbcf-"开头`}</List.Item>
+                      <List.Item>{`规则名称以"lbcf-"开头时，命名空间必须是"kube-system"`}</List.Item>
+                      <List.Item>
+                        {`创建可共享规则时，命名空间固定为'kube-system'，规则名称固定以'lbcf-'开头`}
+                      </List.Item>
+                    </List>
+                  </List.Item>
+                  <List.Item>
+                    可共享规则
+                    <List type="number">
+                      <List.Item>
+                        可共享规则允许在多个命名空间被使用，必须拥有kube-system权限才能创建可共享规则
+                      </List.Item>
+                    </List>
+                  </List.Item>
+                  <List.Item>监听器</List.Item>
+                  <List type="number">
+                    <List.Item>
+                      因新建HTTPS监听器较为复杂，所以不支持创建HTTPS监听器。HTTPS监听器必须由管理员在云上创建好，然后用户在“使用已有监听器”中选择。
+                    </List.Item>
+                    <List.Item>
+                      host禁止填写泛域名，如需要，请联系管理员在云控制台创建好，再通过“使用已有监听器”选择。
+                    </List.Item>
+                  </List>
+                </List>
+              </Alert>
+            }
+          />
+        </Collapse>
+      </div>
     );
   };
 }
 
-export { Editor, ListenerType };
+export { RuleEditor, ListenerType };

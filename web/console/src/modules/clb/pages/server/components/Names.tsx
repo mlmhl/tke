@@ -257,7 +257,7 @@ class Names extends React.Component<PropTypes, StateTypes> {
     return (
       <Card bordered>
         <Card.Body>
-          <Table columns={this.getColumns()} records={data} />
+          <Table compact verticalTop columns={this.getColumns()} records={data} />
           <Button
             style={{ width: '100%', marginTop: 16, marginBottom: 8 }}
             type="weak"
