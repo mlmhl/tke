@@ -2,33 +2,13 @@
  * 实例详情页
  */
 import React from 'react';
-import {
-  Button,
-  Card,
-  Form,
-  SelectMultiple,
-  Table,
-} from '@tencent/tea-component';
+import { Button, Card, Form, SelectMultiple, Table } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
-import AutoSave from '../../components/AutoSave';
-import { getInstanceInfo, modifyInstanceNamespace } from '../../services/api';
+import { getInstanceInfo, getNamespacesByCluster, modifyInstanceNamespace } from '../../services/api';
 
 const { isEqual, isEmpty, pick } = require('lodash');
 const { sortable, filterable, scrollable, radioable, injectable } = Table.addons;
-
-// const labels = {
-//   cluster: '选择集群',
-//   project: '选择业务',
-//   namespace: '命名空间',
-//   ruleName: '规则名称',
-//   switch: '创建可共享规则',
-//   sharedNamespace: '可使用本规则的命名空间',
-//   clbInstance: 'CLB 实例',
-//   useListener: '使用监听器',
-//   showListener: '使用已有监听器',
-//   newListener: '新建监听器',
-// };
 
 const getStatus = meta => {
   if (meta.active && meta.validating) {
@@ -39,17 +19,6 @@ const getStatus = meta => {
   }
   return meta.error ? 'error' : 'success';
 };
-
-interface Project {
-  id: string;
-  name: string;
-}
-
-interface BackendGroup {
-  name: string;
-
-  namespace: string;
-}
 
 interface InstanceInfo {
   name: string; // 规则名称
@@ -88,20 +57,26 @@ interface Cluster {
 interface StateTypes {
   clusterName: string; // 命名空间对应的集群
 
-  // namespace: string;
+  namespaces: String[]; // 可使用该实例的命名空间
 
   name: string;
 
   instanceInfo: InstanceInfo;
+
+  mode: string;
+
+  scope: string[];
 }
 
 class InstanceDetail extends React.Component<PropTypes, StateTypes> {
   state = {
     // isPlatform: this.props.context && this.props.context === 'platform',
     clusterName: this.props.clusterName,
-    // namespace: this.props.namespace,
+    namespaces: [],
     name: this.props.name,
     instanceInfo: {} as InstanceInfo,
+    mode: 'view', // view: 查看，edit：编辑
+    scope: [],
   };
 
   componentDidMount() {
@@ -131,40 +106,71 @@ class InstanceDetail extends React.Component<PropTypes, StateTypes> {
   getInstanceInfo = async () => {
     let { clusterName, name } = this.state;
     let instanceInfo = await getInstanceInfo(clusterName, name);
-    this.setState({ instanceInfo });
+    // 初始化一下scope的状态，后续修改命名空间初始化用
+    let { scope } = instanceInfo;
+    this.setState({ instanceInfo, scope });
+  };
+
+  handleEditScope = async () => {
+    let { clusterName } = this.state;
+    const namespaces = await getNamespacesByCluster(clusterName);
+    this.setState({ namespaces, mode: 'edit' });
+  };
+
+  handleScopeChanged = value => {
+    this.setState({ scope: value });
+  };
+
+  handleSubmitScope = async () => {
+    let {
+      clusterName,
+      instanceInfo: { clbID },
+      scope,
+    } = this.state;
+    let response = await modifyInstanceNamespace(clusterName, clbID, scope);
+    if (response.code === 0 && response.message === 'OK') {
+      this.setState({ mode: 'view' }, () => {
+        this.getInstanceInfo();
+      });
+    }
   };
 
   render = () => {
-    let { clusterName, instanceInfo } = this.state;
+    let { clusterName, instanceInfo, namespaces, mode, scope: newScope } = this.state;
     let { name, type, clbID, clbName, vip, disabled, scope = [] } = instanceInfo;
-    let namespaceList = scope.map(item => ({ namespace: item }));
+    let namespaceList = [];
+    if (mode === 'view') {
+      namespaceList = scope.map(item => ({ namespace: item }));
+    } else {
+      namespaceList = namespaces.map(item => ({ text: item.name, value: item.name }));
+      namespaceList.unshift({ text: '*(任意命名空间)', value: '*' });
+    }
 
     return (
-      <Card>
-        <Card.Body
-          title="规则信息"
-          operation={<Button type="link">修改命名空间</Button>}
-        >
-          <Form>
-            <Form.Item label="规则名称">
-              <Form.Text>{name}</Form.Text>
-            </Form.Item>
-            <Form.Item label="状态">
-              <Form.Text>{disabled ? '已禁用' : '启用中'}</Form.Text>
-            </Form.Item>
-            <Form.Item label="CLB名称">
-              <Form.Text>{clbName}</Form.Text>
-            </Form.Item>
-            <Form.Item label="CLB ID">
-              <Form.Text>{clbID}</Form.Text>
-            </Form.Item>
-            <Form.Item label="网络类型">
-              <Form.Text>{type}</Form.Text>
-            </Form.Item>
-            <Form.Item label="VIP">
-              <Form.Text>{vip}</Form.Text>
-            </Form.Item>
-            <Form.Item label="允许使用本实例的命名空间">
+      <div>
+        <Form style={{ marginBottom: 16 }}>
+          <Form.Item label="名称">
+            <Form.Text>{name}</Form.Text>
+          </Form.Item>
+          <Form.Item label="状态">
+            <Form.Text>{disabled ? '已禁用' : '启用中'}</Form.Text>
+          </Form.Item>
+          <Form.Item label="CLB名称">
+            <Form.Text>{clbName}</Form.Text>
+          </Form.Item>
+          <Form.Item label="CLB ID">
+            <Form.Text>{clbID}</Form.Text>
+          </Form.Item>
+          <Form.Item label="网络类型">
+            <Form.Text>{type}</Form.Text>
+          </Form.Item>
+          <Form.Item label="VIP">
+            <Form.Text>{vip}</Form.Text>
+          </Form.Item>
+        </Form>
+        <Form layout="vertical">
+          <Form.Item label="允许使用本实例的命名空间">
+            {mode === 'view' ? (
               <Table
                 compact
                 bordered
@@ -184,10 +190,40 @@ class InstanceDetail extends React.Component<PropTypes, StateTypes> {
                   }),
                 ]}
               />
-            </Form.Item>
-          </Form>
-        </Card.Body>
-      </Card>
+            ) : (
+              <SelectMultiple
+                value={newScope}
+                onChange={this.handleScopeChanged}
+                // staging={false}
+                appearence="button"
+                size="l"
+                placeholder="请选择命名空间"
+                options={namespaceList}
+              />
+            )}
+          </Form.Item>
+        </Form>
+        <Form.Action>
+          {mode === 'view' ? (
+            <Button type="primary" onClick={this.handleEditScope}>
+              修改命名空间
+            </Button>
+          ) : (
+            <>
+              <Button type="primary" onClick={this.handleSubmitScope}>
+                保存
+              </Button>
+              <Button
+                onClick={() => {
+                  this.setState({ mode: 'view' });
+                }}
+              >
+                取消
+              </Button>
+            </>
+          )}
+        </Form.Action>
+      </div>
     );
   };
 }

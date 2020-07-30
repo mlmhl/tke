@@ -4,11 +4,9 @@
 import React from 'react';
 import { Bubble, Button, Card, Icon, Form, Justify, Table, Text } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
-import { Clip } from '@src/modules/common';
 
 import { getEventListByRule } from '../../services/api';
 import { dateFormatter } from '@helper';
-import { cluster } from '@config/resource/k8sConfig';
 
 const { isEqual, isEmpty, pick } = require('lodash');
 const { sortable, filterable, scrollable, radioable, injectable } = Table.addons;
@@ -147,14 +145,6 @@ class EventList extends React.Component<PropTypes, StateTypes> {
       {
         key: 'name',
         header: '资源名称',
-        // render: record => (
-        //   <div>
-        //     <span id={'eventName' + record.uid} title={record.name} className="text-overflow m-width">
-        //       {record.name}
-        //     </span>
-        //     <Clip target={'#eventName' + record.uid} />
-        //   </div>
-        // ),
       },
       {
         key: 'reason',

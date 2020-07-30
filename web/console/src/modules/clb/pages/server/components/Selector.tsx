@@ -5,7 +5,7 @@ import React from 'react';
 
 import { Button, Card, Form, List, Modal, Radio, Select, Text } from '@tencent/tea-component';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import { getDeploymentsByNamespace, getStatefulsetsByNamespace } from '@src/modules/clb/services/api';
+import { getDeploymentsByNamespace, getStatefulsetsByNamespace, getTappsByNamespace } from '../../../services/api';
 
 const { isEqual, stubArray, stubObject } = require('lodash');
 
@@ -42,6 +42,8 @@ interface StateTypes {
 
   statefulsets: WorkloadSummary[];
 
+  tapps: WorkloadSummary[];
+
   selectedWorkload: string;
 
   labels: object;
@@ -54,6 +56,7 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
     type: 'deployment', // 默认是 Deployment
     deployments: [],
     statefulsets: [],
+    tapps: [],
     selectedWorkload: '', // 当前选中的workload名称
     labels: {},
   };
@@ -78,8 +81,10 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
     let { type, clusterName, namespace } = this.state;
     if (type === 'deployment') {
       this.getDeploymentList(clusterName, namespace);
-    } else {
+    } else if (type === 'statefulset') {
       this.getStatefulsetList(clusterName, namespace);
+    } else {
+      this.getTappList(clusterName, namespace);
     }
   };
 
@@ -95,6 +100,12 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
     this.setState({ statefulsets });
   };
 
+  getTappList = async (clusterName, namespace) => {
+    let data = await getTappsByNamespace(clusterName, namespace);
+    let tapps = data.map(item => ({ name: item.metadata.name, labels: item.metadata.labels }));
+    this.setState({ tapps });
+  };
+
   handleTypeChanged = value => {
     this.setState({ type: value, deployments: stubArray(), statefulsets: stubArray(), labels: stubObject() }, () => {
       this.loadData();
@@ -105,7 +116,6 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
     let { onChange } = this.props;
     let { type, deployments, statefulsets } = this.state;
     let workloads = type === 'deployment' ? deployments : statefulsets;
-    console.log('workload@Selector = ', value);
     let workload = workloads.find(item => item.name === value);
     let { labels } = workload;
     this.setState({ selectedWorkload: value, labels }, () => {
@@ -133,10 +143,14 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
               <Radio name="statefulset">
                 <span>Statefulset</span>
               </Radio>
+              <Radio name="tapp">
+                <span>TAPP</span>
+              </Radio>
             </Radio.Group>
           </Form.Item>
-          <Form.Item label={t('资源列表')}>
+          <Form.Item label="资源列表">
             <Select
+              searchable
               type="simulate"
               appearence="default"
               value={selectedWorkload}

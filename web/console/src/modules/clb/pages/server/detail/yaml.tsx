@@ -2,14 +2,7 @@
  * 服务器组详情页 - YAML
  */
 import React from 'react';
-import {
-  Button,
-  Card,
-  Form,
-  Select,
-  Table,
-  Text,
-} from '@tencent/tea-component';
+import { Button, Card, Form, Select, Table, Text } from '@tencent/tea-component';
 
 import { getRuleYamlContent } from '../../../services/api';
 import { BackendsGroupInfo } from './index';
@@ -131,40 +124,36 @@ class YamlPanel extends React.Component<PropTypes, StateTypes> {
     let { source, ruleName, ruleList, yamlContent } = this.state;
 
     return (
-      <Card>
-        <Card.Body
-          title="YAML"
-        >
-          <Form layout="inline">
-            <Form.Item label={'对象选择'}>
-              <Select
-                boxSizeSync
-                size="m"
-                type="simulate"
-                appearence="button"
-                options={sourceOptions}
-                value={source}
-                onChange={value => this.handleSourceChanged(value)}
-              />
-            </Form.Item>
-            <Form.Item>
-              <Select
-                boxSizeSync
-                size="m"
-                type="simulate"
-                appearence="button"
-                options={ruleList}
-                value={ruleName}
-                onChange={value => this.handleRuleChanged(value)}
-              />
-            </Form.Item>
-            <Form.Item>
-              <Button icon="refresh" onClick={this.reloadContent} />
-            </Form.Item>
-          </Form>
-          <YamlEditorPanel config={yamlContent} readOnly={true} isNeedRefreshContent />
-        </Card.Body>
-      </Card>
+      <div>
+        <Form layout="inline">
+          <Form.Item label="对象选择">
+            <Select
+              boxSizeSync
+              size="m"
+              type="simulate"
+              appearence="button"
+              options={sourceOptions}
+              value={source}
+              onChange={value => this.handleSourceChanged(value)}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Select
+              boxSizeSync
+              size="m"
+              type="simulate"
+              appearence="button"
+              options={ruleList}
+              value={ruleName}
+              onChange={value => this.handleRuleChanged(value)}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button icon="refresh" onClick={this.reloadContent} />
+          </Form.Item>
+        </Form>
+        <YamlEditorPanel config={yamlContent} readOnly={true} isNeedRefreshContent />
+      </div>
     );
   };
 }

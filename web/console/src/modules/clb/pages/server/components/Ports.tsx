@@ -292,12 +292,11 @@ class Ports extends React.Component<PropTypes, StateTypes> {
 
   render = () => {
     const { loading, data } = this.state;
-    console.log('data@Ports = ', data);
 
     return (
       <Card bordered>
         <Card.Body>
-          <Table columns={this.getColumns()} records={data} />
+          <Table compact verticalTop columns={this.getColumns()} records={data} />
           <Button
             style={{ width: '100%', marginTop: 16, marginBottom: 8 }}
             type="weak"

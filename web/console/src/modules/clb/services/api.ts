@@ -315,7 +315,7 @@ export async function getInstanceInfo(clusterName, clbId) {
  * @param scope CLB实例允许使用的命名空间，"*"为任意空间
  */
 export async function modifyInstanceNamespace(clusterName, clbId, scope) {
-  let result = [];
+  let result;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=updateCLBScope&lbID=${clbId}`;
   let params: RequestParams = {
     method: Method.post,
@@ -329,6 +329,7 @@ export async function modifyInstanceNamespace(clusterName, clbId, scope) {
     result = response;
   } catch (error) {
     alertError(error, url);
+    return { code: 500, message: 'exception' };
   }
 
   return result;
@@ -417,8 +418,8 @@ export async function getAvailableInstancesByClusterAndNamespace(clusterName, na
  * @param namespace 规则所在命名空间
  * @param ruleName 规则名称
  */
-export async function generateNewPort(clusterName, lbId, protocol) {
-  let result = [];
+export async function generateServerPort(clusterName, lbId, protocol) {
+  let result;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=applyListenerPort`;
   let params: RequestParams = {
     method: Method.post,
@@ -444,7 +445,7 @@ export async function generateNewPort(clusterName, lbId, protocol) {
  * @param payload rule的实体
  */
 export async function createRule(clusterName, payload) {
-  let result = [];
+  let result;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=createRule`;
   let params: RequestParams = {
     method: Method.post,
@@ -509,6 +510,7 @@ export async function getRuleInfo(clusterName, namespace, ruleName) {
     }
   } catch (error) {
     alertError(error, url);
+    return {};
   }
 
   return result;
@@ -522,7 +524,7 @@ export async function getRuleInfo(clusterName, namespace, ruleName) {
  * @param scope CLB实例允许使用的命名空间，"*"为任意空间
  */
 export async function modifyRuleNamespace(clusterName, namespace, ruleName, scope) {
-  let result = [];
+  let result;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=updateRuleScope`;
   let params: RequestParams = {
     method: Method.post,
@@ -624,13 +626,39 @@ export async function getStatefulsetsByNamespace(clusterName, namespace) {
 }
 
 /**
+ * 获取某个命名空间下的全部Tapp列表
+ * @param namespace 命名空间名称
+ */
+export async function getTappsByNamespace(clusterName, namespace) {
+  let tappList = [];
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/tapps?namespace=${namespace}`;
+  let params: RequestParams = {
+    method: Method.get,
+    url,
+  };
+  try {
+    let response = await reduceNetworkRequest(params, clusterName);
+    if (response.code === 0) {
+      let list = response.data;
+      if (list && list.items) {
+        tappList = [...list.items];
+      }
+    }
+  } catch (error) {
+    alertError(error, url);
+  }
+
+  return tappList;
+}
+
+/**
  * 删除服务器组
  * @param clusterName 集群名称
  * @param namespace 规则所在命名空间
  * @param ruleName 规则名称
  */
 export async function removeBackendsGroup(clusterName, namespace, backendGroupName) {
-  let result = [];
+  let result;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendgroups?namespace=${namespace}&name=${backendGroupName}`;
   let params: RequestParams = {
     method: Method.delete,
@@ -653,7 +681,7 @@ export async function removeBackendsGroup(clusterName, namespace, backendGroupNa
  * @param backendGroupName 服务器组名称
  */
 export async function createBackendsGroup(clusterName, namespace, payload) {
-  let result = [];
+  let result;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendgroups?namespace=${namespace}`;
   let params: RequestParams = {
     method: Method.post,
@@ -744,7 +772,7 @@ export async function getEventListByRule(clusterName, namespace, ruleName) {
     let response = await reduceNetworkRequest(params, clusterName);
     if (response.code === 0) {
       let { items } = response.data;
-      result = [...items];
+      result = items ? [...items] : [];
     }
   } catch (error) {
     alertError(error, url);
