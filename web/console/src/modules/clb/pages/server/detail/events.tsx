@@ -1,48 +1,30 @@
 /**
- * 服务器组详情 - 事件
+ * 规则事件
  */
 import React from 'react';
-import { Bubble, Button, Card, Form, Justify, Select, Switch, Table, Text } from '@tencent/tea-component';
+import { Bubble, Button, Card, Icon, Form, Justify, Table, Text } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
-import { getEventListByRule } from '../../../services/api';
-import { BackendsGroupInfo } from './index';
+import { getEventListByBackends } from '../../../services/api';
 import { dateFormatter } from '@helper';
-import { Clip } from '@src/modules/common';
 
 const { isEqual, isEmpty, pick } = require('lodash');
 const { sortable, filterable, scrollable, radioable, injectable } = Table.addons;
 
-// 对象选择
-const sourceOptions = [
-  { text: '负载均衡', value: 'lbcf' },
-  { text: '后端记录', value: 'lbcf_br' },
-];
+interface ServerType {
+  id: string;
+
+  addr: string; // json string: { ip: '', port: 80 }
+
+  status: string;
+}
 
 interface PropTypes {
   clusterName: string; // 集群名称
 
   namespace: string;
 
-  name: string;
-
-  context: string; // 业务侧/平台侧
-
-  backendsGroupInfo: BackendsGroupInfo;
-}
-
-interface Cluster {
-  name: string;
-
-  displayName: string;
-
-  phase: string;
-}
-
-interface Options {
-  text: string;
-
-  value: string;
+  serverId: string;
 }
 
 interface StateTypes {
@@ -50,96 +32,76 @@ interface StateTypes {
 
   namespace: string;
 
-  name: string;
-
-  backendsGroupInfo: BackendsGroupInfo;
-
-  timingReload: boolean; // 定时刷新列表
-
-  ruleName: string;
-
-  ruleList: Options[];
+  serverId: string;
 
   events: any[];
-
-  source: string;
 }
 
-const convert = event => {
-  let {
-    metadata: { name, namespace, uid, creationTimestamp },
-    involvedObject: { kind },
-    reason,
-    message,
-    firstTimestamp,
-    lastTimestamp,
-    count,
-    type,
-  } = event;
+// const convert = event => {
+//   let {
+//     metadata: { name, namespace, uid, creationTimestamp },
+//     involvedObject: { kind },
+//     reason,
+//     message,
+//     firstTimestamp,
+//     lastTimestamp,
+//     count,
+//     type,
+//   } = event;
+//
+//   let data = {
+//     name, // 事件名称，例如tfan-rule.1623a7a45afdd9e5
+//     namespace,
+//     uid,
+//     creationTimestamp,
+//     kind,
+//     reason,
+//     message,
+//     firstTimestamp,
+//     lastTimestamp,
+//     count,
+//     type,
+//   };
+//   return data;
+// };
 
-  let data = {
-    name, // 事件名称，例如tfan-rule.1623a7a45afdd9e5
-    namespace,
-    uid,
-    creationTimestamp,
-    kind,
-    reason,
-    message,
-    firstTimestamp,
-    lastTimestamp,
-    count,
-    type,
-  };
-  return data;
-};
-
-class EventsPanel extends React.Component<PropTypes, StateTypes> {
+class EventList extends React.Component<PropTypes, StateTypes> {
   state = {
-    isPlatform: this.props.context && this.props.context === 'platform',
     clusterName: this.props.clusterName,
     namespace: this.props.namespace,
-    name: this.props.name, // 服务器组名称
-    backendsGroupInfo: this.props.backendsGroupInfo,
-
-    source: '',
-    ruleName: '',
-    ruleList: [],
-    timingReload: false,
+    serverId: this.props.serverId,
     events: [],
   };
 
   componentDidMount() {
-    // this.loadData();
+    this.loadData();
   }
 
   // componentWillReceiveProps(nextProps, nextContext) {
-  //   const { clusterName, namespace, name } = this.state;
+  //   const { clusterName, namespace, serverId } = this.state;
   //
-  //   if (!isEqual(nextProps.clusterName, clusterName) || !isEqual(nextProps.namespace, namespace) || !isEqual(nextProps.name, name)) {
-  //     this.setState({ clusterName: nextProps.clusterName, namespace: nextProps.namespace, name: nextProps.name }, () => {
-  //       if (nextProps.clusterName && nextProps.namespace && nextProps.name) {
+  //   if (!isEqual(nextProps.clusterName, clusterName) || !isEqual(nextProps.namespace, namespace) || !isEqual(nextProps.serverId, serverId)) {
+  //     this.setState({ clusterName: nextProps.clusterName, namespace: nextProps.namespace, serverId: nextProps.serverId }, () => {
+  //       if (nextProps.clusterName && nextProps.namespace && nextProps.serverId) {
   //         this.loadData();
   //       }
   //     });
   //   }
   // }
 
-  /**
-   * 切换"对象选择"
-   * @param source
-   */
-  handleSourceChanged = async source => {
-    let { backendsGroupInfo } = this.state;
-    let options;
-    if (source === 'lbcf') {
-      // 要处理loadBalancers不存在的情况
-      options = (backendsGroupInfo['spec']['loadBalancers'] || []).map(item => ({ text: item, value: item }));
-    }
-    this.setState({ source, ruleList: options });
+  loadData = () => {
+    let { clusterName, namespace, serverId } = this.state;
+    this.getList(clusterName, namespace, serverId);
   };
 
-  getList = async (clusterName, namespace, ruleName) => {
-    let events = await getEventListByRule(clusterName, namespace, ruleName);
+  /**
+   * 获取服务器事件列表
+   * @param clusterName
+   * @param namespace
+   * @param name
+   */
+  getList = async (clusterName, namespace, serverId) => {
+    let events = await getEventListByBackends(clusterName, namespace, serverId);
     this.setState({ events });
   };
 
@@ -147,28 +109,18 @@ class EventsPanel extends React.Component<PropTypes, StateTypes> {
    * 增加一个刷新图标按钮用来刷新列表数据
    */
   reloadList = () => {
-    let { clusterName, namespace, ruleName } = this.state;
-    if (clusterName && namespace && ruleName) {
-      this.getList(clusterName, namespace, ruleName);
+    let { clusterName, namespace, serverId } = this.state;
+    if (clusterName && namespace && serverId) {
+      this.setState({ events: [] }, () => {
+        this.getList(clusterName, namespace, serverId);
+      });
     }
   };
 
-  /**
-   * 切换命名空间的时候获取规则列表
-   * @param namespace
-   */
-  handleRuleChanged = ruleName => {
-    let { clusterName, namespace } = this.state;
-    this.setState({ ruleName }, () => {
-      this.getList(clusterName, namespace, ruleName);
-    });
-  };
-
-  handleReloadSwitch = value => {};
-
   render = () => {
-    let { source, ruleName, ruleList, timingReload, events } = this.state;
-    let eventList = events.map(item => convert(item));
+    let { clusterName, namespace, serverId, events } = this.state;
+    // let eventList = events.map(item => convert(item));
+    let eventList = events.map(item => item);
 
     /** 处理时间 */
     const reduceTime = (time: string) => {
@@ -197,29 +149,24 @@ class EventsPanel extends React.Component<PropTypes, StateTypes> {
         header: '级别',
         render: record => <Text theme={record.type === 'Warning' ? 'warning' : 'text'}>{record.type}</Text>,
       },
-      {
-        key: 'kind',
-        header: '资源类型',
-      },
-      {
-        key: 'name',
-        header: '资源名称',
-        render: record => (
-          <div>
-            <span id={'eventName' + record.uid} title={record.name} className="text-overflow m-width">
-              {record.name}
-            </span>
-            <Clip target={'#eventName' + record.uid} />
-          </div>
-        ),
-      },
+      // {
+      //   key: 'kind',
+      //   header: '资源类型',
+      // },
+      // {
+      //   key: 'name',
+      //   header: '资源名称',
+      // },
       {
         key: 'reason',
         header: '内容',
         render: record => (
-          <Text theme="text" tooltip={record.message}>
-            {record.reason}
-          </Text>
+          <>
+            <Text theme="text">{record.reason}</Text>
+            <Bubble content={record.message}>
+              <Icon type="info" />
+            </Bubble>
+          </>
         ),
       },
       {
@@ -229,55 +176,24 @@ class EventsPanel extends React.Component<PropTypes, StateTypes> {
     ];
 
     return (
-      <div>
-        <Table.ActionPanel>
-          <Justify
-            left={
-              <Form layout="inline">
-                <Form.Item label="对象选择">
-                  <Select
-                    boxSizeSync
-                    size="m"
-                    type="simulate"
-                    appearence="button"
-                    options={sourceOptions}
-                    value={source}
-                    onChange={value => this.handleSourceChanged(value)}
-                  />
-                </Form.Item>
-                <Form.Item>
-                  <Select
-                    searchable
-                    boxSizeSync
-                    size="m"
-                    type="simulate"
-                    appearence="button"
-                    options={ruleList}
-                    value={ruleName}
-                    onChange={value => this.handleRuleChanged(value)}
-                  />
-                </Form.Item>
-                <Form.Item>
-                  <Button icon="refresh" onClick={this.reloadList} />
-                </Form.Item>
-              </Form>
-            }
+      <Card>
+        <Card.Body operation={<Button icon="refresh" onClick={this.reloadList} />}>
+          <Table
+            verticalTop
+            disableTextOverflow={true}
+            records={eventList}
+            recordKey="uid"
+            columns={columns}
+            addons={[
+              autotip({
+                emptyText: '暂无数据',
+              }),
+            ]}
           />
-        </Table.ActionPanel>
-        <Table
-          verticalTop
-          records={eventList}
-          recordKey="uid"
-          columns={columns}
-          addons={[
-            autotip({
-              emptyText: '暂无数据',
-            }),
-          ]}
-        />
-      </div>
+        </Card.Body>
+      </Card>
     );
   };
 }
 
-export { EventsPanel };
+export { EventList };

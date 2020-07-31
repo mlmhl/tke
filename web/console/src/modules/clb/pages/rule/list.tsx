@@ -10,6 +10,7 @@ import {
   Drawer,
   Form,
   Justify,
+  List,
   Modal,
   Select,
   Table,
@@ -339,9 +340,10 @@ export class RuleList extends React.Component<PropTypes> {
       <ContentView>
         <Header title="CLB规则" />
         <Body>
-          <Alert defaultVisible type="warning">
-            <h4 style={{ marginBottom: 8 }}>重要声明</h4>
+          <Alert defaultVisible type="info">
+            <h4 style={{ marginBottom: 8 }}>提示</h4>
             <p>删除规则会导致规则下所有容器被解绑</p>
+            <p>规则创建后，还需在<Text theme="warning">CLB管理 --&gt; 服务器组</Text>页面中将规则与服务器组相关联</p>
           </Alert>
           <Table.ActionPanel>
             <Justify
@@ -416,7 +418,7 @@ export class RuleList extends React.Component<PropTypes> {
                   {
                     key: 'type',
                     header: '网络类型',
-                    render: rule => rule.type,
+                    render: rule => <p>{rule.type === 'OPEN' ? '公网' : '内网'}</p>,
                   },
                   {
                     key: 'vip',
@@ -442,8 +444,13 @@ export class RuleList extends React.Component<PropTypes> {
                   {
                     key: 'backendGroups',
                     header: '服务器组',
-                    align: 'right',
-                    render: rule => rule.backendGroups.length,
+                    render: rule => (
+                      <List>
+                        {rule.backendGroups.map(item => (
+                          <List.Item key={item.name}>{`${item.namespace}/${item.name}`}</List.Item>
+                        ))}
+                      </List>
+                    ),
                   },
                   {
                     key: 'settings',
@@ -499,11 +506,7 @@ export class RuleList extends React.Component<PropTypes> {
                 title="规则详情"
                 onClose={this.handleCloseDrawer}
                 size="l"
-                footer={
-                  <Button onClick={this.handleCloseDrawer}>
-                    关闭
-                  </Button>
-                }
+                footer={<Button onClick={this.handleCloseDrawer}>关闭</Button>}
               >
                 <RuleDetail clusterName={clusterName} namespace={namespace} ruleName={selectedItem.name} />
               </Drawer>

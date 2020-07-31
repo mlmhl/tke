@@ -162,7 +162,7 @@ class InstanceDetail extends React.Component<PropTypes, StateTypes> {
             <Form.Text>{clbID}</Form.Text>
           </Form.Item>
           <Form.Item label="网络类型">
-            <Form.Text>{type}</Form.Text>
+            <Form.Text>{type === 'OPEN' ? '公网' : '内网'}</Form.Text>
           </Form.Item>
           <Form.Item label="VIP">
             <Form.Text>{vip}</Form.Text>

@@ -654,6 +654,35 @@ export async function getTappsByNamespace(clusterName, namespace) {
 }
 
 /**
+ * 获取workloads
+ * 带是否可用于创建服务器组的标志
+ * @param clusterName
+ * @param namespace
+ * @param workloadType
+ */
+export async function getWorkloadsByNamespace(clusterName, namespace, workloadType) {
+  let workloads = [];
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=listWorkload&workloadNS=${namespace}&workloadType=${workloadType}`;
+  let params: RequestParams = {
+    method: Method.get,
+    url,
+  };
+  try {
+    let response = await reduceNetworkRequest(params, clusterName);
+    if (response.code === 0) {
+      let list = response.data;
+      if (list && list.workloads) {
+        workloads = [...list.workloads];
+      }
+    }
+  } catch (error) {
+    alertError(error, url);
+  }
+
+  return workloads;
+}
+
+/**
  * 删除服务器组
  * @param clusterName 集群名称
  * @param namespace 规则所在命名空间
@@ -686,6 +715,31 @@ export async function createBackendsGroup(clusterName, namespace, payload) {
   let result;
   // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendgroups?namespace=${namespace}`;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&api=createGroup&apiPort=80`;
+  let params: RequestParams = {
+    method: Method.post,
+    url,
+    data: { ...payload },
+  };
+  try {
+    let response = await reduceNetworkRequest(params, clusterName);
+    result = response;
+  } catch (error) {
+    alertError(error, url);
+  }
+
+  return result;
+}
+
+/**
+ * 修改服务器组关联的规则
+ * @param clusterName
+ * @param namespace
+ * @param backendsGroupName
+ * @param payload
+ */
+export async function changeRulesForBackendsGroup(clusterName, namespace, backendsGroupName, payload) {
+  let result;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&api=updateGroupRule&apiPort=80&groupNS=${namespace}&groupName=${backendsGroupName}`;
   let params: RequestParams = {
     method: Method.post,
     url,
@@ -736,7 +790,6 @@ export async function getBackendsGroupInfo(clusterName, namespace, backendGroupN
  */
 export async function getBackendsInfo(clusterName, namespace, backendGroupName) {
   let result;
-  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendrecords?namespace=${namespace}&bg=${backendGroupName}&lb=${ruleName}`;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=listGroupServers&groupNS=${namespace}&groupName=${backendGroupName}`;
   let params: RequestParams = {
     method: Method.get,
@@ -787,14 +840,15 @@ export async function getEventListByRule(clusterName, namespace, ruleName) {
 }
 
 /**
- * 获取服务器组事件
+ * 获取服务器事件
  * @param clusterName
  * @param namespace
- * @param backendsGroupName
+ * @param serverId
  */
-export async function getEventListByBackendsGroup(clusterName, namespace, backendsGroupName) {
+export async function getEventListByBackends(clusterName, namespace, serverId) {
   let result;
-  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendrecords?namespace=${namespace}&name=${backendsGroupName}&action=events`;
+  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendrecords?namespace=${namespace}&name=${backendsGroupName}&action=events`;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=getBackendRecordEvent&serverNS=${namespace}&serverID=${serverId}`;
   let params: RequestParams = {
     method: Method.get,
     url,
@@ -821,7 +875,38 @@ export async function getEventListByBackendsGroup(clusterName, namespace, backen
  */
 export async function getRuleYamlContent(clusterName, namespace, ruleName) {
   let result = '';
-  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbs?namespace=${namespace}&name=${ruleName}`;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbs?namespace=${
+    /lbcf-*/.test(ruleName) ? 'kube-system' : namespace
+  }&name=${ruleName}`;
+  let userDefinedHeader = {
+    Accept: 'application/yaml',
+  };
+  let params: RequestParams = {
+    method: Method.get,
+    userDefinedHeader,
+    url,
+  };
+  try {
+    let response = await reduceNetworkRequest(params, clusterName);
+    if (response.code === 0) {
+      result = response.data;
+    }
+  } catch (error) {
+    alertError(error, url);
+  }
+
+  return result;
+}
+
+/**
+ * 获取服务器组的yaml内容
+ * @param clusterName
+ * @param namespace
+ * @param backendsGroupName
+ */
+export async function getBackendsGroupYamlContent(clusterName, namespace, backendsGroupName) {
+  let result = '';
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendgroups?namespace=${namespace}&name=${backendsGroupName}`;
   let userDefinedHeader = {
     Accept: 'application/yaml',
   };

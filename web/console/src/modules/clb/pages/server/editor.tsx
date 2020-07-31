@@ -3,7 +3,6 @@
  */
 import React, { useState } from 'react';
 import { Form as FinalForm, Field, useForm } from 'react-final-form';
-import setFieldData from 'final-form-set-field-data';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import {
   Bubble,
@@ -430,6 +429,7 @@ const LoadBalancers = ({ name, label, records }: { name: string; label: string; 
             {
               key: 'type',
               header: '网络类型',
+              render: rule => (rule.type === 'OPEN' ? '公网' : '内网')
             },
             {
               key: 'vip',

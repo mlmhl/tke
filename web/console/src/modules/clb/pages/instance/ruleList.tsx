@@ -147,7 +147,7 @@ export class RuleList extends React.Component<PropTypes> {
                 key: 'type',
                 header: '网络类型',
                 align: 'center',
-                render: rule => <p>{rule.type}</p>,
+                render: rule => <p>{rule.type === 'OPEN' ? '公网' : '内网'}</p>,
               },
               {
                 key: 'port',

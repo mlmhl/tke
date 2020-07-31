@@ -7,7 +7,7 @@ const { isEqual, isEmpty, pick } = require('lodash');
 
 import { InfoPanel } from './info';
 import { ServerPanel } from './server';
-import { EventsPanel } from './events';
+// import { EventsPanel } from './events';
 import { YamlPanel } from './yaml';
 
 const { Body, Content } = Layout;
@@ -15,7 +15,7 @@ const { Body, Content } = Layout;
 const tabs = [
   { id: 'info', label: '详情' },
   { id: 'server', label: 'CLB规则与服务器' },
-  { id: 'events', label: '事件' },
+  // { id: 'events', label: '事件' },
   { id: 'yaml', label: 'YAML' },
 ];
 
@@ -179,9 +179,9 @@ class ServerDetail extends React.Component<PropTypes, StateTypes> {
           <TabPanel id="server">
             <ServerPanel {...this.props} backendsGroupInfo={backendsGroupInfo} />
           </TabPanel>
-          <TabPanel id="events">
-            <EventsPanel {...this.props} backendsGroupInfo={backendsGroupInfo} />
-          </TabPanel>
+          {/*<TabPanel id="events">*/}
+          {/*  <EventsPanel {...this.props} backendsGroupInfo={backendsGroupInfo} />*/}
+          {/*</TabPanel>*/}
           <TabPanel id="yaml">
             <YamlPanel {...this.props} backendsGroupInfo={backendsGroupInfo} />
           </TabPanel>
