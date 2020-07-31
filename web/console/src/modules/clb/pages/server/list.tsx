@@ -6,6 +6,7 @@ import {
   Drawer,
   Form,
   Justify,
+  List,
   Modal,
   Select,
   Table,
@@ -53,7 +54,8 @@ const convert = item => ({
   ), // 通过path是否存在判断消息内容的类型
   backends: get(item, 'status.backends', 0),
   registeredBackends: get(item, 'status.registeredBackends', 0),
-  relatedRules: max([get(item, 'spec.loadBalancers', 0), get(item, 'spec.lbName', 0), 0]), // 两个路径的对象会且只会存在一个，取出它的值来
+  relatedRules: get(item, 'spec.loadBalancers', []),
+  // relatedRules: get(item, 'spec.lbName') ? 1 : max([get(item, 'spec.loadBalancers', []).length, 0]), // 两个路径的对象会且只会存在一个，取出它的值来
 });
 
 interface Project {
@@ -231,7 +233,7 @@ export class ServerList extends React.Component<PropTypes> {
     try {
       let payload = this.stateToPayload(currentItem);
       let response = await createBackendsGroup(clusterName, namespace, payload);
-      if (response && response.code === 0 && response.message === 'Created') {
+      if (response && response.code === 0 && response.message === 'OK') {
         this.showDrawer(false);
         this.alertSuccess();
         this.loadData();
@@ -310,10 +312,7 @@ export class ServerList extends React.Component<PropTypes> {
             <Button type="link" onClick={this.handleViewItem(item)}>
               <strong>详情</strong>
             </Button>
-            <Button
-              type="link"
-              onClick={this.handleRemoveItem(item)}
-            >
+            <Button type="link" onClick={this.handleRemoveItem(item)}>
               <strong>删除</strong>
             </Button>
           </>
@@ -415,6 +414,13 @@ export class ServerList extends React.Component<PropTypes> {
                   {
                     key: 'relatedRules',
                     header: '关联规则',
+                    render: ({ relatedRules = [] }) => (
+                      <List>
+                        {relatedRules.map(item => (
+                          <List.Item key={item}>{item}</List.Item>
+                        ))}
+                      </List>
+                    ),
                   },
                   {
                     key: 'settings',

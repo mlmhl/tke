@@ -321,7 +321,7 @@ export class InstanceList extends React.Component<PropTypes> {
               {
                 key: 'type',
                 header: '网络类型',
-                render: instance => <p>{instance.type}</p>,
+                render: instance => <p>{instance.type === 'OPEN' ? '公网' : '内网'}</p>,
               },
               {
                 key: 'scope',

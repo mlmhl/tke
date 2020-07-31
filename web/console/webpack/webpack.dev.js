@@ -12,7 +12,6 @@ const version = process.argv[2] || 'tke';
 const lng = process.argv[3] || 'zh';
 
 module.exports = {
-  // devtool: 'eval-cheap-source-map',
   devtool: 'eval-source-map',
   mode: 'development',
 
@@ -34,7 +33,7 @@ module.exports = {
         use: [
           'happypack/loader?id=happyBabel',
           'happypack/loader?id=happyTs',
-          // 'happypack/loader?id=happyESLint',
+          'happypack/loader?id=happyESLint',
           path.resolve(`./loader/iffile-loader.js?version=${version}`),
           path.resolve(`./loader/ifelse-loader.js?version=${version}`),
         ],
@@ -67,17 +66,17 @@ module.exports = {
       threadPool: happyThreadPool,
     }),
 
-    // new HappyPack({
-    //   id: 'happyESLint',
-    //   loaders: [{
-    //     loader: 'eslint-loader',
-    //     options: {
-    //       failOnWarning: true,
-    //       failOnError: true
-    //     }
-    //   }],
-    //   threadPool: happyThreadPool
-    // }),
+    new HappyPack({
+      id: 'happyESLint',
+      loaders: [{
+        loader: 'eslint-loader',
+        options: {
+          failOnWarning: true,
+          failOnError: true
+        }
+      }],
+      threadPool: happyThreadPool
+    }),
 
     new HappyPack({
       id: 'happyBabel',
