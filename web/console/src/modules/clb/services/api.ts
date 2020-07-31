@@ -547,18 +547,20 @@ export async function modifyRuleNamespace(clusterName, namespace, ruleName, scop
 
 /**
  * 获取指定集群和命名空间下的服务器组列表
- * @param clusterId 集群Id
+ * @param clusterName 集群名称
  * @param namespace 命名空间名称
  */
-export async function getBackendsList(clusterId, namespace) {
+export async function getBackendsList(clusterName, namespace) {
   let backendsList = [];
-  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterId}/lbcfbackendgroups?namespace=${namespace}`;
+  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterId}/lbcfbackendgroups?namespace=${namespace}`;
+  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=listGroups?groupNS=${namespace}`;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=listGroups&groupNS=${namespace}`;
   let params: RequestParams = {
     method: Method.get,
     url,
   };
   try {
-    let response = await reduceNetworkRequest(params, clusterId);
+    let response = await reduceNetworkRequest(params, clusterName);
     if (response.code === 0) {
       let list = response.data;
       if (list && list.items) {
@@ -682,7 +684,8 @@ export async function removeBackendsGroup(clusterName, namespace, backendGroupNa
  */
 export async function createBackendsGroup(clusterName, namespace, payload) {
   let result;
-  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendgroups?namespace=${namespace}`;
+  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendgroups?namespace=${namespace}`;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&api=createGroup&apiPort=80`;
   let params: RequestParams = {
     method: Method.post,
     url,
@@ -725,15 +728,16 @@ export async function getBackendsGroupInfo(clusterName, namespace, backendGroupN
 }
 
 /**
- * 获取服务器信息
+ * 获取规则和服务器信息
  * 是个列表
  * @param clusterName
  * @param namespace
  * @param backendGroupName
  */
-export async function getBackendsInfo(clusterName, namespace, backendGroupName, ruleName) {
+export async function getBackendsInfo(clusterName, namespace, backendGroupName) {
   let result;
-  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendrecords?namespace=${namespace}&bg=${backendGroupName}&lb=${ruleName}`;
+  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendrecords?namespace=${namespace}&bg=${backendGroupName}&lb=${ruleName}`;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=listGroupServers&groupNS=${namespace}&groupName=${backendGroupName}`;
   let params: RequestParams = {
     method: Method.get,
     url,

@@ -231,7 +231,7 @@ export class ServerList extends React.Component<PropTypes> {
     try {
       let payload = this.stateToPayload(currentItem);
       let response = await createBackendsGroup(clusterName, namespace, payload);
-      if (response && response.code === 0 && response.message === 'Created') {
+      if (response && response.code === 0 && response.message === 'OK') {
         this.showDrawer(false);
         this.alertSuccess();
         this.loadData();

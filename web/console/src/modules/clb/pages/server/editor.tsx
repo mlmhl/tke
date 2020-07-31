@@ -648,7 +648,7 @@ const NamesAdaptor = ({ name, label }) => (
 const Weight = ({ name, label }) => (
   <Field name={`${name}`}>
     {({ input, meta, ...rest }) => (
-      <Form.Item label={t('权重')} status={getStatus(meta)} message={getStatus(meta) === 'error' && meta.error}>
+      <Form.Item label="权重(0-100)" status={getStatus(meta)} message={getStatus(meta) === 'error' && meta.error}>
         <InputNumber min={0} max={100} {...input} />
       </Form.Item>
     )}
