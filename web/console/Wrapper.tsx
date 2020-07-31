@@ -1,10 +1,10 @@
-import * as React from 'react';
+import React, { ReactNode } from 'react';
 import {
   ConsoleModuleMapProps,
   reduceK8sRestfulPath,
   Method,
   reduceNetworkRequest,
-  setConsoleAPIAddress
+  setConsoleAPIAddress,
 } from './helpers';
 import { ResourceInfo, RequestParams } from './src/modules/common/models';
 import { resourceConfig } from './config';
@@ -20,7 +20,7 @@ enum UserType {
   admin = 'admin',
   member = 'member',
   other = 'other',
-  init = 'init'
+  init = 'init',
 }
 
 /** 获取当前控制台modules的 域名映射表 */
@@ -50,7 +50,7 @@ export enum ConsoleModuleEnum {
   Auth = 'auth',
 
   /** 审计模块 */
-  Audit = 'audit'
+  Audit = 'audit',
 }
 
 export enum PlatformTypeEnum {
@@ -58,7 +58,7 @@ export enum PlatformTypeEnum {
   Manager = 'manager',
 
   /** 业务 */
-  Business = 'business'
+  Business = 'business',
 }
 
 interface RouterConfig {
@@ -83,38 +83,33 @@ const commonRouterConfig: RouterConfig[] = [
   {
     url: '/tkestack/cluster',
     title: '集群管理',
-    watchModule: ConsoleModuleEnum.PLATFORM
+    watchModule: ConsoleModuleEnum.PLATFORM,
   },
   {
     url: '/tkestack/project',
     title: '业务管理',
-    watchModule: ConsoleModuleEnum.Business
+    watchModule: ConsoleModuleEnum.Business,
   },
   {
     url: '/tkestack/addon',
     title: '扩展组件',
-    watchModule: ConsoleModuleEnum.PLATFORM
+    watchModule: ConsoleModuleEnum.PLATFORM,
   },
   {
     title: '组织资源',
     watchModule: [ConsoleModuleEnum.Registry, ConsoleModuleEnum.Chart, ConsoleModuleEnum.ApiKey],
     subRouterConfig: [
-      // {
-      //   url: '/tkestack/registry/repo',
-      //   title: '镜像仓库管理',
-      //   watchModule: ConsoleModuleEnum.Registry
-      // },
       {
         url: '/tkestack/registry/chart',
         title: 'Chart包仓库管理',
-        watchModule: ConsoleModuleEnum.Chart
+        watchModule: ConsoleModuleEnum.Chart,
       },
       {
         url: '/tkestack/registry/apikey',
         title: '访问凭证',
-        watchModule: ConsoleModuleEnum.ApiKey
-      }
-    ]
+        watchModule: ConsoleModuleEnum.ApiKey,
+      },
+    ],
   },
   {
     title: '访问管理',
@@ -123,14 +118,14 @@ const commonRouterConfig: RouterConfig[] = [
       {
         url: '/tkestack/uam/user',
         title: '用户管理',
-        watchModule: ConsoleModuleEnum.Auth
+        watchModule: ConsoleModuleEnum.Auth,
       },
       {
         url: '/tkestack/uam/strategy',
         title: '策略管理',
-        watchModule: ConsoleModuleEnum.Auth
-      }
-    ]
+        watchModule: ConsoleModuleEnum.Auth,
+      },
+    ],
   },
   {
     title: '监控&告警',
@@ -139,19 +134,19 @@ const commonRouterConfig: RouterConfig[] = [
       {
         url: '/tkestack/alarm',
         title: '告警设置',
-        watchModule: ConsoleModuleEnum.Monitor
+        watchModule: ConsoleModuleEnum.Monitor,
       },
       {
         url: '/tkestack/notify',
         title: '通知设置',
-        watchModule: ConsoleModuleEnum.Notify
+        watchModule: ConsoleModuleEnum.Notify,
       },
       {
         url: '/tkestack/alarm-record',
         title: '告警记录',
-        watchModule: ConsoleModuleEnum.Notify
-      }
-    ]
+        watchModule: ConsoleModuleEnum.Notify,
+      },
+    ],
   },
   {
     title: '运维中心',
@@ -160,25 +155,46 @@ const commonRouterConfig: RouterConfig[] = [
       {
         url: '/tkestack/helm',
         title: 'Helm应用',
-        watchModule: ConsoleModuleEnum.PLATFORM
+        watchModule: ConsoleModuleEnum.PLATFORM,
       },
       {
         url: '/tkestack/log',
         title: '日志',
-        watchModule: ConsoleModuleEnum.PLATFORM
+        watchModule: ConsoleModuleEnum.PLATFORM,
       },
       {
         url: '/tkestack/persistent-event',
         title: '事件持久化',
-        watchModule: ConsoleModuleEnum.PLATFORM
+        watchModule: ConsoleModuleEnum.PLATFORM,
       },
       {
         url: '/tkestack/audit',
         title: '审计记录',
-        watchModule: ConsoleModuleEnum.Audit
-      }
-    ]
-  }
+        watchModule: ConsoleModuleEnum.Audit,
+      },
+    ],
+  },
+  {
+    title: 'CLB管理',
+    watchModule: [ConsoleModuleEnum.PLATFORM],
+    subRouterConfig: [
+      {
+        url: '/tkestack/clb-instance',
+        title: '实例',
+        watchModule: ConsoleModuleEnum.PLATFORM,
+      },
+      {
+        url: '/tkestack/clb-rule',
+        title: '规则',
+        watchModule: ConsoleModuleEnum.PLATFORM,
+      },
+      {
+        url: '/tkestack/clb-backendsgroup',
+        title: '服务器组',
+        watchModule: ConsoleModuleEnum.PLATFORM,
+      },
+    ],
+  },
 ];
 
 /** 基础的侧边栏导航栏配置 */
@@ -186,12 +202,12 @@ const businessCommonRouterConfig: RouterConfig[] = [
   {
     url: '/tkestack-project/application',
     title: '应用管理',
-    watchModule: ConsoleModuleEnum.Business
+    watchModule: ConsoleModuleEnum.Business,
   },
   {
     url: '/tkestack-project/helm',
     title: 'Helm应用',
-    watchModule: ConsoleModuleEnum.PLATFORM
+    watchModule: ConsoleModuleEnum.PLATFORM,
   },
   {
     url: '/tkestack-project/project',
@@ -202,17 +218,12 @@ const businessCommonRouterConfig: RouterConfig[] = [
     title: '组织资源',
     watchModule: [ConsoleModuleEnum.Registry, ConsoleModuleEnum.ApiKey],
     subRouterConfig: [
-      // {
-      //   url: '/tkestack-project/registry/repo',
-      //   title: '仓库管理',
-      //   watchModule: ConsoleModuleEnum.Registry
-      // },
       {
         url: '/tkestack-project/registry/apikey',
         title: '访问凭证',
-        watchModule: ConsoleModuleEnum.ApiKey
-      }
-    ]
+        watchModule: ConsoleModuleEnum.ApiKey,
+      },
+    ],
   },
   {
     title: '监控&告警',
@@ -221,15 +232,36 @@ const businessCommonRouterConfig: RouterConfig[] = [
       {
         url: '/tkestack-project/alarm',
         title: '告警设置',
-        watchModule: ConsoleModuleEnum.Monitor
+        watchModule: ConsoleModuleEnum.Monitor,
       },
       {
         url: '/tkestack-project/notify',
         title: '通知设置',
-        watchModule: ConsoleModuleEnum.Notify
-      }
-    ]
-  }
+        watchModule: ConsoleModuleEnum.Notify,
+      },
+    ],
+  },
+  {
+    title: 'CLB管理',
+    watchModule: [ConsoleModuleEnum.Business],
+    subRouterConfig: [
+      // {
+      //   url: '/tkestack-project/clb-instance',
+      //   title: 'CLB管理',
+      //   watchModule: ConsoleModuleEnum.Business,
+      // },
+      {
+        url: '/tkestack-project/clb-rule',
+        title: '规则',
+        watchModule: ConsoleModuleEnum.Business,
+      },
+      {
+        url: '/tkestack-project/clb-backendsgroup',
+        title: '服务器组',
+        watchModule: ConsoleModuleEnum.Business,
+      },
+    ],
+  },
 ];
 
 interface ConsoleWrapperProps {
@@ -238,6 +270,9 @@ interface ConsoleWrapperProps {
 
   /** 是否需要侧边导航栏 */
   sideBar?: boolean;
+
+  /** children */
+  children: (any) => ReactNode;
 }
 
 interface UserInfo {
@@ -295,7 +330,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
       userInfo: {
         extra: '',
         groups: [],
-        name: ''
+        name: '',
       },
       consoleApiMap: window['modules'] || {},
       isShowPlatformSwitch: false,
@@ -305,12 +340,12 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
       routerConfig: [],
       asideRouterSelect: {
         index: -1,
-        isShow: false
-      }
+        isShow: false,
+      },
     };
   }
 
-  async componentWillMount() {
+  async componentDidMount() {
     await this.getConsoleModule();
     this.state.userInfo.name === '' && (await this.getUserInfo());
     this.state.userType === UserType.init && (await this.getUserProjectInfo());
@@ -322,12 +357,12 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
     let url = reduceK8sRestfulPath({ resourceInfo: infoResourceInfo });
     let params: RequestParams = {
       method: Method.get,
-      url
+      url,
     };
     try {
       let response = await reduceNetworkRequest(params);
       this.setState({
-        userInfo: response.data
+        userInfo: response.data,
       });
     } catch (error) {}
   }
@@ -340,7 +375,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
     let url = reduceK8sRestfulPath({ resourceInfo: moduleResourceInfo });
     let params: RequestParams = {
       method: Method.get,
-      url
+      url,
     };
     try {
       let consoleApiMap;
@@ -397,8 +432,8 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
         routerConfig: currentRouterConfig,
         asideRouterSelect: {
           index: subRouterIndex,
-          isShow: subRouterIndex > -1
-        }
+          isShow: subRouterIndex > -1,
+        },
       });
     } catch (error) {}
   }
@@ -409,7 +444,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
     let url = reduceK8sRestfulPath({ resourceInfo: userResourceInfo });
     let params: RequestParams = {
       method: Method.get,
-      url
+      url,
     };
     try {
       let response = await reduceNetworkRequest(params);
@@ -417,7 +452,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
         let projects = Object.keys(response.data.projects).map(key => {
           return {
             id: key,
-            name: response.data.projects[key]
+            name: response.data.projects[key],
           };
         });
         let userType = response.data.administrator
@@ -427,7 +462,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
           : UserType.other;
         this.setState({
           userType,
-          projects
+          projects,
         });
         if (userType === UserType.member && this.props.platformType === PlatformTypeEnum.Manager) {
           location.href = location.origin + '/tkestack-project/application';
@@ -450,7 +485,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
     let url = reduceK8sRestfulPath({ resourceInfo: logoutInfo });
     let params: RequestParams = {
       method: Method.get,
-      url
+      url,
     };
     try {
       let response = await reduceNetworkRequest(params);
@@ -470,13 +505,14 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
 
   _handleHoverForFlatformSwitch(isShow: boolean = false) {
     this.setState({
-      isShowPlatformSwitch: isShow
+      isShowPlatformSwitch: isShow,
     });
   }
 
   render() {
     let query = window.location.search;
     let finalContent: React.ReactNode;
+    let { projects } = this.state;
 
     if (isEmpty(this.state.consoleApiMap)) {
       finalContent = <noscript />;
@@ -490,7 +526,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
             {sideBar && this._renderSideBar(query)}
 
             <div id="appArea" className="main" style={sideBar ? {} : { left: 0 }}>
-              {this.props.children}
+              {this.props.children({ projects })}
             </div>
           </div>
         </React.Fragment>
@@ -604,8 +640,8 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
                             this.setState({
                               asideRouterSelect: {
                                 index,
-                                isShow: asideIndex !== index ? true : !isShow
-                              }
+                                isShow: asideIndex !== index ? true : !isShow,
+                              },
                             });
                           }}
                         >
@@ -618,7 +654,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
                               <li key={subIndex}>
                                 <a
                                   className={classnames('qc-aside-level-2', {
-                                    'qc-aside-select': selectedIndex === subIndex
+                                    'qc-aside-select': selectedIndex === subIndex,
                                   })}
                                   href="javascript:;"
                                   onClick={() => {
@@ -642,7 +678,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
                         <a
                           style={{ paddingLeft: '24px' }}
                           className={classnames('qc-aside-level-1', {
-                            'qc-aside-select': isSelected
+                            'qc-aside-select': isSelected,
                           })}
                           href="javascript:;"
                           onClick={e => {

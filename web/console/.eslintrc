@@ -1,5 +1,10 @@
 {
-  "extends": ["eslint-config-alloy/react", "eslint-config-alloy/typescript"],
+  "extends": [
+    "eslint-config-alloy/react",
+    "eslint-config-alloy/typescript",
+    "plugin:you-dont-need-lodash-underscore/compatible"
+  ],
+  "plugins": ["prettier"],
   "rules": {
     "@typescript-eslint/no-namespace": ["off"],
     "indent": ["off"],
