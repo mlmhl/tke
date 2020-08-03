@@ -132,8 +132,12 @@ Entry.register({
       title: t('业务管理 - TKEStack业务侧'),
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          <ForbiddentDialog />
-          <Project />
+          {(projects) => (
+            <>
+              <ForbiddentDialog />
+              <Project />
+            </>
+          )}
         </Wrapper>
       )
     },
