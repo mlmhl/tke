@@ -392,16 +392,24 @@ const restActions = {
   },
 
   /** 轮询拉取条件 */
-  poll: (queryObj: ResourceFilter) => {
+  poll: () => {
     return async (dispatch, getState: GetState) => {
-      // 每次轮询之前先清空之前的轮询
-      dispatch(resourceActions.clearPollEvent());
-      // 触发列表的查询
-      dispatch(resourceActions.applyFilter(queryObj));
+      let { route } = getState();
+      let { np, clusterId, rid, meshId } = route.queries;
 
-      window[PollEventName['resourceList']] = setInterval(() => {
-        dispatch(resourceActions.poll(queryObj));
-      }, 8000);
+      let filterObj: ResourceFilter = {
+        namespace: np,
+        clusterId,
+        regionId: +rid,
+        meshId
+      };
+
+      dispatch(
+          resourceActions.polling({
+            filter: filterObj,
+            delayTime: 8000
+          })
+      );
     };
   },
 
