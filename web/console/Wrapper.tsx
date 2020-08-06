@@ -10,7 +10,7 @@ import { ResourceInfo, RequestParams } from './src/modules/common/models';
 import { resourceConfig } from './config';
 import { isEmpty } from './src/modules/common/utils';
 import * as classnames from 'classnames';
-import { Button, Icon, Text, Bubble, NavMenu, List } from '@tencent/tea-component';
+import { Button, Icon, Text, Bubble, NavMenu, List, Select } from '@tencent/tea-component';
 
 const routerSea = seajs.require('router');
 
@@ -323,6 +323,8 @@ interface ConsoleWrapperState {
     index: number;
     isShow: boolean;
   };
+  userList: any[];
+  selectedUserId: string;
 }
 
 export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapperState> {
@@ -346,6 +348,8 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
         index: -1,
         isShow: false,
       },
+      userList: [],
+      selectedUserId: null
     };
   }
 
@@ -365,10 +369,56 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
     };
     try {
       let response = await reduceNetworkRequest(params);
+      const userInfo = response.data;
+      const tenantId = userInfo.extra ? String(userInfo.extra.tenantid) : '';
+      if (!tenantId) {
+        this.getUserList();
+      }
+      localStorage.setItem('tenantId', tenantId || '');
       this.setState({
-        userInfo: response.data,
+        userInfo,
       });
     } catch (error) {}
+  }
+
+  async getUserList() {
+    const url = '/apis/idc.tkestack.io/v1/tenant/list';
+    let params: RequestParams = {
+      method: Method.get,
+      url,
+    };
+    try {
+      let response = await reduceNetworkRequest(params);
+      const responseData = response.code === 0 ? response.data.data : [];
+      const userList = responseData ? responseData.map(item => {
+        return { ...item, value: item.id, text: item.text };
+      }) : [];
+      this.setState({
+        userList,
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async switchTenant() {
+    const url = '/apis/idc.tkestack.io/v1/tenant/switch';
+    let params: RequestParams = {
+      method: Method.post,
+      url,
+      data: {
+        newTenant: this.state.selectedUserId
+      }
+    };
+    try {
+      const response = await reduceNetworkRequest(params);
+      if (response.code === 0) {
+        localStorage.setItem('tenantId', 'true');
+        location.reload();
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
@@ -478,6 +528,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
     };
     try {
       let response = await reduceNetworkRequest(params);
+      localStorage.removeItem('tenantId');
     } catch (error) {}
   }
 
@@ -502,8 +553,26 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
     let query = window.location.search;
     let finalContent: React.ReactNode;
     let { projects } = this.state;
-
-    if (isEmpty(this.state.consoleApiMap)) {
+    const tenantId = localStorage.getItem('tenantId');
+    if (!tenantId) {
+      return (
+        <section style={{ display: 'table', margin: '0 auto', marginTop: '300px' }}>
+          <Select
+            type="simulate"
+            appearence="button"
+            size="m"
+            boxSizeSync={true}
+            options={this.state.userList}
+            value={this.state.selectedUserId}
+            onChange={value => this.setState({ selectedUserId: value })}
+            placeholder="请选择租户"
+          />
+          <Button type="primary" onClick={() => {
+            this.switchTenant();
+          }}>切换</Button>
+        </section>
+        );
+    } else if (isEmpty(this.state.consoleApiMap)) {
       finalContent = <noscript />;
     } else {
       let { sideBar = true } = this.props;
