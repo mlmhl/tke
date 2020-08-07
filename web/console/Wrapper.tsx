@@ -391,7 +391,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
       let response = await reduceNetworkRequest(params);
       const responseData = response.code === 0 ? response.data.data : [];
       const userList = responseData ? responseData.map(item => {
-        return { ...item, value: item.id, text: item.text };
+        return { ...item, value: item.id, text: `${item.name}(${item.id})`, tooltip: `${item.name}(${item.id})` };
       }) : [];
       this.setState({
         userList,
