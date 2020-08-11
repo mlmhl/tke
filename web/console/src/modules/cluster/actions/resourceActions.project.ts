@@ -143,7 +143,8 @@ async function _reduceGameGateResource(clusterVersion, resourceQuery, resourceIn
   gameLBList.records.forEach((item, index) => {
     let backGroups = [];
     gameBGList.records.forEach(backgroup => {
-      if (backgroup.spec.lbName === item.metadata.name) {
+      // if (backgroup.spec.lbName === item.metadata.name) {
+      if ((backgroup.spec.lbName || backgroup.spec.loadBalancers[0]) === item.metadata.name) {
         let backendRecords = gameBRList.records.filter(
           records => records.metadata.labels['lbcf.tkestack.io/backend-group'] === backgroup.metadata.name
         );
