@@ -2,7 +2,19 @@
  * CLB 实例管理 - 实例列表页
  */
 import React from 'react';
-import { Card, ContentView, Drawer, Form, Justify, Modal, Select, Table, Text, Button } from '@tencent/tea-component';
+import {
+  Card,
+  ContentView,
+  Drawer,
+  Form,
+  Justify,
+  Modal,
+  PopConfirm,
+  Select,
+  Table,
+  Text,
+  Button,
+} from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 import { InstanceEditor } from './instanceEditor';
 import { InstanceDetail } from './detail';
@@ -75,7 +87,7 @@ export class InstanceList extends React.Component<PropTypes> {
   getList = async clusterName => {
     let instances = await getImportedInstancesByCluster(clusterName);
     let instanceList = instances.map(item => convert(item));
-    this.setState({ instanceList });
+    this.setState({ instanceList: instanceList.map(item => ({ ...item, confirmVisible: false })) });
   };
 
   /**
@@ -191,10 +203,11 @@ export class InstanceList extends React.Component<PropTypes> {
 
   /**
    * 删除实例
-   * @param clbID
+   * @param item, 主要是取里面的 clbID 使用
    */
-  handleRemoveInstance = async clbID => {
+  handleRemoveInstance = async item => {
     let { clusterName } = this.state;
+    let { clbID } = item;
     let response = await removeInstance(clusterName, clbID);
     if (response.code === 0 && response.message === 'OK') {
       this.alertSuccess();
@@ -224,13 +237,23 @@ export class InstanceList extends React.Component<PropTypes> {
       text: `${displayName}(${name})`,
     }));
 
+    let setConfirmVisible = (currentItem, confirmVisible) => {
+      let newList = instanceList.map(item => ({ ...item }));
+      // instance 的 key 是 name
+      let target = newList.filter(item => item.name === currentItem.name)[0];
+      if (target) {
+        target.confirmVisible = confirmVisible;
+        this.setState({ instanceList: newList });
+      }
+    };
+
     let renderOperationColumn = () => {
-      return item => {
-        let { disabled, clbID } = item;
+      return currentItem => {
+        let { disabled, clbID } = currentItem;
 
         return (
           <>
-            <Button type="link" onClick={this.handleViewItem(item)}>
+            <Button type="link" onClick={this.handleViewItem(currentItem)}>
               <strong>详情</strong>
             </Button>
             <Button
@@ -239,14 +262,38 @@ export class InstanceList extends React.Component<PropTypes> {
             >
               <strong>{disabled ? '启用' : '禁用'}</strong>
             </Button>
-            <Button
-              type="link"
-              onClick={() => {
-                this.handleRemoveInstance(clbID);
+            <PopConfirm
+              title="确定要删除该条记录？"
+              visible={currentItem.confirmVisible}
+              onVisibleChange={confirmVisible => {
+                setConfirmVisible(currentItem, confirmVisible);
               }}
+              footer={
+                <>
+                  <Button
+                    type="link"
+                    onClick={() => {
+                      setConfirmVisible(currentItem, false);
+                      this.handleRemoveInstance(currentItem);
+                    }}
+                  >
+                    删除
+                  </Button>
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      setConfirmVisible(currentItem, false);
+                    }}
+                  >
+                    取消
+                  </Button>
+                </>
+              }
             >
-              <strong>删除</strong>
-            </Button>
+              <Button type="link">
+                <strong>删除</strong>
+              </Button>
+            </PopConfirm>
           </>
         );
       };
@@ -321,7 +368,7 @@ export class InstanceList extends React.Component<PropTypes> {
               {
                 key: 'type',
                 header: '网络类型',
-                render: instance => <p>{instance.type}</p>,
+                render: instance => <p>{instance.type === 'OPEN' ? '公网' : '内网'}</p>,
               },
               {
                 key: 'scope',
@@ -381,11 +428,7 @@ export class InstanceList extends React.Component<PropTypes> {
             title="查看详情"
             onClose={this.handleCloseDetail}
             size="l"
-            footer={
-              <Button onClick={this.handleCloseDetail}>
-                关闭
-              </Button>
-            }
+            footer={<Button onClick={this.handleCloseDetail}>关闭</Button>}
           >
             <InstanceDetail clusterName={clusterName} name={selectedItem.clbID} />
           </Drawer>

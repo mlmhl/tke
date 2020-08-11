@@ -1,106 +1,13 @@
 /**
  * 服务器组详情页 - 基本信息
+ * 可以修改权重
  */
 import React from 'react';
-import { Button, Card, Form, Input, Radio, Select, Table } from '@tencent/tea-component';
+import { Button, Form, InputNumber, List, Table } from '@tencent/tea-component';
 
-import { Field, Form as FinalForm } from 'react-final-form';
-import { createBackendsGroup, getBackendsGroupInfo } from '../../../services/api';
-import { Selector } from '@src/modules/clb/pages/server/components/Selector';
-import { Ports } from '@src/modules/clb/pages/server/components/Ports';
-import { Names } from '@src/modules/clb/pages/server/components/Names';
 import { BackendsGroupInfo } from './index';
+import { changeWeightForBackendsGroup } from '../../../services/api';
 const { isEqual, isEmpty, pick } = require('lodash');
-const { sortable, filterable, scrollable, radioable, injectable } = Table.addons;
-
-/**
- * 网络协议 - 下拉选择框的数据源
- */
-const ProtocolList = [
-  { text: 'HTTP', value: 'http' },
-  { text: 'TCP', value: 'tcp' },
-  { text: 'UDP', value: 'udp' },
-];
-
-// interface Project {
-//   id: string;
-//   name: string;
-// }
-//
-// interface Backend {
-//   name: string;
-//
-//   namespace: string;
-// }
-//
-// interface Cluster {
-//   name: string;
-//
-//   displayName: string;
-//
-//   phase: string;
-// }
-//
-// interface PortSelector {
-//   port: number; // 端口号
-//
-//   protocol: string; // 支持TCP和UDP，默认TCP
-// }
-//
-// interface ServiceBackend {
-//   name: string; // 被绑定Service的name
-//
-//   port: PortSelector; // 用来选择被绑定的Service Port
-//
-//   nodeSelector: any; // 用来选择被绑定的计算节点，只有label与之匹配的节点才会被绑定。为空是，选中所有节点
-//   // map<string, string>
-// }
-//
-// interface SelectPodByLabel {
-//   selector: any; // map<string, string> 被选中的Pod label
-//
-//   except?: string[]; // Pod.name数组，数组中的Pod不会被选中，如果之前已被选中，则会触发该Pod的解绑流程
-// }
-//
-// interface PodBackend {
-//   ports: PortSelector[]; // 用来选择被绑定的容器内端口
-//
-//   byLabel?: SelectPodByLabel; // 通过label选择Pod
-//
-//   byName?: string[]; // 通过Pod.name选择Pod
-// }
-//
-// interface DeregisterWebhookSpec {
-//   driverName: string; // The name of LoadBalancerDriver.
-//
-//   failurePolicy: 'DoNothing' | 'IfNotReady' | 'IfNotRunning';
-// }
-//
-// interface EnsurePolicy {}
-
-// interface BackendsGroupInfo {
-//   name: string;
-//
-//   namespace: string;
-//
-//   loadBalancers: string[]; // 使用的LoadBalancer的name
-//
-//   service?: ServiceBackend; // 被绑定至负载均衡的service配置。service、pods、static三种配置中只能存在一种
-//
-//   podChoice?: string;
-//
-//   pods?: PodBackend; // 被绑定至负载均衡的Pod配置。service、pods、static三种配置中只能存在一种
-//
-//   static?: string[]; // 被绑定至负载均衡的静态地址配置。service、pods、static三种配置中只能存在一种
-//
-//   parameters?: any; // 绑定backend时使用的参数 map<string, string>
-//
-//   deregisterPolicy?: string; // Pod解绑条件，仅当pods不为nil时有效，可选的值为IfNotReady、IfNotRunning、Webhook。不填时默认为IfNotReady。详见文档自定义解绑条件设计
-//
-//   deregisterWebhook?: DeregisterWebhookSpec; // 通过Webhook判断Pod是否解绑，仅当deregisterPolicy为Webhook时有效。详见文档自定义解绑条件设计
-//
-//   ensurePolicy?: EnsurePolicy; // 与LoadBalancer中的ensurePolicy相同
-// }
 
 interface PropTypes {
   clusterName: string; // 集群名称
@@ -121,142 +28,19 @@ interface StateTypes {
 
   name: string;
 
-  backendsGroupInfo: BackendsGroupInfo;
+  backendsGroup: BackendsGroupInfo;
 
-  // podChoice: string; // 选择Pod
+  mode: string;
+
+  weight: number;
 }
-
-// 名称 - 文本框
-const Name = ({ name, label }) => (
-  <Field name={`${name}`}>
-    {({ input, meta, ...rest }) => (
-      <Form.Item label={`${label}`}>
-        <Form.Text>{input.value}</Form.Text>
-      </Form.Item>
-    )}
-  </Field>
-);
-
-// 命名空间下拉选择框
-const Namespace = ({ name, label }) => (
-  <Field name={`${name}`}>
-    {({ input, meta, ...rest }) => (
-      <Form.Item label={`${label}`}>
-        <Form.Text>{input.value}</Form.Text>
-      </Form.Item>
-    )}
-  </Field>
-);
-
-// 选择Pod 的选择：按Label，按Pod名
-const PodChoice = ({ name, label }) => (
-  <Field name={`${name}`}>
-    {({ input, meta, ...rest }) => (
-      <Form.Item label={`${label}`}>
-        <Radio.Group {...input} layout="column" disabled>
-          <Radio name="byLabel">按Label</Radio>
-          <Radio name="byName">按Pod名</Radio>
-        </Radio.Group>
-      </Form.Item>
-    )}
-  </Field>
-);
-
-const SelectorAdaptor = ({ name, label, clusterName, namespace }) => (
-  <Field name={`${name}`}>
-    {({ input, meta, ...rest }) => (
-      <Form.Item label={`${label}`}>
-        <Selector {...input} clusterName={clusterName} namespace={namespace} />
-      </Form.Item>
-    )}
-  </Field>
-);
-
-const Except = ({ name, label }) => (
-  <Field name={`${name}`}>
-    {({ input, meta, ...rest }) => (
-      <Form.Item label={`${label}`}>
-        <Input {...input} />
-      </Form.Item>
-    )}
-  </Field>
-);
-
-// 选择pod - 按Label
-const SelectPodByLabel = ({ name, label, clusterName, namespace }) => (
-  <Field name={`${name}`}>
-    {({ input, meta, ...rest }) => (
-      <Form.Item label={`${label}`}>
-        <Card bordered>
-          <Card.Body>
-            <SelectorAdaptor
-              name={`${name}.selector`}
-              label="selector"
-              clusterName={clusterName}
-              namespace={namespace}
-            />
-            <NamesAdaptor name={`${name}.except`} label="排除Pod" />
-          </Card.Body>
-        </Card>
-      </Form.Item>
-    )}
-  </Field>
-);
-
-// 选择pod - 按Pod名称，字符串数组
-const PortSelector = ({ name, label }) => (
-  <>
-    <Field name={`${name}.protocol`}>
-      {({ input, meta, ...rest }) => (
-        <Form.Item label={'协议'}>
-          <Select
-            {...input}
-            type="simulate"
-            appearence="button"
-            size="m"
-            placeholder="请选择网络协议"
-            options={ProtocolList}
-          />
-        </Form.Item>
-      )}
-    </Field>
-    <Field name={`${name}.port`}>
-      {({ input, meta, ...rest }) => (
-        <Form.Item label={'端口'}>
-          <Input {...input} />
-        </Form.Item>
-      )}
-    </Field>
-  </>
-);
-
-// Pod端口
-const PortsAdaptor = ({ name, label }) => (
-  <Field name={`${name}`}>
-    {({ input, meta, ...rest }) => (
-      <Form.Item label={`${label}`}>
-        <Ports {...input} />
-      </Form.Item>
-    )}
-  </Field>
-);
-
-// Pod名称
-const NamesAdaptor = ({ name, label }) => (
-  <Field name={`${name}`}>
-    {({ input, meta, ...rest }) => (
-      <Form.Item label={`${label}`}>
-        <Names {...input} />
-      </Form.Item>
-    )}
-  </Field>
-);
 
 const convert = backendsGroupInfo => {
   if (isEmpty(backendsGroupInfo)) {
     return {
       name: '',
       namespace: '',
+      parameters: { },
       pods: {},
       loadBalancers: [],
       podChoice: '',
@@ -264,11 +48,12 @@ const convert = backendsGroupInfo => {
   }
   let {
     metadata: { name, namespace },
-    spec: { pods, loadBalancers },
+    spec: { parameters, pods, loadBalancers },
   } = backendsGroupInfo;
   let data = {
     name,
     namespace,
+    parameters,
     pods,
     loadBalancers,
     podChoice: isEmpty(pods.byLabel) ? 'byName' : 'byLabel',
@@ -282,7 +67,9 @@ class InfoPanel extends React.Component<PropTypes, StateTypes> {
     clusterName: this.props.clusterName,
     namespace: this.props.namespace,
     name: this.props.name, // 服务器组名称
-    backendsGroupInfo: this.props.backendsGroupInfo,
+    backendsGroup: convert(this.props.backendsGroupInfo),
+    mode: 'view', // view: 查看，edit：编辑
+    weight: 100,
   };
 
   componentDidMount() {
@@ -290,132 +77,160 @@ class InfoPanel extends React.Component<PropTypes, StateTypes> {
   }
 
   componentWillReceiveProps(nextProps, nextContext) {
-    const { clusterName, namespace, name, backendsGroupInfo } = this.state;
+    const { clusterName, namespace, name, backendsGroup } = this.state;
+    let nextBackendsGroup = convert(nextProps.backendsGroupInfo);
 
     if (
       !isEqual(nextProps.clusterName, clusterName) ||
       !isEqual(nextProps.namespace, namespace) ||
       !isEqual(nextProps.name, name) ||
-      !isEqual(nextProps.backendsGroupInfo, backendsGroupInfo)
+      !isEqual(nextBackendsGroup, backendsGroup)
     ) {
+      let {
+        parameters: { weight },
+      } = nextBackendsGroup;
       this.setState({
         clusterName: nextProps.clusterName,
         namespace: nextProps.namespace,
         name: nextProps.name,
-        backendsGroupInfo: nextProps.backendsGroupInfo,
+        // backendsGroupInfo: nextProps.backendsGroupInfo,
+        backendsGroup: nextBackendsGroup,
+        weight: Number(weight),
       });
     }
   }
 
-  /**
-   * 加载初始化数据
-   * 如果用户在列表页选择了业务和命名空间，就使用用户选择的【也就是说传到Editor里面的时候value里面的project, namespace是有数据的】，然后加载对应的可选CLB实例列表和命名空间列表
-   */
-  // loadData = async () => {
-  //   await this.getBackendsGroupInfo();
-  // };
-
-  // getBackendsGroupInfo = async () => {
-  //   let { clusterName, namespace, name } = this.state;
-  //   let backendsGroupInfo: BackendsGroupnfo = await getBackendsGroupInfo(clusterName, namespace, name);
-  //   this.setState({ backendsGroupInfo });
-  // };
-
-  stateToPayload = values => {
-    let { name, namespace, loadBalancers, ports, podChoice, byLabel, byName, parameters } = values;
-    let pods = Object.assign({}, podChoice === 'byLabel' ? { byLabel } : { byName }, {
-      ports: ports.map(({ protocol, port }) => ({ protocol, port })),
-    });
-    let payload = {
-      apiVersion: 'lbcf.tkestack.io/v1beta1',
-      kind: 'BackendGroup',
-      metadata: { name, namespace },
-      spec: {
-        loadBalancers,
-        pods,
-        parameters,
-      },
-    };
-
-    return payload;
+  handleEditWeight = async () => {
+    this.setState({ mode: 'edit' });
   };
 
-  submit = async values => {
-    let { clusterName, namespace } = this.state;
+  handleWeightChanged = value => {
+    this.setState({ weight: value });
+  };
 
-    try {
-      let payload = this.stateToPayload(values);
-      let response = await createBackendsGroup(clusterName, namespace, payload);
-    } catch (err) {}
+  handleSubmitWeight = async () => {
+    let { clusterName, namespace, backendsGroup, weight } = this.state;
+    let response = await changeWeightForBackendsGroup(clusterName, namespace, backendsGroup.name, { weight });
+    if (response.code === 0 && response.message === 'OK') {
+      let nextBackendsGroup = { ...backendsGroup };
+      nextBackendsGroup.parameters.weight = String(weight);
+      this.setState({ mode: 'view', backendsGroup: nextBackendsGroup });
+    }
   };
 
   render = () => {
-    let { clusterName, backendsGroupInfo } = this.state;
-    let backendsGroup = convert(backendsGroupInfo);
+    let { clusterName, backendsGroup, mode, weight } = this.state;
+    // let backendsGroup = convert(backendsGroupInfo);
     let { name, namespace, loadBalancers, podChoice, pods } = backendsGroup;
     let { byLabel = {}, byName = [], ports = [] } = pods;
     let { selector = {}, except = [] } = byLabel;
 
     return (
-      <Form>
-        <Form.Item label="名称">
-          <Form.Text>{name}</Form.Text>
-        </Form.Item>
-        <Form.Item label="命名空间">
-          <Form.Text>{namespace}</Form.Text>
-        </Form.Item>
-        {podChoice === 'byLabel' ? (
-          <>
-            <Form.Item label="Selector">
-              <Form.Text>
-                {Object.keys(selector).map(item => (
-                  <p key={item}>{item}</p>
-                ))}
-              </Form.Text>
-            </Form.Item>
-            <Form.Item label="排除Pod">
-              <Form.Text>
-                {except.map(item => (
-                  <p key={item}>{item}</p>
-                ))}
-              </Form.Text>
-            </Form.Item>
-          </>
-        ) : (
-          <Form.Item label="按Pod名">
-            <Form.Text>
-              {byName.map(item => (
-                <p key={item}>{item}</p>
-              ))}
-            </Form.Text>
+      <div>
+        <Form>
+          <Form.Item label="名称">
+            <Form.Text>{name}</Form.Text>
           </Form.Item>
-        )}
-        <Form.Item label="Pod端口 ">
-          <Table
-            compact
-            verticalTop
-            columns={[
-              {
-                key: 'protocol',
-                header: '协议',
-              },
-              {
-                key: 'port',
-                header: '端口',
-              },
-              {
-                key: 'host',
-                header: '主机',
-              },
-              {
-                key: 'path',
-                header: '路径',
-              },
-            ]}
-            records={ports}
-          />
-        </Form.Item>
-      </Form>
+          <Form.Item label="命名空间">
+            <Form.Text>{namespace}</Form.Text>
+          </Form.Item>
+          <Form.Item label="关联规则">
+            <List>
+              {loadBalancers.map(item => (
+                <List.Item key={item}>
+                  <Form.Text>{item}</Form.Text>
+                </List.Item>
+              ))}
+            </List>
+            ),
+          </Form.Item>
+          {podChoice === 'byLabel' ? (
+            <>
+              <Form.Item label="Selector">
+                <Form.Text>
+                  {Object.keys(selector).map(item => (
+                    <p key={item}>{item}</p>
+                  ))}
+                </Form.Text>
+              </Form.Item>
+              <Form.Item label="排除Pod">
+                <Form.Text>
+                  {except.map(item => (
+                    <p key={item}>{item}</p>
+                  ))}
+                </Form.Text>
+              </Form.Item>
+            </>
+          ) : (
+            <Form.Item label="按Pod名">
+              <Form.Text>
+                {byName.map(item => (
+                  <p key={item}>{item}</p>
+                ))}
+              </Form.Text>
+            </Form.Item>
+          )}
+          <Form.Item label="Pod端口 ">
+            <Table
+              compact
+              verticalTop
+              columns={[
+                {
+                  key: 'protocol',
+                  header: '协议',
+                },
+                {
+                  key: 'port',
+                  header: '端口',
+                },
+                {
+                  key: 'host',
+                  header: '主机',
+                },
+                {
+                  key: 'path',
+                  header: '路径',
+                },
+              ]}
+              records={ports}
+            />
+          </Form.Item>
+        </Form>
+        <Form layout="inline" style={{ marginTop: 16 }}>
+          <Form.Item label="权重">
+            {mode === 'view' ? (
+              <Form.Text>
+                {backendsGroup.parameters.weight}
+              </Form.Text>
+            ) : (
+              <InputNumber
+                value={weight}
+                onChange={this.handleWeightChanged}
+              />
+            )}
+          </Form.Item>
+          <Form.Action>
+            {mode === 'view' ? (
+              <Button type="primary" onClick={this.handleEditWeight}>
+                修改权重
+              </Button>
+            ) : (
+              <>
+                <Button type="primary" onClick={this.handleSubmitWeight}>
+                  保存
+                </Button>
+                <Button
+                  onClick={() => {
+                    this.setState({ mode: 'view' });
+                  }}
+                >
+                  取消
+                </Button>
+              </>
+            )}
+          </Form.Action>
+        </Form>
+      </div>
     );
   };
 }

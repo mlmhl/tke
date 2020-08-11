@@ -5,7 +5,12 @@ import React from 'react';
 
 import { Button, Card, Form, List, Modal, Radio, Select, Text } from '@tencent/tea-component';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import { getDeploymentsByNamespace, getStatefulsetsByNamespace, getTappsByNamespace } from '../../../services/api';
+import {
+  getDeploymentsByNamespace,
+  getStatefulsetsByNamespace,
+  getTappsByNamespace,
+  getWorkloadsByNamespace,
+} from '../../../services/api';
 
 const { isEqual, stubArray, stubObject } = require('lodash');
 
@@ -38,11 +43,13 @@ interface StateTypes {
 
   type: string;
 
-  deployments: WorkloadSummary[];
+  // deployments: WorkloadSummary[];
+  //
+  // statefulsets: WorkloadSummary[];
+  //
+  // tapps: WorkloadSummary[];
 
-  statefulsets: WorkloadSummary[];
-
-  tapps: WorkloadSummary[];
+  workloads: WorkloadSummary[];
 
   selectedWorkload: string;
 
@@ -54,9 +61,10 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
     clusterName: this.props.clusterName,
     namespace: this.props.namespace,
     type: 'deployment', // 默认是 Deployment
-    deployments: [],
-    statefulsets: [],
-    tapps: [],
+    // deployments: [],
+    // statefulsets: [],
+    // tapps: [],
+    workloads: [],
     selectedWorkload: '', // 当前选中的workload名称
     labels: {},
   };
@@ -79,43 +87,44 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
 
   loadData = () => {
     let { type, clusterName, namespace } = this.state;
-    if (type === 'deployment') {
-      this.getDeploymentList(clusterName, namespace);
-    } else if (type === 'statefulset') {
-      this.getStatefulsetList(clusterName, namespace);
-    } else {
-      this.getTappList(clusterName, namespace);
+    if (clusterName && namespace) {
+      if (type === 'deployment') {
+        this.getDeploymentList(clusterName, namespace);
+      } else if (type === 'statefulset') {
+        this.getStatefulsetList(clusterName, namespace);
+      } else {
+        this.getTappList(clusterName, namespace);
+      }
     }
   };
 
   getDeploymentList = async (clusterName, namespace) => {
-    let data = await getDeploymentsByNamespace(clusterName, namespace);
-    let deployments = data.map(item => ({ name: item.metadata.name, labels: item.metadata.labels }));
-    this.setState({ deployments });
+    let data = await getWorkloadsByNamespace(clusterName, namespace, 'deployment');
+    let workloads = data.map(({ name, available, labels }) => ({ name, labels, available }));
+    this.setState({ workloads });
   };
 
   getStatefulsetList = async (clusterName, namespace) => {
-    let data = await getStatefulsetsByNamespace(clusterName, namespace);
-    let statefulsets = data.map(item => ({ name: item.metadata.name, labels: item.metadata.labels }));
-    this.setState({ statefulsets });
+    let data = await getWorkloadsByNamespace(clusterName, namespace, 'statefulset');
+    let workloads = data.map(({ name, available, labels }) => ({ name, labels, available }));
+    this.setState({ workloads });
   };
 
   getTappList = async (clusterName, namespace) => {
-    let data = await getTappsByNamespace(clusterName, namespace);
-    let tapps = data.map(item => ({ name: item.metadata.name, labels: item.metadata.labels }));
-    this.setState({ tapps });
+    let data = await getWorkloadsByNamespace(clusterName, namespace, 'tapp');
+    let workloads = data.map(({ name, available, labels }) => ({ name, labels, available }));
+    this.setState({ workloads });
   };
 
   handleTypeChanged = value => {
-    this.setState({ type: value, deployments: stubArray(), statefulsets: stubArray(), labels: stubObject() }, () => {
+    this.setState({ type: value, workloads: stubArray(), labels: stubObject() }, () => {
       this.loadData();
     });
   };
 
   handleWorkloadChanged = value => {
     let { onChange } = this.props;
-    let { type, deployments, statefulsets } = this.state;
-    let workloads = type === 'deployment' ? deployments : statefulsets;
+    let { type, workloads } = this.state;
     let workload = workloads.find(item => item.name === value);
     let { labels } = workload;
     this.setState({ selectedWorkload: value, labels }, () => {
@@ -126,11 +135,8 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
   };
 
   render() {
-    let { type, deployments, statefulsets, selectedWorkload, labels } = this.state;
-    let workloads = type === 'deployment' ? deployments : statefulsets;
-    let workloadList = workloads.map(item => ({ value: item.name, text: item.name }));
-    // let workload = workloads.find(item => item.name === selectedWorkload);
-    // let { labels = {} } = workload || {};
+    let { type, workloads, selectedWorkload, labels } = this.state;
+    let workloadList = workloads.map(item => ({ value: item.name, text: item.name, disabled: !item.available }));
 
     return (
       <Card bordered>
@@ -152,10 +158,11 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
             <Select
               searchable
               type="simulate"
-              appearence="default"
+              appearence="button"
               value={selectedWorkload}
               options={workloadList}
               onChange={this.handleWorkloadChanged}
+              placeholder="请选择hostNetwork或Floating IP的容器"
             />
           </Form.Item>
           <Form.Item label="Labels">
