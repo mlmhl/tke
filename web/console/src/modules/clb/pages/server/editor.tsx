@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Form,
   Icon,
+  InputAdornment,
   Input,
   InputNumber,
   Radio,
@@ -38,6 +39,14 @@ import {
   getNamespacesByProject,
   getRuleList,
 } from '../../services/api';
+import {
+  getClusterCache,
+  getNamespaceCache,
+  getProjectCache,
+  setClusterCache,
+  setNamespaceCache,
+  setProjectCache,
+} from '@src/modules/clb/helpers/util';
 
 const { findKey, get, has, isEqual, isEmpty, max, pick, stubString } = require('lodash');
 const { sortable, filterable, scrollable, selectable, injectable } = Table.addons;
@@ -84,17 +93,7 @@ const getStatus = meta => {
   return meta.error ? 'error' : 'success';
 };
 
-// const formatRule = item => ({
-//   name: get(item, 'metadata.name', stubString()), // 取值
-//   type: findKey(
-//     { pods: has(item, 'spec.pods'), service: has(item, 'spec.service'), static: has(item, 'spec.static') },
-//     item => item
-//   ), // 通过path是否存在判断消息内容的类型
-//   backends: get(item, 'status.backends', 0),
-//   registeredBackends: get(item, 'status.registeredBackends', 0),
-//   relatedRules: max([get(item, 'spec.loadBalancers', 0), get(item, 'spec.lbName', 0), 0]), // 两个路径的对象会且只会存在一个，取出它的值来
-// });
-
+// 业务
 interface Project {
   id: string;
   name: string;
@@ -159,12 +158,8 @@ interface BackendGroup {
 }
 
 interface PropTypes {
-  // clusterName: string; // 集群名称
-
   projects: Project[]; // 业务列表
 
-  // value?: BackendGroup; // value 属性，和 onChange 对应的
-  //
   onChange?: (value) => void;
 
   context: string; // 业务侧/平台侧
@@ -200,11 +195,14 @@ interface Name {
 
 interface Webhook {
   driverName: string;
+
   failurePolicy: string;
 }
 
 interface StateTypes {
   isPlatform: boolean;
+
+  projects: Project[]; // 业务列表
 
   clusters: ClusterType[]; // 集群列表
 
@@ -224,13 +222,13 @@ interface StateTypes {
 
   namespace: string; // 所在命名空间
 
+  namespaceValue: string; // 所在命名空间的全名
+
   loadBalancers: string[]; // 规则名称数组
 
   byName?: Name[]; // Pod名称数组
 
   byLabel?: SelectPodByLabel;
-
-  // except: Name[]; // Pod名称数组
 
   parameters: object; // { weigth: number }
 
@@ -256,7 +254,9 @@ const Name = ({ name, label }) => (
         status={getStatus(meta)}
         message={getStatus(meta) === 'error' && meta.error}
       >
-        <Input {...input} {...rest} />
+        <InputAdornment before="clb-">
+          <Input {...input} {...rest} maxLength={50} />
+        </InputAdornment>
       </Form.Item>
     )}
   </Field>
@@ -364,7 +364,7 @@ const Project = ({ name, label, options, onChange }) => (
 );
 
 // 命名空间下拉选择框
-const Namespace = ({ name, label, options, onChange }) => (
+const Namespace = ({ name, label, options, groups, onChange }) => (
   <Field
     name={`${name}`}
     validate={value => {
@@ -394,6 +394,7 @@ const Namespace = ({ name, label, options, onChange }) => (
           boxSizeSync
           placeholder="请选择命名空间"
           options={options}
+          groups={groups}
         />
       </Form.Item>
     )}
@@ -429,7 +430,7 @@ const LoadBalancers = ({ name, label, records }: { name: string; label: string; 
             {
               key: 'type',
               header: '网络类型',
-              render: rule => (rule.type === 'OPEN' ? '公网' : '内网')
+              render: rule => (rule.type === 'OPEN' ? '公网' : '内网'),
             },
             {
               key: 'vip',
@@ -527,26 +528,6 @@ const SelectorAdaptor = ({ name, label, clusterName, namespace }) => (
     )}
   </Field>
 );
-
-// const Except = ({ name, label }) => (
-//   <Field
-//     name={`${name}`}
-//     validate={value => {
-//       return !value ? t('请设置except') : undefined;
-//     }}
-//   >
-//     {({ input, meta, ...rest }) => (
-//       <Form.Item
-//         label={`${label}`}
-//         required
-//         status={getStatus(meta)}
-//         message={getStatus(meta) === 'error' && meta.error}
-//       >
-//         <Input {...input} />
-//       </Form.Item>
-//     )}
-//   </Field>
-// );
 
 // 选择pod - 按Label
 const SelectPodByLabel = ({ name, label, clusterName, namespace }) => (
@@ -775,7 +756,7 @@ const DeregisterWebhookAdaptor = ({ name, label }) => (
 class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
   state = {
     isPlatform: this.props.context && this.props.context === 'platform',
-    // data: this.props.value,
+    projects: this.props.projects,
     clusters: [],
     namespaces: [],
     rules: [],
@@ -786,6 +767,7 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
     project: '', // 所在业务
     clusterName: '', // 所在集群
     namespace: '', // 所在命名空间
+    namespaceValue: '', // 所在命名空间
     loadBalancers: [], // 规则名称数组
     byName: [], // 规则名称数组
     byLabel: {
@@ -795,7 +777,7 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
     // except: [], // 排除Pod数组
     ports: [], // Pod 端口
     parameters: {
-      // weight: 0,
+      weight: 100,
     },
     deregisterPolicy: 'IfNotReady',
     deregisterWebhook: {
@@ -805,30 +787,46 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
   };
 
   componentDidMount() {
-    this.loadData();
+    if (this.state.isPlatform) {
+      this.loadData();
+    } else {
+      this.getCache();
+    }
   }
 
-  // componentWillReceiveProps(nextProps, nextContext) {
-  //   const { data } = this.state;
-  //   const { value } = nextProps;
-  //
-  //   if (!isEqual(data, value)) {
-  //     console.log('rerender');
-  //     this.setState({ data: value });
-  //   }
-  // }
-
-  /**
-   * 加载初始化数据
-   * 如果用户在列表页选择了业务和命名空间，就使用用户选择的【也就是说传到Editor里面的时候value里面的project, namespace是有数据的】，然后加载对应的可选CLB实例列表和命名空间列表
-   */
-  loadData = async () => {
-    const { isPlatform, project } = this.state;
-    if (!isEmpty(project)) {
-      await this.getNamespaceList();
+  componentWillReceiveProps(nextProps, nextContext) {
+    const { projects } = this.state;
+    if (!isEqual(nextProps.projects, projects)) {
+      this.setState({ projects: nextProps.projects }, () => {
+        if (nextProps.context && nextProps.context === 'business') {
+          this.getCache();
+        }
+      });
     }
+  }
+
+  loadData = async () => {
+    let clusters = await getAllClusters();
+    this.setState({ clusters }, () => {
+      this.getCache();
+    });
+  };
+
+  getCache = () => {
+    let { isPlatform, clusters } = this.state;
     if (isPlatform) {
-      await this.getClusterList();
+      // 处理缓存的集群选择
+      let selectedClusterName = getClusterCache();
+      if (clusters.map(item => item.name).includes(selectedClusterName)) {
+        this.handleClusterChanged(selectedClusterName);
+      }
+    } else {
+      // 处理缓存的业务选择，注意这里缓存的是业务id
+      let { projects } = this.state;
+      let selectedProject = getProjectCache();
+      if (projects.map(item => item.id).includes(selectedProject)) {
+        this.handleProjectChanged(selectedProject);
+      }
     }
   };
 
@@ -836,16 +834,16 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
    * 获取集群列表
    * 用于初始化集群下拉选择框
    */
-  getClusterList = async () => {
-    let clusters = await getAllClusters();
-    this.setState({ clusters });
-    // 缓存处理（如果没有从父组件传入clusterName的话使用缓存中的）
-    let { clusterName } = this.state;
-    let selectedClusterName = clusterName || window.localStorage.getItem('selectedClusterName');
-    if (clusters.map(item => item.name).includes(selectedClusterName)) {
-      this.handleClusterChanged(selectedClusterName);
-    }
-  };
+  // getClusterList = async () => {
+  //   let clusters = await getAllClusters();
+  //   this.setState({ clusters });
+  //   // 缓存处理（如果没有从父组件传入clusterName的话使用缓存中的）
+  //   let { clusterName } = this.state;
+  //   let selectedClusterName = clusterName || window.localStorage.getItem('selectedClusterName');
+  //   if (clusters.map(item => item.name).includes(selectedClusterName)) {
+  //     this.handleClusterChanged(selectedClusterName);
+  //   }
+  // };
 
   /**
    * 获取业务下的命名空间列表
@@ -866,14 +864,14 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
   };
 
   handleClusterChanged = async clusterName => {
+    setClusterCache(clusterName);
     let namespaces = await getNamespacesByCluster(clusterName);
-    this.setState({ clusterName, namespaces });
-    // 缓存处理（如果没有从父组件传入clusterName的话使用缓存中的）
-    let { namespace } = this.state;
-    let selectedNamespace = namespace || window.localStorage.getItem('selectedNamespace');
-    if (namespaces.map(item => item.name).includes(selectedNamespace)) {
-      this.handleNamespaceChanged(selectedNamespace);
-    }
+    this.setState({ clusterName, namespaces }, () => {
+      let selectedNamespace = getNamespaceCache(this.state.isPlatform);
+      if (namespaces.map(item => item.name).includes(selectedNamespace)) {
+        this.handleNamespaceChanged(selectedNamespace);
+      }
+    });
   };
 
   /**
@@ -881,9 +879,19 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
    * NOTE: 业务选择器的数据源是从wrapper传过来的
    * @param project 业务id
    */
-  handleProjectChanged = project => {
-    this.setState({ project }, () => {
-      this.getNamespaceList();
+  // handleProjectChanged = project => {
+  //   this.setState({ project }, () => {
+  //     this.getNamespaceList();
+  //   });
+  // };
+  handleProjectChanged = async projectId => {
+    setProjectCache(projectId);
+    let namespaces = await getNamespacesByProject(projectId);
+    this.setState({ project: projectId, namespaces }, () => {
+      let selectedNamespace = getNamespaceCache(this.state.isPlatform);
+      if (namespaces.map(item => (this.state.isPlatform ? item.name : item.fullName)).includes(selectedNamespace)) {
+        this.handleNamespaceChanged(selectedNamespace);
+      }
     });
   };
 
@@ -891,12 +899,22 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
    * 切换命名空间的时候获取规则列表
    * @param namespace
    */
-  handleNamespaceChanged = namespace => {
+  handleNamespaceChanged = namespaceValue => {
+    // let { namespaces } = this.state;
+    // let { clusterName } = namespaces.find(item => item.name === namespace);
+    // this.setState({ clusterName, namespace }, () => {
+    //   this.getRuleList(clusterName, namespace);
+    // });
+    setNamespaceCache(namespaceValue, this.state.isPlatform);
     let { namespaces } = this.state;
-    let { clusterName } = namespaces.find(item => item.name === namespace);
-    this.setState({ clusterName, namespace }, () => {
-      this.getRuleList(clusterName, namespace);
-    });
+    let namespaceItem = namespaces.find(item => (this.state.isPlatform ? item.name : item.fullName) === namespaceValue);
+    // 兼容业务侧场景，直接从ns中取cluster
+    if (namespaceItem) {
+      let { clusterName, name: namespace } = namespaceItem;
+      this.setState({ clusterName, namespace, namespaceValue }, () => {
+        this.getRuleList(clusterName, namespace);
+      });
+    }
   };
 
   stateToPayload = values => {
@@ -904,10 +922,11 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
     let pods = Object.assign({}, podChoice === 'byLabel' ? { byLabel } : { byName }, {
       ports: ports.map(({ protocol, port }) => ({ protocol, port })),
     });
+    // 名称固定加上clb-的前缀（类似clb规则的名称规范）
     let payload = {
       apiVersion: 'lbcf.tkestack.io/v1beta1',
       kind: 'BackendGroup',
-      metadata: { name, namespace },
+      metadata: { name: `clb-${name}`, namespace },
       spec: {
         loadBalancers,
         pods,
@@ -921,15 +940,15 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
     return payload;
   };
 
+  /**
+   * 用在表单自身独立提交的时候
+   */
   submit = async values => {
     let { clusterName, namespace } = this.state;
 
     try {
       let payload = this.stateToPayload(values);
-      // if (!isEdit) {
       let response = await createBackendsGroup(clusterName, namespace, payload);
-      // let response = await createBackendsGroup(clusterName, 'tfan', payload_bylabel);
-      // let response = await createBackendsGroup(clusterName, 'tfan', payload_byname);
     } catch (err) {
       // message.error(err)
     }
@@ -944,6 +963,7 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
       name,
       project,
       namespace,
+      namespaceValue,
       loadBalancers,
       byName,
       byLabel,
@@ -960,21 +980,32 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
       value: id,
       text: name,
     }));
-    let namespaceList = namespaces.map(item => ({ text: item.name, value: item.name }));
-    // TODO: 业务侧下面通过*无法获取关联的集群，去掉
-    // namespaceList.unshift({ text: '*(任意命名空间)', value: '*' });
     let clusterList = clusters.map(({ name, displayName }) => ({
       value: name,
       text: `${displayName}(${name})`,
     }));
-
-    const save = form => {
-      return async values => {
-        // if (onChange) {
-        //   onChange(form.getState());
-        // }
-      };
-    };
+    let namespaceList = [];
+    let groups = {};
+    if (isPlatform) {
+      namespaceList = namespaces.map(({ name, fullName }) => ({
+        // value: fullName,
+        value: name,
+        text: name,
+      }));
+    } else {
+      namespaceList = namespaces.map(({ name, clusterName, fullName }) => ({
+        value: fullName,
+        groupKey: clusterName,
+        text: name,
+      }));
+      groups = namespaces.reduce((accu, item, index, arr) => {
+        let { clusterName, clusterDisplayName, namespace } = item;
+        if (!accu[clusterName]) {
+          accu[clusterName] = clusterDisplayName;
+        }
+        return accu;
+      }, {});
+    }
 
     const onFormChange = formState => {
       let { onChange } = this.props;
@@ -1005,24 +1036,6 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
       }
     };
 
-    const validate = async ({ clbId, scope }) => {
-      if (!clbId) {
-        return t('请选择一个实例');
-      }
-      // if (!/(?!^[._-].*)(?!.*[._-]$)(?!.*[._-]{2,}.*)(?=^[0-9a-z._-]{2,26}$)[0-9a-z._-]+/.test(repo_name)) {
-      //   return t('长度2-26个字符，只能包含小写字母、数字及分隔符("."、"_"、"-")，且不能以分隔符开头、结尾或连续');
-      // }
-      // let response = await WebAPI.fetchRepositoryList(
-      //   {},
-      //   {
-      //     exact_query: `${project_name}/${repo_name}`,
-      //   }
-      // );
-      // if (response.records.length) {
-      //   return t('名称重复');
-      // }
-    };
-
     return (
       <FinalForm
         onSubmit={this.submit}
@@ -1031,7 +1044,7 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
           name,
           project,
           clusterName,
-          namespace,
+          namespace: namespaceValue,
           typeChoice,
           podChoice,
           loadBalancers,
@@ -1071,6 +1084,7 @@ class BackendsGroupEditor extends React.Component<PropTypes, StateTypes> {
                   name="namespace"
                   label={labels.namespace}
                   options={namespaceList}
+                  groups={groups}
                   onChange={this.handleNamespaceChanged}
                 />
                 <LoadBalancers name="loadBalancers" label={labels.loadBalancers} records={rules} />

@@ -7,10 +7,11 @@ const { get, isEmpty } = require('lodash');
 
 function alertError(error, url) {
   let message = `错误码：${error.response.status}，错误描述：${error.response.statusText}`;
-  let description = `${error.message}，请求路径：: ${url}`;
-  if (error.response.status === 500) {
+  let description = `请求路径: ${url} `;
+  // if (error.response.status === 500) {
+  if (error.response.data) {
     // 内部异常的response可能是文本也可能是错误对象
-    description += `, 异常消息：${_(error.response.data).value()}`;
+    description += `错误消息：${_(error.response.data).value()}`;
   }
   Modal.error({
     message,
@@ -72,7 +73,7 @@ export async function getNamespacesByProject(projectId) {
           fullName: item.metadata.name,
           clusterName: item.spec.clusterName,
           clusterDisplayName: item.spec.clusterDisplayName,
-          projectId: item.metadata.namespace,
+          projectId,
         };
       });
     }
@@ -102,8 +103,9 @@ export async function getNamespacesByCluster(clusterName) {
       namespaceList = namespaces.map(item => {
         return {
           name: item.metadata.name,
-          uid: item.metadata.uid,
-          phase: item.status.phase,
+          fullName: `${clusterName}-${item.metadata.name}`,
+          // uid: item.metadata.uid,
+          // phase: item.status.phase,
           clusterName,
         };
       });
@@ -368,12 +370,14 @@ export async function getRuleList(clusterName, namespace) {
  * @param namespace 规则所在命名空间
  * @param ruleName 规则名称
  */
-export async function removeRule(clusterName, namespace, ruleName) {
+export async function removeRule(clusterName, namespace, ruleName, payload) {
   let result;
-  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbs?namespace=${namespace}&name=${ruleName}`;
+  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbs?namespace=${namespace}&name=${ruleName}`;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=deleteRule&ruleNS=${namespace}&ruleName=${ruleName}`;
   let params: RequestParams = {
     method: Method.delete,
     url,
+    data: { ...payload },
   };
   try {
     let response = await reduceNetworkRequest(params, clusterName);
@@ -468,7 +472,10 @@ export async function createRule(clusterName, payload) {
  * @param clbId
  */
 export async function getAvailableListeners(clusterName, clbId) {
-  let result = [];
+  let result = {
+    listeners: [],
+    occupied: [],
+  };
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&api=listListener&apiPort=80&lbID=${clbId}`;
   let params: RequestParams = {
     method: Method.get,
@@ -477,9 +484,12 @@ export async function getAvailableListeners(clusterName, clbId) {
   try {
     let response = await reduceNetworkRequest(params, clusterName);
     if (response.code === 0) {
-      let list = response.data;
-      if (list && list.Response && list.Response.Listeners) {
-        result = [...list.Response.Listeners];
+      let data = response.data;
+      if (data && data.Response && data.Response.Listeners) {
+        result.listeners = [...data.Response.Listeners];
+      }
+      if (data && data.occupied) {
+        result.occupied = [...data.occupied];
       }
     }
   } catch (error) {
@@ -552,8 +562,6 @@ export async function modifyRuleNamespace(clusterName, namespace, ruleName, scop
  */
 export async function getBackendsList(clusterName, namespace) {
   let backendsList = [];
-  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterId}/lbcfbackendgroups?namespace=${namespace}`;
-  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=listGroups?groupNS=${namespace}`;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=listGroups&groupNS=${namespace}`;
   let params: RequestParams = {
     method: Method.get,
@@ -847,7 +855,6 @@ export async function getEventListByRule(clusterName, namespace, ruleName) {
  */
 export async function getEventListByBackends(clusterName, namespace, serverId) {
   let result;
-  // let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcfbackendrecords?namespace=${namespace}&name=${backendsGroupName}&action=events`;
   let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&apiPort=80&api=getBackendRecordEvent&serverNS=${namespace}&serverID=${serverId}`;
   let params: RequestParams = {
     method: Method.get,
@@ -920,6 +927,31 @@ export async function getBackendsGroupYamlContent(clusterName, namespace, backen
     if (response.code === 0) {
       result = response.data;
     }
+  } catch (error) {
+    alertError(error, url);
+  }
+
+  return result;
+}
+
+/**
+ * 修改服务器组权重
+ * @param clusterName
+ * @param namespace
+ * @param backendsGroupName
+ * @param payload, { weight: 20 }
+ */
+export async function changeWeightForBackendsGroup(clusterName, namespace, backendsGroupName, payload) {
+  let result;
+  let url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&api=updateGroupWeight&apiPort=80&groupNS=${namespace}&groupName=${backendsGroupName}`;
+  let params: RequestParams = {
+    method: Method.post,
+    url,
+    data: { ...payload },
+  };
+  try {
+    let response = await reduceNetworkRequest(params, clusterName);
+    result = response;
   } catch (error) {
     alertError(error, url);
   }

@@ -8,6 +8,7 @@ import {
   Justify,
   List,
   Modal,
+  PopConfirm,
   Select,
   Table,
   Text,
@@ -32,6 +33,8 @@ import {
 } from '@tencent/tea-component/lib/table/addons';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
+import { BackendsGroupEditor } from './editor';
+import { ServerDetail } from './detail';
 import {
   createBackendsGroup,
   getAllClusters,
@@ -40,10 +43,16 @@ import {
   getNamespacesByProject,
   removeBackendsGroup,
 } from '../../services/api';
-import { BackendsGroupEditor } from './editor';
-import { ServerDetail } from './detail';
+import {
+  getClusterCache,
+  setClusterCache,
+  getProjectCache,
+  setProjectCache,
+  getNamespaceCache,
+  setNamespaceCache,
+} from '../../helpers/util';
 
-const { at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
+const { isEqual, at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
 const { Body, Header } = ContentView;
 
 const convert = item => ({
@@ -56,6 +65,7 @@ const convert = item => ({
   registeredBackends: get(item, 'status.registeredBackends', 0),
   relatedRules: get(item, 'spec.loadBalancers', []),
   // relatedRules: get(item, 'spec.lbName') ? 1 : max([get(item, 'spec.loadBalancers', []).length, 0]), // 两个路径的对象会且只会存在一个，取出它的值来
+  confirmVisible: item.confirmVisible,
 });
 
 interface Project {
@@ -73,9 +83,11 @@ export class ServerList extends React.Component<PropTypes> {
   state = {
     clusters: [], // 平台侧下的集群列表
     isPlatform: this.props.context && this.props.context === 'platform',
+    projects: this.props.projects,
     projectId: '',
     clusterName: '',
-    namespace: '',
+    namespace: '', // 当前选中的命名空间（给接口使用）
+    namespaceValue: '', // 当前选中的命名空间的全名（给组件使用）
     namespaces: [],
     backendGroups: [],
     alertVisible: false,
@@ -96,17 +108,43 @@ export class ServerList extends React.Component<PropTypes> {
     this.state.isPlatform && this.loadData();
   }
 
+  componentWillReceiveProps(nextProps, nextContext) {
+    const { projects } = this.state;
+    if (!isEqual(nextProps.projects, projects)) {
+      this.setState({ projects: nextProps.projects }, () => {
+        if (nextProps.context && nextProps.context === 'business') {
+          this.getCache();
+        }
+      });
+    }
+  }
+
+  getCache = () => {
+    let { isPlatform, clusters } = this.state;
+    if (isPlatform) {
+      // 处理缓存的集群选择
+      let selectedClusterName = getClusterCache();
+      if (clusters.map(item => item.name).includes(selectedClusterName)) {
+        this.handleClusterChanged(selectedClusterName);
+      }
+    } else {
+      // 处理缓存的业务选择，注意这里缓存的是业务id
+      let { projects } = this.state;
+      let selectedProject = getProjectCache();
+      if (projects.map(item => item.id).includes(selectedProject)) {
+        this.handleProjectChanged(selectedProject);
+      }
+    }
+  };
+
   /**
    * 在平台侧时，获取全部集群列表
    */
   loadData = async () => {
     let clusters = await getAllClusters();
-    this.setState({ clusters });
-    // 缓存处理
-    let selectedClusterName = window.localStorage.getItem('selectedClusterName');
-    if (clusters.map(item => item.name).includes(selectedClusterName)) {
-      this.handleClusterChanged(selectedClusterName);
-    }
+    this.setState({ clusters }, () => {
+      this.getCache();
+    });
   };
 
   /**
@@ -114,13 +152,26 @@ export class ServerList extends React.Component<PropTypes> {
    * @param clusterName 集群名称
    */
   handleClusterChanged = async clusterName => {
-    // 缓存选择的集群
-    window.localStorage.setItem('selectedClusterName', clusterName);
-
+    setClusterCache(clusterName);
     let namespaces = await getNamespacesByCluster(clusterName);
-    let selectedNamespace = window.localStorage.getItem('selectedNamespace');
     this.setState({ clusterName, namespaces }, () => {
+      let selectedNamespace = getNamespaceCache(this.state.isPlatform);
       if (namespaces.map(item => item.name).includes(selectedNamespace)) {
+        this.handleNamespaceChanged(selectedNamespace);
+      }
+    });
+  };
+
+  /**
+   * 切换业务的时候更新命名空间
+   * @param projectId 业务id
+   */
+  handleProjectChanged = async projectId => {
+    setProjectCache(projectId);
+    let namespaces = await getNamespacesByProject(projectId);
+    this.setState({ projectId, namespaces }, () => {
+      let selectedNamespace = getNamespaceCache(this.state.isPlatform);
+      if (namespaces.map(item => (this.state.isPlatform ? item.name : item.fullName)).includes(selectedNamespace)) {
         this.handleNamespaceChanged(selectedNamespace);
       }
     });
@@ -130,8 +181,14 @@ export class ServerList extends React.Component<PropTypes> {
    * 获取服务器组列表数据
    */
   getList = async (clusterName, namespace) => {
+    // let { namespaces } = this.state;
+    // let namespaceItem = namespaces.find(item => (this.state.isPlatform ? item.name : item.fullName) === namespaceValue);
+    // // TODO: 注意这个地方的 namespaceValue 和 namespaceName 是不一样的，在平台侧和业务侧下面
+    // let { name: namespacenName } = namespaceItem;
     let backendGroups = await getBackendsList(clusterName, namespace);
-    this.setState({ backendGroups });
+    this.setState({
+      backendGroups: backendGroups.map(item => convert(item)).map(item => ({ ...item, confirmVisible: false })),
+    });
   };
 
   reloadList = () => {
@@ -152,27 +209,21 @@ export class ServerList extends React.Component<PropTypes> {
   };
 
   /**
-   * 切换业务的时候更新命名空间
-   * @param projectId 业务id
-   */
-  handleProjectChanged = async projectId => {
-    let namespaces = await getNamespacesByProject(projectId);
-    this.setState({ projectId, namespaces });
-  };
-
-  /**
    * 切换命名空间的时候更新列表页数据
    * 注意要兼容业务侧和平台侧两种情况
    * @param namespace
    */
-  handleNamespaceChanged = namespace => {
+  handleNamespaceChanged = namespaceValue => {
+    setNamespaceCache(namespaceValue, this.state.isPlatform);
     let { namespaces } = this.state;
-    let { clusterName } = namespaces.find(item => item.name === namespace);
-    this.setState({ namespace, clusterName }, () => {
-      this.getList(clusterName, namespace);
-      // 缓存命名空间下拉列表选择
-      window.localStorage.setItem('selectedNamespace', namespace);
-    });
+    let namespaceItem = namespaces.find(item => (this.state.isPlatform ? item.name : item.fullName) === namespaceValue);
+    if (namespaceItem) {
+      // 注意这里区分了namespaceName和namespaceValue，就是在业务侧下，namespaceName是ns的名称，namespaceValue是其fullName
+      let { clusterName, name: namespace } = namespaceItem;
+      this.setState({ namespace, namespaceValue, clusterName }, () => {
+        this.getList(clusterName, namespace);
+      });
+    }
   };
 
   handleCancelItem = () => {
@@ -193,18 +244,20 @@ export class ServerList extends React.Component<PropTypes> {
   };
 
   stateToPayload = values => {
-    let { name, namespace, loadBalancers, ports, podChoice, byLabel, byName, parameters } = values;
+    let { clusterName, name, namespace, loadBalancers, ports, podChoice, byLabel, byName, parameters } = values;
+    if (!this.state.isPlatform) {
+      namespace = namespace.replace(new RegExp(`^${clusterName}-`), '');
+    }
     let pods = Object.assign({}, podChoice === 'byLabel' ? { byLabel } : { byName: byName.map(item => item.name) }, {
       ports: ports.map(({ protocol, port }) => ({ protocol, port })),
     });
     let payload = {
       apiVersion: 'lbcf.tkestack.io/v1beta1',
       kind: 'BackendGroup',
-      metadata: { name, namespace },
+      metadata: { name: `clb-${name}`, namespace },
       spec: {
         loadBalancers,
         pods,
-        // parameters,
         parameters: {
           weight: String(parameters.weight),
         },
@@ -221,14 +274,17 @@ export class ServerList extends React.Component<PropTypes> {
   close = () => {
     let { clusterName, namespace } = this.state;
     this.setState({ alertVisible: false });
-    this.getList(clusterName, namespace);
+    if (clusterName && namespace) {
+      this.getList(clusterName, namespace);
+    }
   };
 
   handleSubmitItem = async () => {
-    // document.getElementById('backendsGroupForm').dispatchEvent(new Event('submit', { cancelable: true }));
-    // this.showDrawer(false);
     let { currentItem } = this.state;
     let { clusterName, namespace } = currentItem;
+    if (!this.state.isPlatform) {
+      namespace = namespace.replace(new RegExp(`^${clusterName}-`), '');
+    }
 
     try {
       let payload = this.stateToPayload(currentItem);
@@ -263,15 +319,13 @@ export class ServerList extends React.Component<PropTypes> {
     };
   };
 
-  handleRemoveItem = item => {
-    return async () => {
-      let { clusterName, namespace } = this.state;
-      let { name } = item;
-      let response = await removeBackendsGroup(clusterName, namespace, name);
-      if (response && response.code === 0 && response.message === 'OK') {
-        this.alertSuccess();
-      }
-    };
+  handleRemoveItem = async item => {
+    let { clusterName, namespace } = this.state;
+    let { name } = item;
+    let response = await removeBackendsGroup(clusterName, namespace, name);
+    if (response && response.code === 0 && response.message === 'OK') {
+      this.alertSuccess();
+    }
   };
 
   render() {
@@ -280,6 +334,7 @@ export class ServerList extends React.Component<PropTypes> {
       clusterName,
       clusters,
       namespace,
+      namespaceValue,
       namespaces,
       backendGroups,
       dialogVisible,
@@ -299,22 +354,77 @@ export class ServerList extends React.Component<PropTypes> {
       value: name,
       text: `${displayName}(${name})`,
     }));
-    let namespaceList = namespaces.map(({ name }) => ({
-      value: name,
-      text: name,
-    }));
-    let backendGroupList = backendGroups.map(item => convert(item));
+    let namespaceList = [];
+    let groups = {};
+    if (isPlatform) {
+      namespaceList = namespaces.map(({ name, fullName }) => ({
+        // value: fullName,
+        value: name,
+        text: name,
+      }));
+    } else {
+      namespaceList = namespaces.map(({ name, clusterName, fullName }) => ({
+        value: fullName,
+        groupKey: clusterName,
+        text: name,
+      }));
+      groups = namespaces.reduce((accu, item, index, arr) => {
+        let { clusterName, clusterDisplayName, namespace } = item;
+        if (!accu[clusterName]) {
+          accu[clusterName] = clusterDisplayName;
+        }
+        return accu;
+      }, {});
+    }
+
+    let setConfirmVisible = (currentItem, confirmVisible) => {
+      let newList = backendGroups.map(item => ({ ...item }));
+      let target = newList.filter(item => item.name === currentItem.name)[0];
+      if (target) {
+        target.confirmVisible = confirmVisible;
+        this.setState({ backendGroups: newList });
+      }
+    };
 
     let renderOperationColumn = () => {
-      return item => {
+      return currentItem => {
         return (
           <>
-            <Button type="link" onClick={this.handleViewItem(item)}>
+            <Button type="link" onClick={this.handleViewItem(currentItem)}>
               <strong>详情</strong>
             </Button>
-            <Button type="link" onClick={this.handleRemoveItem(item)}>
-              <strong>删除</strong>
-            </Button>
+            <PopConfirm
+              title="确定要删除该记录？"
+              visible={currentItem.confirmVisible}
+              onVisibleChange={confirmVisible => {
+                setConfirmVisible(currentItem, confirmVisible);
+              }}
+              footer={
+                <>
+                  <Button
+                    type="link"
+                    onClick={() => {
+                      setConfirmVisible(currentItem, false);
+                      this.handleRemoveItem(currentItem);
+                    }}
+                  >
+                    删除
+                  </Button>
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      setConfirmVisible(currentItem, false);
+                    }}
+                  >
+                    取消
+                  </Button>
+                </>
+              }
+            >
+              <Button type="link">
+                <strong>删除</strong>
+              </Button>
+            </PopConfirm>
           </>
         );
       };
@@ -362,19 +472,18 @@ export class ServerList extends React.Component<PropTypes> {
                       />
                     </Form.Item>
                   )}
-                  <Form.Item label="命名空间">
+                  <Form.Item align="middle" label="命名空间">
                     <Select
                       searchable
                       boxSizeSync
-                      size="m"
+                      groups={isPlatform ? undefined : groups}
+                      size={isPlatform ? 'm' : 'l'}
                       type="simulate"
                       appearence="button"
                       options={namespaceList}
-                      value={namespace}
+                      value={namespaceValue}
                       onChange={value => this.handleNamespaceChanged(value)}
                     />
-                  </Form.Item>
-                  <Form.Item>
                     <Button icon="refresh" onClick={this.reloadList} />
                   </Form.Item>
                 </Form>
@@ -385,7 +494,7 @@ export class ServerList extends React.Component<PropTypes> {
             <Card.Body>
               <Table
                 verticalTop
-                records={backendGroupList}
+                records={backendGroups}
                 recordKey="name"
                 columns={[
                   {
