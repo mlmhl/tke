@@ -133,12 +133,13 @@ export const reduceK8sRestfulPath = (options: K8sRestfulPathOptions) => {
 
   /// #if project
   //业务侧ns eg: cls-xxx-ns 需要去除前缀
-  if (namespace && !isSpetialNamespace) {
-    namespace = namespace.startsWith('global')
-      ? namespace.split('-').splice(1).join('-')
-      : namespace.split('-').splice(2).join('-');
-  }
+  namespace = namespace.replace(new RegExp(`^${clusterId}-`), '');
   /// #endif
+  // if (namespace && !isSpetialNamespace) {
+  //   namespace = namespace.startsWith('global')
+  //     ? namespace.split('-').splice(1).join('-')
+  //     : namespace.split('-').splice(2).join('-');
+  // }
   let url: string = '';
   let isAddon = resourceInfo.requestType && resourceInfo.requestType.addon ? resourceInfo.requestType.addon : false;
 
