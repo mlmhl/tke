@@ -208,13 +208,13 @@ function getAlarmPolicyParams(alarmPolicyEdition: AlarmPolicyEdition[], opreator
   if (alarmPolicyEdition[0].alarmPolicyType === 'pod') {
     if (alarmPolicyEdition[0].alarmObjectsType === 'all') {
       if (alarmPolicyEdition[0].alarmObjectNamespace !== 'ALL') {
-        params['Namespace'] = reduceNs(alarmPolicyEdition[0].alarmObjectNamespace);
+        params['Namespace'] = reduceNs(alarmPolicyEdition[0].alarmObjectNamespace, opreator.clusterId);
       }
       if (alarmPolicyEdition[0].alarmObjectWorkloadType !== 'ALL') {
         params['WorkloadType'] = alarmPolicyEdition[0].alarmObjectWorkloadType;
       }
     } else {
-      params['Namespace'] = reduceNs(alarmPolicyEdition[0].alarmObjectNamespace);
+      params['Namespace'] = reduceNs(alarmPolicyEdition[0].alarmObjectNamespace, opreator.clusterId);
       params['WorkloadType'] = alarmPolicyEdition[0].alarmObjectWorkloadType;
     }
   }

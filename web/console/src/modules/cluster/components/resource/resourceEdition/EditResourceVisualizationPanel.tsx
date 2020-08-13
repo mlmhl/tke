@@ -660,7 +660,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         apiVersion: (workloadResourceInfo.group ? workloadResourceInfo.group + '/' : '') + workloadResourceInfo.version,
         metadata: {
           name: workloadName,
-          namespace: reduceNs(namespace),
+          namespace: reduceNs(namespace, route.queries['clusterId']),
           labels: labelsInfo,
           annotations: isEmpty(annotations) ? undefined : annotations
         },
@@ -779,7 +779,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
   /** 处理cronhpa的相关信息 */
   private _reduceCronHpaData() {
-    let { subRoot, clusterVersion } = this.props,
+    let { subRoot, clusterVersion, route } = this.props,
       { cronMetrics, workloadType, workloadName, namespace } = subRoot.workloadEdit;
 
     let resourceInfo = resourceConfig(clusterVersion)['cronhpa'],
@@ -792,7 +792,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       apiVersion: (resourceInfo.group ? resourceInfo.group + '/' : '') + resourceInfo.version,
       metadata: {
         name: workloadName,
-        namespace: reduceNs(namespace)
+        namespace: reduceNs(namespace, route.queries['clusterId'])
       },
       spec: {
         scaleTargetRef: {
@@ -814,7 +814,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
   /** 处理hpa的相关信息 */
   private _reduceHpaData() {
-    let { subRoot, clusterVersion } = this.props,
+    let { subRoot, clusterVersion, route } = this.props,
       { minReplicas, maxReplicas, workloadName, namespace, metrics, workloadType } = subRoot.workloadEdit;
 
     // hpa的相关配置信息
@@ -863,7 +863,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       apiVersion: (resourceInfo.group ? resourceInfo.group + '/' : '') + resourceInfo.version,
       metadata: {
         name: workloadName,
-        namespace: reduceNs(namespace),
+        namespace: reduceNs(namespace, route.queries['clusterId']),
         labels: {
           'qcloud-app': workloadName
         }
@@ -916,7 +916,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       communicationType,
       serviceName: workloadEdit.workloadName,
       isOpenHeadless,
-      sessionConfig
+      sessionConfig,
+      clusterId: route.queries['clusterId']
     });
 
     return jsonData;

@@ -37,7 +37,7 @@ export class ResourceRollbackDialog extends React.Component<RootProps, {}> {
     let resource: CreateResource = {
       id: uuid(),
       resourceInfo,
-      namespace: reduceNs(route.queries['np']),
+      namespace: reduceNs(route.queries['np'], route.queries['clusterId']),
       clusterId: route.queries['clusterId'],
       resourceIns,
       jsonData: JSON.stringify(jsonData)

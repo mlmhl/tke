@@ -328,7 +328,7 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
                     ? [['node', '=', route.queries['resourceIns'] || '']]
                     : [
                         ['workload_name', '=', route.queries['resourceIns'] || ''],
-                        ['namespace', '=', reduceNs(route.queries['np'] || 'default')]
+                        ['namespace', '=', reduceNs(route.queries['np'] || 'default', route.queries['clusterId'])]
                       ])
                 ],
                 fields: podMonitorFields
@@ -364,7 +364,7 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
                         ? resourceDetailState.podList.data.records[0].metadata.name
                         : '')
                   ],
-                  ...(isInNodeManage ? [] : [['namespace', '=', reduceNs(route.queries['np'] || 'default')]])
+                  ...(isInNodeManage ? [] : [['namespace', '=', reduceNs(route.queries['np'] || 'default', route.queries['clusterId'])]])
                 ],
                 fields: containerMonitorFields
               }

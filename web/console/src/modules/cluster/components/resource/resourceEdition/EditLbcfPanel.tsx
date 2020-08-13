@@ -245,7 +245,7 @@ export class EditLbcfPanel extends React.Component<RootProps, {}> {
         apiVersion: 'lbcf.tkestack.io/v1beta1', //(resourceInfo.group ? resourceInfo.group + '/' : '') + resourceInfo.version,
         metadata: {
           name: name,
-          namespace: reduceNs(namespace)
+          namespace: reduceNs(namespace, route.queries['clusterId'])
         },
         spec: {
           lbDriver: driver.selection ? driver.selection.metadata.name : '',

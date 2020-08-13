@@ -231,7 +231,7 @@ export async function createHelmByOther(
   let data = {
     chart_url: params.chart_url,
     repo: params.resource,
-    namespace: reduceNs(params.namespace)
+    namespace: reduceNs(params.namespace, clusterId)
   };
   if (params.username) {
     data['username'] = params.username;
@@ -302,7 +302,7 @@ export async function updateHelmByOther(
   if (params.username) {
     data['username'] = params.username;
     data['password'] = params.password;
-    data['namespace'] = reduceNs(params.namespace);
+    data['namespace'] = reduceNs(params.namespace, clusterId);
   }
   if (params.kvs && params.kvs.length) {
     data['values'] = formatKeyValue(params.kvs);
@@ -435,7 +435,7 @@ export async function fetchHelmList(
     specificName: clusterId
   })}/helm/tiller/v2/releases/json?status_codes=DEPLOYED&&status_codes=FAILED&&status_codes=DELETING&&status_codes=DELETED&&status_codes=UNKNOWN&&sort_by=LAST_RELEASED&&sort_order=DESC&&namespace=${reduceNs(
     np
-  )}&&limit=${paging.pageSize}`;
+  , clusterId)}&&limit=${paging.pageSize}`;
   try {
     let response = await GET(url, regionId, clusterId, false);
     let data = response;
