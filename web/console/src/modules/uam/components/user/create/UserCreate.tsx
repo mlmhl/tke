@@ -14,6 +14,7 @@ import {
   VALIDATE_PHONE_RULE
 } from '../../../constants/Config';
 import { getStatus } from '../../../../common/validate';
+import { useImmer } from 'use-immer';
 const _cloneDeep = require('lodash/cloneDeep');
 const { useState, useEffect, useRef } = React;
 const { scrollable, selectable, removeable } = Table.addons;
@@ -30,9 +31,23 @@ export const UserCreate = props => {
     item => ['PlatformAdmin', 'PlatformUser', 'PlatformLogin'].includes(item.displayName) === false
   );
   const tenantID = policyPlainListRecord.filter(item => item.displayName === 'PlatformAdmin')[0].tenantID;
-  const [targetKeys, setTargetKeys] = useState([]);
-  const [inputValue, setInputValue] = useState('');
+  const [platformRole, setPlatformRole] = useImmer({
+    inputValue: '',
+    targetKeys: []
+  });
+  // const [targetKeys, setTargetKeys] = useState([]);
+  // const [inputValue, setInputValue] = useState('');
 
+  function setInputValue(inputValue) {
+    setPlatformRole(draft => {
+      draft.inputValue = inputValue;
+    });
+  }
+  function setTargetKeys(targetKeys) {
+    setPlatformRole(draft => {
+      draft.targetKeys = targetKeys;
+    });
+  }
   // 处理外层滚动
   const bottomAffixRef = useRef(null);
   useEffect(() => {
@@ -48,7 +63,6 @@ export const UserCreate = props => {
   }, []);
 
   function onSubmit(values, form) {
-    console.log('submit .....', values, targetKeys);
     const { name, displayName, password, phone, email, role } = values;
     let userInfo: User = {
       id: uuid(),
@@ -59,11 +73,10 @@ export const UserCreate = props => {
         email,
         phoneNumber: phone,
         extra: {
-          policies: role === 'custom' ? targetKeys.join(',') : role
+          policies: role === 'custom' ? platformRole.targetKeys.join(',') : role
         }
       }
     };
-    console.log('submit userInfo: ', userInfo);
     actions.user.addUser.start([userInfo]);
     actions.user.addUser.perform();
     // router.navigate({ module: 'user' });
@@ -147,16 +160,16 @@ export const UserCreate = props => {
 
   const roleValue = role.input.value;
   useEffect(() => {
-    if (targetKeys.length > 0 && !roleValue) {
+    if (platformRole.targetKeys.length > 0 && !roleValue) {
       form.change('role', 'custom');
     }
     if (roleValue && roleValue !== 'custom') {
       // 对于targetKeys选择的时候是替换数组，所以引用不同，这里会被触发；这里清空的时候，让引用不变，所以这个useEffect不会被再次触发
-      const newTargetKeys = targetKeys;
+      const newTargetKeys = platformRole.targetKeys;
       newTargetKeys.length = 0;
       setTargetKeys(newTargetKeys);
     }
-  }, [roleValue, targetKeys]);
+  }, [roleValue, platformRole.targetKeys]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -261,20 +274,20 @@ export const UserCreate = props => {
                         scrollable={false}
                         title="为这个用户自定义独立的权限"
                         tip="支持按住 shift 键进行多选"
-                        header={<SearchBox value={inputValue} onChange={value => setInputValue(value)} />}
+                        header={<SearchBox value={platformRole.inputValue} onChange={value => setInputValue(value)} />}
                       >
                         <SourceTable
-                          dataSource={strategyList.filter(i => i.displayName.includes(inputValue))}
-                          targetKeys={targetKeys}
+                          dataSource={strategyList.filter(i => i.displayName.includes(platformRole.inputValue))}
+                          targetKeys={platformRole.targetKeys}
                           onChange={keys => setTargetKeys(keys)}
                         />
                       </Transfer.Cell>
                     }
                     rightCell={
-                      <Transfer.Cell title={`已选择 (${targetKeys.length})`}>
+                      <Transfer.Cell title={`已选择 (${platformRole.targetKeys.length})`}>
                         <TargetTable
-                          dataSource={strategyList.filter(i => targetKeys.includes(i.id))}
-                          onRemove={key => setTargetKeys(targetKeys.filter(i => i !== key))}
+                          dataSource={strategyList.filter(i => platformRole.targetKeys.includes(i.id))}
+                          onRemove={key => setTargetKeys(platformRole.targetKeys.filter(i => i !== key))}
                         />
                       </Transfer.Cell>
                     }
