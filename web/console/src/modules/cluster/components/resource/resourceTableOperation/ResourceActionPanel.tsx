@@ -111,7 +111,7 @@ export class ResourceActionPanel extends React.Component<RootProps, ResouceActio
             conditions: [
               ['tke_cluster_instance_id', '=', route.queries.clusterId],
               ['workload_kind', '=', subRoot.resourceInfo.headTitle],
-              ['namespace', '=', reduceNs(this.props.route.queries['np'])]
+              ['namespace', '=', reduceNs(this.props.route.queries['np'], route.queries.clusterId)]
             ]
           }
         ],

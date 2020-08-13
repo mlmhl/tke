@@ -242,7 +242,7 @@ export class EditConfigMapPanel extends React.Component<RootProps, {}> {
         apiVersion: (resourceInfo.group ? resourceInfo.group + '/' : '') + resourceInfo.version,
         metadata: {
           name: name,
-          namespace: reduceNs(namespace)
+          namespace: reduceNs(namespace, route.queries['clusterId'])
         },
         data: cmEdit.variables.reduce((prev, next) => {
           return Object.assign({}, prev, {

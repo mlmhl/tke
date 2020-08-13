@@ -89,6 +89,7 @@ export const ReduceServiceJSONData = (dataObj: {
   serviceName: string;
   isOpenHeadless: boolean;
   sessionConfig: any;
+  clusterId?: string|undefined;
 }) => {
   let {
     resourceInfo,
@@ -99,7 +100,8 @@ export const ReduceServiceJSONData = (dataObj: {
     communicationType,
     serviceName,
     isOpenHeadless,
-    sessionConfig
+    sessionConfig,
+    clusterId
   } = dataObj;
 
   let jsonData: ServiceEditJSONYaml = {
@@ -107,7 +109,7 @@ export const ReduceServiceJSONData = (dataObj: {
     apiVersion: (resourceInfo.group ? resourceInfo.group + '/' : '') + resourceInfo.version,
     metadata: {
       name: serviceName,
-      namespace: reduceNs(namespace),
+      namespace: clusterId ? reduceNs(namespace, clusterId) : reduceNs(namespace),
       annotations: isEmpty(annotations) ? undefined : annotations
     },
     spec: {

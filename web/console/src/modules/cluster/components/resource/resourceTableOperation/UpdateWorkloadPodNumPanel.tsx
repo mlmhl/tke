@@ -159,7 +159,7 @@ export class UpdateWorkloadPodNumPanel extends React.Component<RootProps, {}> {
             apiVersion: (hpaResourceInfo.group ? hpaResourceInfo.group + '/' : '') + hpaResourceInfo.version,
             metadata: {
               name: workloadName,
-              namespace: reduceNs(namespace),
+              namespace: reduceNs(namespace, clusterId),
               labels: {
                 'qcloud-app': workloadName
               }

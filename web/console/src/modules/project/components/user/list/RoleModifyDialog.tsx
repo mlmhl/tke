@@ -17,9 +17,10 @@ export function RoleModifyDialog(props) {
 
   const { policyPlainList, route } = state;
   const policyPlainListRecords = policyPlainList.list.data.records;
+  const policyTenantID = policyPlainListRecords.length ? policyPlainListRecords[0].tenantID : 'default';
   let strategyList = policyPlainListRecords ? _cloneDeep(policyPlainListRecords) : [];
   strategyList = strategyList.filter(
-    item => ['pol-demo-project-owner', 'pol-demo-project-member', 'pol-demo-project-viewer'].includes(item.id) === false
+    item => [`pol-${policyTenantID}-project-owner`, `pol-${policyTenantID}-project-member`, `pol-${policyTenantID}-project-viewer`].includes(item.id) === false
   );
   const { isShowing, toggle, user } = props;
   console.log('PrivateEditorDialog props user:', user);

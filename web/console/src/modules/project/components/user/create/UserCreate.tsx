@@ -20,9 +20,10 @@ export const UserCreate = props => {
   const userList = manager.list.data.records || [];
   const policyPlainListRecords = policyPlainList.list.data.records;
   let strategyList = policyPlainListRecords ? _cloneDeep(policyPlainListRecords) : [];
-  const tenantID = policyPlainListRecords.filter(item => item.id === 'pol-demo-project-owner')[0].tenantID;
+  // const tenantID = policyPlainListRecords.filter(item => item.id === 'pol-demo-project-owner')[0].tenantID;
+  const tenantID = policyPlainListRecords[0].tenantID;
   strategyList = strategyList.filter(
-    item => ['pol-demo-project-owner', 'pol-demo-project-member', 'pol-demo-project-viewer'].includes(item.id) === false
+    item => [`pol-${tenantID}-project-owner`, `pol-${tenantID}-project-member`, `pol-${tenantID}-project-viewer`].includes(item.id) === false
   );
 
   const [inputValue, setInputValue] = useState('');
