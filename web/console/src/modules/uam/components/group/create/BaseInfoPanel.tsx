@@ -12,7 +12,7 @@ const _cloneDeep = require('lodash/cloneDeep');
 const { useState, useEffect, useRef } = React;
 const { scrollable, selectable, removeable } = Table.addons;
 
-export const BaseInfoPanel = props => {
+export const BaseInfoPanel = React.memo(props => {
   const state = useSelector(state => state);
   const dispatch = useDispatch();
   const { actions } = bindActionCreators({ actions: allActions }, dispatch);
@@ -262,7 +262,7 @@ export const BaseInfoPanel = props => {
       </Affix>
     </form>
   );
-};
+});
 
 const userAssociateColumns = [
   {
