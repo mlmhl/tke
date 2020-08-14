@@ -23,6 +23,9 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@sentry/browser": "^5.21.1",
+    "@tencent/beacon-web-sdk": "^3.1.51",
+    "@tencent/emonitor": "^3.1.5",
     "@vx/axis": "0.0.181",
     "@vx/brush": "0.0.179",
     "@vx/event": "0.0.179",

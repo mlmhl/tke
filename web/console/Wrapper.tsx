@@ -12,9 +12,28 @@ import { isEmpty } from './src/modules/common/utils';
 import * as classnames from 'classnames';
 import { Button, Icon, Text, Bubble, NavMenu, List, Select } from '@tencent/tea-component';
 
+import * as Sentry from '@sentry/browser';
+import * as emonitor from '@tencent/emonitor';
+import * as BeaconAction from '@tencent/beacon-web-sdk';
+
+Sentry.init({ dsn: 'https://f5911fc91ca24d35a41ed8389446e525@report.url.cn/sentry/2795' });
+
+emonitor.create({
+  name: 'tkestack',
+  mode: '007', // 设置成pecker时上报到啄木鸟
+  atta: {
+    name: 'tkestack' //当上报到007时才需要设置该项
+  }
+});
+
+let beacon = new BeaconAction({
+  appkey: 'JS0F7Q4Z3HR89R',
+  strictMode: false
+});
+beacon.reportPV();
+
 // @ts-ignore
 const routerSea = seajs.require('router');
-
 /**平台管理员,业务成员,游客,未初始化 */
 enum UserType {
   admin = 'admin',
