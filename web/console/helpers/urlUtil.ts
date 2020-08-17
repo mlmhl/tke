@@ -181,7 +181,7 @@ export function reduceNs(namesapce, clusterId = undefined) {
   let newNs = namesapce;
   /// #if project
   //业务侧ns eg: cls-xxx-ns 需要去除前缀
-  if (clusterId) {
+  if (clusterId && namesapce) {
     return namesapce.replace(new RegExp(`^${clusterId}-`), '');
   } else if (newNs) {
     newNs = newNs.startsWith('global') ? newNs.split('-').splice(1).join('-') : newNs.split('-').splice(2).join('-');
