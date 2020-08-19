@@ -36,11 +36,11 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
 
   render() {
     let { subRoot } = this.props,
-      { resourceName, resourceDetailState } = subRoot,
-      { resourceDetailInfo } = resourceDetailState;
+      { resourceOption, resourceName } = subRoot,
+      { ffResourceList } = resourceOption;
 
     let istapp = resourceName === 'tapp';
-    let resourceIns = resourceDetailInfo.selection;
+    let resourceIns = cloneDeep(ffResourceList.selection);
 
     if (istapp && resourceIns) {
       //tapp 需要展示灰度升级的container信息
