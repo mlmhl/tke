@@ -30,17 +30,18 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
   constructor(props, context) {
     super(props, context);
     this.state = {
-      tabName: ''
+      tabName: '',
     };
   }
 
   render() {
     let { subRoot } = this.props,
-      { resourceOption, resourceName } = subRoot,
-      { ffResourceList } = resourceOption;
+      { resourceName, resourceOption, resourceDetailState } = subRoot,
+      { ffResourceList } = resourceOption,
+      { resourceDetailInfo } = resourceDetailState;
 
     let istapp = resourceName === 'tapp';
-    let resourceIns = cloneDeep(ffResourceList.selection);
+    let resourceIns = resourceDetailInfo.selection;
 
     if (istapp && resourceIns) {
       //tapp 需要展示灰度升级的container信息
@@ -54,7 +55,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
             let grayUpdateContainers = templatePool[item].spec.containers.map(c => {
               return {
                 ...c,
-                name: `${c.name} (灰度升级${item})`
+                name: `${c.name} (灰度升级${item})`,
               };
             });
 
@@ -71,7 +72,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
         {this._renderBasicInfo(resourceIns)}
         {resourceName === 'ingress' && this._renderRules(resourceIns)}
         {resourceName === 'svc' && this._renderAdvancedInfo(resourceIns)}
-        {resourceName === 'lbcf' && this._renderBackGroup(resourceIns)}
+        {resourceName === 'lbcf' && this._renderBackGroup({ ...ffResourceList.selection })}
         {this._renderVolumes(resourceIns)}
         {this._renderContainer(resourceIns)}
       </div>
@@ -125,7 +126,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           // 这里需要对齐进行排序
           showContentObj.push({
             order: fieldInfo.order,
-            item: showElement
+            item: showElement,
           });
         });
       });
@@ -173,7 +174,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
       let annotations = resourceIns.metadata.annotations;
       let showData = {
         http: annotations['kubernetes.io/ingress.http-rules'] || '',
-        https: annotations['kubernetes.io/ingress.https-rules'] || ''
+        https: annotations['kubernetes.io/ingress.https-rules'] || '',
       };
 
       let showContent = this._renderRulesItem(showData, true, resourceIns);
@@ -379,7 +380,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
         ? backGroups.map((item, index) => {
             let tab = {
               id: item['name'] + index,
-              label: item['name']
+              label: item['name'],
             };
             return tab;
           })
@@ -437,7 +438,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
         ? containers.map((item, index) => {
             let tab = {
               id: item['name'] + index,
-              label: item['name']
+              label: item['name'],
             };
             return tab;
           })
@@ -655,8 +656,8 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
         route,
         subRoot: {
           deleteResourceFlow,
-          detailResourceOption: { detailDeleteResourceSelection }
-        }
+          detailResourceOption: { detailDeleteResourceSelection },
+        },
       } = this.props;
       //detail页面删除backendGroup
       showContent = (
@@ -677,7 +678,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
                     resourceInfo: bgResourceInfo,
                     namespace: namespaceSelection,
                     clusterId: route.queries['clusterId'],
-                    resourceIns
+                    resourceIns,
                   };
                   actions.workflow.deleteResource.start([resource]);
                   actions.workflow.deleteResource.perform();
@@ -848,7 +849,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.protocol}
           </Text>
-        )
+        ),
       },
       {
         key: 'port',
@@ -857,7 +858,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.targetPort}
           </Text>
-        )
+        ),
       },
       {
         key: 'nodePort',
@@ -866,7 +867,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.nodePort}
           </Text>
-        )
+        ),
       },
       {
         key: 'targetPort',
@@ -875,8 +876,8 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.port}
           </Text>
-        )
-      }
+        ),
+      },
     ];
 
     // 这里需要判断，因为clusterIP的类型，没有NodePort
@@ -890,7 +891,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
       protocol: item.protocol || '-',
       nodePort: item.nodePort || '-',
       port: item.port || '-',
-      targetPort: item.targetPort || '-'
+      targetPort: item.targetPort || '-',
     }));
 
     return (
@@ -899,8 +900,8 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
         records={records}
         addons={[
           stylize({
-            style: { overflow: 'visible', maxWidth: '800px' }
-          })
+            style: { overflow: 'visible', maxWidth: '800px' },
+          }),
         ]}
       />
     );
@@ -916,7 +917,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.protocol === 'http' ? '80' : '443'}
           </Text>
-        )
+        ),
       },
       {
         key: 'host',
@@ -946,7 +947,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
               </Text>
             )}
           </div>
-        )
+        ),
       },
       {
         key: 'path',
@@ -955,7 +956,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.path}
           </Text>
-        )
+        ),
       },
       {
         key: 'serviceName',
@@ -964,7 +965,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.serviceName}
           </Text>
-        )
+        ),
       },
       {
         key: 'servicePort',
@@ -973,8 +974,8 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.servicePort}
           </Text>
-        )
-      }
+        ),
+      },
     ];
 
     let records: RuleMap[] = [];
@@ -987,7 +988,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.protocol}
           </Text>
-        )
+        ),
       });
 
       let httpRules = showData['http'] === '' || showData['http'] === 'null' ? [] : JSON.parse(showData['http']),
@@ -1000,7 +1001,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           path: item['path'],
           serviceName: item['backend']['serviceName'],
           servicePort: item['backend']['servicePort'],
-          host: item['host']
+          host: item['host'],
         };
         records.push(tmp);
       });
@@ -1012,7 +1013,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           path: item['path'],
           serviceName: item['backend']['serviceName'],
           servicePort: item['backend']['servicePort'],
-          host: item['host']
+          host: item['host'],
         };
         records.push(tmp);
       });
@@ -1028,7 +1029,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           path,
           serviceName,
           servicePort,
-          host: rule['host']
+          host: rule['host'],
         };
 
         return tmp;
@@ -1041,8 +1042,8 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
         records={records}
         addons={[
           stylize({
-            style: { overflow: 'visible' }
-          })
+            style: { overflow: 'visible' },
+          }),
         ]}
       />
     );
@@ -1065,7 +1066,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
           <Text parent="div" overflow>
             {x.name}
           </Text>
-        )
+        ),
       },
       {
         key: 'backendAddr',
@@ -1077,7 +1078,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
               {x.backendAddr}
             </Text>
           </Bubble>
-        )
+        ),
       },
       {
         key: 'condition',
@@ -1090,7 +1091,7 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
               {registerItem.length ? `Registered:${registerItem[0].status}` : 'Registered:false'}
             </Text>
           );
-        }
+        },
       },
       {
         key: 'operator',
@@ -1110,8 +1111,8 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
               查看事件
             </Button>
           );
-        }
-      }
+        },
+      },
     ];
 
     return (
@@ -1120,8 +1121,8 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
         records={showData}
         addons={[
           stylize({
-            style: { overflow: 'visible' }
-          })
+            style: { overflow: 'visible' },
+          }),
         ]}
       />
     );
