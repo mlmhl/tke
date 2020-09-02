@@ -20,7 +20,7 @@ import { EditServiceAdvanceSettingPanel } from './EditServiceAdvanceSettingPanel
 import { EditServiceCommunicationPanel } from './EditServiceCommunicationPanel';
 import { EditServicePortMapPanel } from './EditServicePortMapPanel';
 import { EditServiceWorkloadDialog } from './EditServiceWorkloadDialog';
-import { reduceNs } from '../../../../../../helpers';
+import { reduceNs } from '@helper/urlUtil';
 
 /** service YAML当中的type映射 */
 export const ServiceTypeMap = {
@@ -109,7 +109,7 @@ export const ReduceServiceJSONData = (dataObj: {
     apiVersion: (resourceInfo.group ? resourceInfo.group + '/' : '') + resourceInfo.version,
     metadata: {
       name: serviceName,
-      namespace: clusterId ? reduceNs(namespace, clusterId) : reduceNs(namespace),
+      namespace: reduceNs(namespace, clusterId),
       annotations: isEmpty(annotations) ? undefined : annotations
     },
     spec: {
@@ -481,7 +481,8 @@ export class EditServicePanel extends React.Component<RootProps, EditServicePane
         communicationType,
         serviceName,
         isOpenHeadless,
-        sessionConfig
+        sessionConfig,
+        clusterId: route.queries['clusterId']
       });
 
       let resource: CreateResource = {

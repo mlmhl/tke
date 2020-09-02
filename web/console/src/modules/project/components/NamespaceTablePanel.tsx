@@ -20,6 +20,7 @@ import { Namespace, NamespaceOperator, Project } from '../models';
 import { router } from '../router';
 // import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
 import { RootProps } from './ProjectApp';
+import { reduceNs } from '@helper/urlUtil';
 
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
@@ -63,9 +64,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
         key: 'name',
         header: t('名称'),
         render: x => {
-          const showName = x.metadata.name.includes('cls')
-              ? x.metadata.name.split('-').splice(2).join('-')
-              : x.metadata.name.split('-').splice(1).join('-');
+          const showName = reduceNs(x.spec.namespace, x.spec.clusterName);
           let disabledOp = x.status.phase === 'Terminating';
           let url = `/tkestack/cluster/sub/list/resource/deployment?rid=1&clusterId=${x.spec.clusterName}&np=${x.spec.namespace}`;
           /// #if project
