@@ -29,7 +29,8 @@ module.exports = {
   },
 
   module: {
-    rules: [{
+    rules: [
+      {
         test: /\.tsx?$/,
         use: [
           'happypack/loader?id=happyBabel',
@@ -55,25 +56,29 @@ module.exports = {
   plugins: [
     new HappyPack({
       id: 'happyTs',
-      loaders: [{
-        loader: 'ts-loader',
-        options: {
-          happyPackMode: true,
-          transpileOnly: true
+      loaders: [
+        {
+          loader: 'ts-loader',
+          options: {
+            happyPackMode: true,
+            transpileOnly: true
+          }
         }
-      }],
+      ],
       threadPool: happyThreadPool
     }),
 
     new HappyPack({
       id: 'happyESLint',
-      loaders: [{
-        loader: 'eslint-loader',
-        options: {
-          failOnWarning: true,
-          failOnError: true
+      loaders: [
+        {
+          loader: 'eslint-loader',
+          options: {
+            failOnWarning: true,
+            failOnError: true
+          }
         }
-      }],
+      ],
       threadPool: happyThreadPool
     }),
 
