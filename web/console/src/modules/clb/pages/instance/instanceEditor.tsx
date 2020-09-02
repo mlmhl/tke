@@ -265,7 +265,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                               header: 'VIP',
                               render: instance => (
                                 <>
-                                  {instance.vips.map(vip => (
+                                  {instance.vips && instance.vips.map(vip => (
                                     <p key={vip}>{vip}</p>
                                   ))}
                                 </>
