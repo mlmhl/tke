@@ -371,7 +371,7 @@ export class ServerList extends React.Component<PropTypes> {
       groups = namespaces.reduce((accu, item, index, arr) => {
         let { clusterName, clusterDisplayName, namespace } = item;
         if (!accu[clusterName]) {
-          accu[clusterName] = clusterDisplayName;
+          accu[clusterName] = `${clusterDisplayName}(${clusterName})`;
         }
         return accu;
       }, {});

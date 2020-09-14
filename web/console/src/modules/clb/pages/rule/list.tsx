@@ -403,9 +403,9 @@ export class RuleList extends React.Component<PropTypes> {
         text: name,
       }));
       groups = namespaces.reduce((accu, item, index, arr) => {
-        let { clusterName, clusterDisplayName, namespace } = item;
+        let { clusterName, clusterDisplayName } = item;
         if (!accu[clusterName]) {
-          accu[clusterName] = clusterDisplayName;
+          accu[clusterName] = `${clusterDisplayName}(${clusterName})`;
         }
         return accu;
       }, {});
