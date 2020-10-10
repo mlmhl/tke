@@ -193,18 +193,28 @@ export class EditResourcePanel extends React.Component<RootProps, EditResourcePa
   /** 处理提交请求 */
   _handleSubmit() {
     let { actions, subRoot, namespaceSelection, region, route } = this.props,
-      { resourceInfo, mode, resourceOption } = subRoot,
+      {
+        resourceInfo,
+        detailResourceOption: { detailResourceInfo, detailResourceSelection },
+        mode,
+        resourceOption
+      } = subRoot,
       { ffResourceList } = resourceOption;
 
     if (this.state.config !== '') {
       let resource: CreateResource = {
         id: uuid(),
-        resourceInfo,
+        resourceInfo: resourceInfo.requestType.useDetailInfo ? detailResourceInfo : resourceInfo,
         mode,
         namespace: namespaceSelection,
         yamlData: this.state.config,
         clusterId: route.queries['clusterId'],
-        resourceIns: mode === 'modify' ? ffResourceList.selection.metadata.name : ''
+        resourceIns:
+          mode === 'modify'
+            ? resourceInfo.requestType.useDetailInfo
+            ? detailResourceSelection
+            : ffResourceList.selection.metadata.name
+            : ''
       };
 
       if (mode === 'apply') {
