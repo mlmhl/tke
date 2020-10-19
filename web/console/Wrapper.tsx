@@ -70,6 +70,9 @@ export enum ConsoleModuleEnum {
 
   /** 审计模块 */
   Audit = 'audit',
+
+  /** 北极星模块 */
+  Polaris = 'polaris',
 }
 
 export enum PlatformTypeEnum {
@@ -220,9 +223,15 @@ const commonRouterConfig: RouterConfig[] = [
       },
     ],
   },
+  {
+    url: '/tkestack/polaris',
+    title: '北极星',
+    // watchModule: [ConsoleModuleEnum.Polaris],
+    watchModule: ConsoleModuleEnum.PLATFORM,
+  }
 ];
 
-/** 基础的侧边栏导航栏配置 */
+/** 业务侧 侧边栏导航栏配置 */
 const businessCommonRouterConfig: RouterConfig[] = [
   {
     url: '/tkestack-project/application',
@@ -287,6 +296,11 @@ const businessCommonRouterConfig: RouterConfig[] = [
       },
     ],
   },
+  {
+    url: '/tkestack-project/polaris',
+    title: '北极星',
+    watchModule: ConsoleModuleEnum.Business,
+  }
 ];
 
 interface ConsoleWrapperProps {
