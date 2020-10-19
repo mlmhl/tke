@@ -35,9 +35,6 @@ export const Polaris = React.memo((props: any) => {
   const { projectList = [] } = props;
   const newProjectList = projectList.map(item => ({ ...item, value: item.id, text: item.name }));
 
-  // 刷新标识
-  const { refreshFlag, triggerRefresh } = useRefresh();
-
   // 集群列表数据获取
   const clusterList = useClusters();
 
@@ -47,16 +44,16 @@ export const Polaris = React.memo((props: any) => {
   /**
    * 北极星规则列表获取
    */
-  const [polarisData, setPolarisData] = useState();
-  useEffect(() => {
-    async function getPolarisData({ namespaceId, clusterId }: { namespaceId: string; clusterId: string}) {
-      const result = await fetchPolarisData({ namespaceId, clusterId });
-      setPolarisData(result);
-    }
-    if (namespaceId && clusterId) {
-      getPolarisData({ namespaceId, clusterId });
-    }
-  }, [namespaceId, clusterId, refreshFlag]);
+  // const [polarisData, setPolarisData] = useState();
+  // useEffect(() => {
+  //   async function getPolarisData({ namespaceId, clusterId }: { namespaceId: string; clusterId: string}) {
+  //     const result = await fetchPolarisData({ namespaceId, clusterId });
+  //     setPolarisData(result);
+  //   }
+  //   if (namespaceId && clusterId) {
+  //     getPolarisData({ namespaceId, clusterId });
+  //   }
+  // }, [namespaceId, clusterId, refreshFlag]);
 
   /**
    * 下边返回的不是路由适配的内容的话，上边的部分数据获取可以直接放在List组件中
@@ -66,8 +63,6 @@ export const Polaris = React.memo((props: any) => {
       clusterList={clusterList}
       namespaceList={namespaceList}
       projectList={newProjectList}
-      polarisData={polarisData}
-      triggerRefresh={triggerRefresh}
     />
   );
 });

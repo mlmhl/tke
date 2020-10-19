@@ -40,11 +40,12 @@ const ClusterSelector = React.memo((props: {
         {t('集群')}
       </Text>
       <Select
-        type="native"
+        searchable
+        boxSizeSync
+        type="simulate"
         appearence="button"
         size="m"
         options={clusterList}
-        style={{ width: '130px', marginRight: '5px' }}
         value={selectedClusterId}
         onChange={selectClusterId => {
           setSelectedClusterId(selectClusterId);
