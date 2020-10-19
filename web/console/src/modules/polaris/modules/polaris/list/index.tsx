@@ -61,6 +61,9 @@ const List = React.memo((props: ListProps) => {
     async function polarisInstallCheck() {
       const result = await polarisInstallCheckByCluster({ clusterId });
       setCheckResult(result);
+      if (result && result.installed === false) {
+        uninstalledToggle(true);
+      }
       console.log('polarisInstallCheckByCluster result:', result);
     }
     if (clusterId) {
@@ -157,6 +160,13 @@ const List = React.memo((props: ListProps) => {
                     header: t('（北极星）命名空间'),
                     render: record => (
                       <Text>{record.spec.loadBalancers[0].spec.namespace}</Text>
+                    ),
+                  },
+                  {
+                    key: 'deletion',
+                    header: t('状态'),
+                    render: record => (
+                      <Text>{record.metadata.deletionTimestamp ? '删除中' : '运行中'}</Text>
                     ),
                   },
                   {
