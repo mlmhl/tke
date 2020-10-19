@@ -59,19 +59,20 @@ const NamespaceSelector = React.memo((props: {
     }
   }, [namespaceList]);
 
-  const selectStyle = useMemo(() => ({ display: 'inline-block', fontSize: '12px', verticalAlign: 'middle' }), []);
+  const selectStyle = useMemo(() => ({ display: 'inline-block', marginLeft: '5px', fontSize: '12px', verticalAlign: 'middle' }), []);
   return (
     <div style={selectStyle}>
       <Text theme="label" verticalAlign="middle">
         {t('命名空间')}
       </Text>
       <Select
-        type="native"
+        searchable
+        boxSizeSync
+        type="simulate"
         appearence="button"
-        size="l"
+        size="m"
         options={namespaceList}
         groups={isPlatform ? undefined : groups}
-        style={{ width: '130px', marginRight: '5px' }}
         value={selectedNamespaceId}
         onChange={selectedNamespaceId => {
           setSelectedNamespaceId(selectedNamespaceId);

@@ -14,14 +14,14 @@ import {
   Drawer
 } from '@tencent/tea-component';
 import { StateContext, DispatchContext } from '../context';
-import { isEmpty, useModal } from '@src/modules/common/utils';
+import { isEmpty, useModal, useRefresh } from '@src/modules/common/utils';
 import { LinkButton } from '@src/modules/common/components';
 import ClusterSelector from '@src/modules/polaris/common/components/clusterSelector';
 import ProjectSelector from '@src/modules/polaris/common/components/projectSelector';
 import NamespaceSelector from '@src/modules/polaris/common/components/namespaceSelector';
 import PolarisEditorWithMethodProvide from '../editor/polaris/index';
 import Details from '../detail';
-import { deletePolaris, polarisInstallCheckByCluster } from '../../../services/api';
+import { deletePolaris, fetchPolarisData, polarisInstallCheckByCluster } from '../../../services/api';
 
 const { Body, Content } = Layout;
 const { autotip } = Table.addons;
@@ -30,14 +30,12 @@ interface ListProps {
   clusterList: any[];
   namespaceList: any[];
   projectList: any[];
-  polarisData: any;
-  triggerRefresh: () => void;
 }
 
 const List = React.memo((props: ListProps) => {
   const scopeState = useContext(StateContext);
   const { clusterId, namespaceId, isPlatform } = scopeState;
-  const { clusterList, namespaceList, projectList, polarisData, triggerRefresh } = props;
+  const { clusterList, namespaceList, projectList } = props;
 
   const { isShowing: createVisible, toggle: createToggle } = useModal();
   const { isShowing: detailsDrawerVisible, toggle: detailsDrawerToggle } = useModal();
@@ -54,7 +52,6 @@ const List = React.memo((props: ListProps) => {
   const [loading, setLoading] = useState(true);
   const [emptyText, setEmptyText] = useState('');
   const [polarisList, setPolarisList] = useState([]);
-  console.log('polarisData is:', polarisData);
 
   const [checkResult, setCheckResult] = useState();
   useEffect(() => {
@@ -71,6 +68,22 @@ const List = React.memo((props: ListProps) => {
     }
   }, [clusterId]);
 
+  /**
+   * 北极星规则列表获取
+   */
+  const [polarisData, setPolarisData] = useState();
+  // 刷新标识
+  const { refreshFlag, triggerRefresh } = useRefresh();
+  useEffect(() => {
+    async function getPolarisData({ namespaceId, clusterId }: { namespaceId: string; clusterId: string}) {
+      const result = await fetchPolarisData({ namespaceId, clusterId });
+      setPolarisData(result);
+    }
+    if (checkResult && checkResult.installed && namespaceId && clusterId) {
+      getPolarisData({ namespaceId, clusterId });
+    }
+  }, [namespaceId, clusterId, checkResult, refreshFlag]);
+
   useEffect(() => {
     if (checkResult && !checkResult.installed) {
       setLoading(false);
@@ -81,6 +94,7 @@ const List = React.memo((props: ListProps) => {
     } else if (!polarisData.recordCount) {
       setLoading(false);
       setEmptyText('您选择的该资源的列表为空');
+      setPolarisList([]);
     } else if (polarisData.recordCount) {
       setLoading(false);
       setEmptyText('');
