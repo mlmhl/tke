@@ -415,7 +415,7 @@ export async function modifyPolarisYaml({ namespaceId, clusterId, ruleName, yaml
  * 北极星是否安装的check接口
  */
 export async function polarisInstallCheckByCluster({ clusterId }: { clusterId: string; }) {
-  let result = {};
+  let result;
   const url = `/apis/platform.tkestack.io/v1/clusters/${clusterId}/polaris?action=isInstalled`;
   let params: RequestParams = {
     method: Method.put,

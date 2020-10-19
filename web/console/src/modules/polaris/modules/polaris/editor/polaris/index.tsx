@@ -221,7 +221,7 @@ const PolarisEditor = (
         }
       });
     }
-  }, [namespace]);
+  }, [namespace, theNamespaceList]);
 
   /**
    * 选择 Pod后，进行相关数据设置
@@ -261,7 +261,7 @@ const PolarisEditor = (
     }
   }, [resource, namespace]);
 
-  console.log('errors is:', isPlatform, cluster, namespace, selectedNamespaceId, workloads, workloadList, errors);
+  console.log('errors is:', resourceType, isPlatform, cluster, namespace, selectedNamespaceId, workloads, workloadList, errors);
   /**
    * 表单提交数据处理
    * @param data
