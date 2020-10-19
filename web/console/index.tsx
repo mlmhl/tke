@@ -21,6 +21,7 @@ import { Helm } from './src/modules/helm';
 import { CLBInstance } from './src/modules/clb/pages/instance';
 import { CLBServer } from './src/modules/clb/pages/server';
 import { CLBRule } from './src/modules/clb/pages/rule';
+import { PolarisModule } from './src/modules/polaris/modules/polaris';
 import { TipDialog } from './src/modules/common';
 import { Button, Alert, Text } from '@tencent/tea-component';
 import { Init_Forbiddent_Config } from './helpers/reduceNetwork';
@@ -396,6 +397,26 @@ Entry.register({
               <CLBServer {...props} context="platform" />
             </>
           )}
+        </Wrapper>
+      )
+    },
+
+    /**
+     * @url https://{{domain}}/tkestack/polaris
+     * context="platform" 表示是平台侧；类似的，context="business" 表示业务侧
+     */
+    polaris: {
+      title: t('北极星 - TKEStack'),
+      container: (
+        <Wrapper platformType={PlatformTypeEnum.Manager}>
+          {
+            props => (
+              <>
+                <ForbiddentDialog />
+                <PolarisModule {...props} context="platform" />
+              </>
+            )
+          }
         </Wrapper>
       )
     },

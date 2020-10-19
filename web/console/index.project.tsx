@@ -20,6 +20,7 @@ import { LogStash } from '@src/modules/logStash';
 import { PersistentEvent } from '@src/modules/persistentEvent';
 import { AlarmPolicy } from '@src/modules/alarmPolicy';
 import { Notify } from '@src/modules/notify';
+import { PolarisModule } from './src/modules/polaris/modules/polaris';
 // 公有云的图表组件为异步加载，这里为了减少路径配置，还是保留为同步加载，预先import即可变成不split
 import '@tencent/tchart/build/ChartsComponents';
 import { Project } from '@src/modules/project';
@@ -294,6 +295,26 @@ Entry.register({
           )}
         </Wrapper>
       ),
+    },
+
+    /**
+     * @url https://{{domain}}/tkestack/polaris
+     * context="platform" 表示是平台侧；类似的，context="business" 表示业务侧
+     */
+    polaris: {
+      title: t('北极星 - TKEStack'),
+      container: (
+        <Wrapper platformType={PlatformTypeEnum.Business}>
+          {
+              props => (
+                <>
+                  <ForbiddentDialog />
+                  <PolarisModule {...props} context="business" />
+                </>
+              )
+            }
+        </Wrapper>
+      )
     },
   },
 });
