@@ -40,7 +40,9 @@ const ProjectSelector = React.memo((props: {
         {t('业务')}
       </Text>
       <Select
-        type="native"
+        searchable
+        boxSizeSync
+        type="simulate"
         appearence="button"
         size="m"
         options={projectList}
