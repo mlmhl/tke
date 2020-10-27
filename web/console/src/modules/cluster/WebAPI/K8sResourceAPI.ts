@@ -670,15 +670,9 @@ export async function rollbackResourceIns(resource: CreateResource[], regionId: 
     let { resourceIns, clusterId, resourceInfo, namespace, jsonData } = resource[0];
 
     let rsResourceInfo = resourceConfig(resourceInfo.k8sVersion).rs;
-    /// #if project
-    //业务侧ns eg: cls-xxx-ns 需要去除前缀
-    if (resourceInfo.namespaces) {
-      namespace = namespace.split('-').splice(2).join('-');
-    }
-    /// #endif
-    // 因为回滚需要使用特定的apiVersion，故不用reduceK8sRestful
+    // apiVersion 由v1beta变更为v1
     let k8sUrl =
-      `/${resourceInfo.basicEntry}/apps/v1beta1/` +
+      `/${resourceInfo.basicEntry}/apps/v1/` +
       (resourceInfo.namespaces ? `${resourceInfo.namespaces}/${namespace}/` : '') +
       `${resourceInfo.requestType['list']}/${resourceIns}/rollback`;
     let url = k8sUrl;
