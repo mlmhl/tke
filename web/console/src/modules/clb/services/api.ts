@@ -137,8 +137,6 @@ export async function getImportedInstancesByCluster(clusterName): Promise<Import
       let list = response.data;
       if (list && list.items) {
         instances = list.items.map(({ clbID, ...rest }) => ({ clbId: clbID, ...rest }));
-        console.log('instances@getImportedInstancesByCluster = ', instances);
-        // instances = [...list.items];
       }
     }
   } catch (error) {
@@ -251,7 +249,6 @@ export async function getAvailableInstancesByCluster(
 ): Promise<[number, Instance[]]> {
   let result = [];
   let totalCount = 0;
-  console.log('pagination@getAvailableInstancesByCluster = ', pagination);
   const { pageIndex = 1, pageSize = 20 } = pagination; // 设置一下默认值
   const query = {
     namespace: 'kube-system',
