@@ -13,7 +13,7 @@ import {
   Select,
   Table,
   Text,
-  Button
+  Button,
 } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 import { InstanceEditor } from './instanceEditor';
@@ -24,7 +24,7 @@ import {
   importInstance,
   disableInstance,
   enableInstance,
-  removeInstance
+  removeInstance,
 } from '../../services/api';
 import { Cluster as ClusterType } from '../../models';
 import { Instance, ImportedInstance } from '../../models/instance';
@@ -95,14 +95,14 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
     currentItem: {
       clusterName: '',
       clbId: '',
-      scope: []
+      scope: [],
     },
     valid: false,
     detailVisible: false,
     selectedItem: {
       name: '',
-      clbId: ''
-    }
+      clbId: '',
+    },
   };
 
   componentDidMount() {
@@ -176,7 +176,7 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
     try {
       const payload = {
         lbID: clbId,
-        scope
+        scope,
       };
       await importInstance(clusterName, payload);
       this.setState({ dialogVisible: false });
@@ -193,8 +193,8 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
         key: `NEW_ITEMID_${this.index++}`,
         clusterName: '',
         clbId: '',
-        scope: []
-      }
+        scope: [],
+      },
     });
   };
 
@@ -260,12 +260,12 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
       currentItem,
       alertVisible,
       detailVisible,
-      selectedItem
+      selectedItem,
     } = this.state;
     let { projects } = this.props;
     let clusterList = clusters.map(({ name, displayName }) => ({
       value: name,
-      text: `${displayName}(${name})`
+      text: `${displayName}(${name})`,
     }));
 
     let setConfirmVisible = (currentItem, confirmVisible) => {
@@ -382,28 +382,28 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
                   <Button type="link" onClick={this.handleViewItem(instance)}>
                     {instance.name}
                   </Button>
-                )
+                ),
               },
               {
                 key: 'clbId',
-                header: 'CLB ID'
+                header: 'CLB ID',
               },
               {
                 key: 'clbName',
-                header: 'CLB名称'
+                header: 'CLB名称',
               },
               {
                 key: 'vip',
-                header: 'VIP'
+                header: 'VIP',
               },
               {
                 key: 'type',
                 header: '网络类型',
-                render: instance => <p>{instance.type === 'OPEN' ? '公网' : '内网'}</p>
+                render: instance => <p>{instance.type === 'OPEN' ? '公网' : '内网'}</p>,
               },
               {
                 key: 'vipIsp',
-                header: '运营商'
+                header: '运营商',
               },
               {
                 key: 'scope',
@@ -414,25 +414,25 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
                       <p key={item}>{item}</p>
                     ))}
                   </>
-                )
+                ),
               },
               {
                 key: 'disabled',
                 header: '状态',
                 render: instance => (
                   <>{instance.disabled ? <Text theme="warning">已禁用</Text> : <Text theme="success">允许使用</Text>}</>
-                )
+                ),
               },
               {
                 key: 'settings',
                 header: '操作',
-                render: renderOperationColumn()
-              }
+                render: renderOperationColumn(),
+              },
             ]}
             addons={[
               autotip({
-                emptyText: '暂无数据'
-              })
+                emptyText: '暂无数据',
+              }),
             ]}
           />
           <Modal visible={dialogVisible} caption="导入CLB实例" onClose={this.handleCancelItem} size="l">
