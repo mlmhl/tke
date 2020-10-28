@@ -19,5 +19,7 @@ export interface ImportedInstance extends Instance {
 
   vip: string;
 
+  vipIsp: string; // 运营商
+
   disabled: boolean;
 }

@@ -272,10 +272,7 @@ export async function getAvailableInstancesByCluster(
   } else {
     Object.assign(query, { clbName: keyword });
   }
-  // TODO: 用querystring把参数按照对象进行处理
   const url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?${querystring.stringify(query)}`;
-  // const url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&api=listCLB&apiPort=80&offset=${(pageIndex - 1) * pageSize}&limit=${pageSize}`;
-  // NOTE: 比较含糊这种硬编码的apiPort=80在不同的环境下会不会变化
   const params: RequestParams = {
     method: Method.get,
     url
