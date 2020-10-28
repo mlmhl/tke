@@ -14,7 +14,7 @@ import {
   Justify,
   Button,
   Input,
-  SearchBox
+  SearchBox,
 } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
@@ -25,7 +25,7 @@ import {
   getAllClusters,
   getAvailableInstancesByCluster,
   getImportedInstancesByCluster,
-  getNamespacesByCluster
+  getNamespacesByCluster,
 } from '../../services/api';
 
 const isEqual = require('lodash.isequal');
@@ -40,12 +40,12 @@ const labels = {
   vip: 'VIP',
   network: '所属网络',
   namespace: '允许使用本实例的命名空间',
-  instance: '选择实例'
+  instance: '选择实例',
 };
 
 const TYPE_TEXT = {
   INTERNAL: '内网',
-  OPEN: '公网'
+  OPEN: '公网',
 };
 const ALL_VALUE = '__ALL__';
 
@@ -149,7 +149,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
     pageSize: this.defaultPageSize,
     keyword: '',
     type: ALL_VALUE,
-    selectedCLB: ''
+    selectedCLB: '',
   };
 
   componentDidMount() {
@@ -181,7 +181,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
     const pageIndex = 1;
     const pagination: PagingQuery = {
       pageIndex,
-      pageSize
+      pageSize,
     };
     const [instanceTotalCount, instances] = await this.getInstances({ clusterName, pagination, keyword });
     const importedInstances = await this.getImportedInstances(clusterName);
@@ -202,7 +202,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
     const pageIndex = 1;
     const pagination = {
       pageIndex,
-      pageSize
+      pageSize,
     };
     const [instanceTotalCount, instances] = await this.getInstances({ clusterName, pagination, keyword });
     const instanceList = this.withImported(instances, importedInstances);
@@ -222,9 +222,9 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
       clusterName,
       pagination: {
         pageSize,
-        pageIndex
+        pageIndex,
       },
-      keyword
+      keyword,
     };
 
     const [instanceTotalCount, instances] = await this.getInstances(query);
@@ -260,7 +260,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
     const importedClbIDs = importedInstances.map(item => item.clbId);
     return instances.map(item => ({
       ...item,
-      imported: importedClbIDs.includes(item.clbId)
+      imported: importedClbIDs.includes(item.clbId),
     }));
   };
 
@@ -278,12 +278,12 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
       instanceList,
       namespaces,
       selectedCLB,
-      clusterName
+      clusterName,
     } = this.state;
     let { clbId = '', scope = [] } = data;
     let clusterList = clusters.map(({ name, displayName }) => ({
       value: name,
-      text: `${displayName}(${name})`
+      text: `${displayName}(${name})`,
     }));
     let namespaceList = namespaces.map(item => ({ text: item.name, value: item.name }));
     namespaceList.unshift({ text: '*(任意命名空间)', value: '*' });
@@ -321,7 +321,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
         initialValues={{
           clusterName,
           clbId: '',
-          scope: []
+          scope: [],
         }}
         mutators={{ setFieldData }}
         subscription={{}}
@@ -343,7 +343,7 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                   validate={async value => {
                     const result = await validate({
                       clbId: value,
-                      scope: form.getFieldState('scope').value
+                      scope: form.getFieldState('scope').value,
                     });
                     return result;
                   }}
@@ -374,18 +374,18 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                               {
                                 key: 'clbId',
                                 header: 'CLB ID',
-                                render: instance => instance.clbId
+                                render: instance => instance.clbId,
                               },
                               {
                                 key: 'clbName',
-                                header: 'CLB名称'
+                                header: 'CLB名称',
                               },
                               {
                                 key: 'vips',
                                 header: 'VIP',
                                 render: instance => (
                                   <>{instance.vips && instance.vips.map(vip => <p key={vip}>{vip}</p>)}</>
-                                )
+                                ),
                               },
                               {
                                 key: 'type',
@@ -394,12 +394,12 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                                   <>
                                     <p>{instance.type === 'OPEN' ? '公网' : '内网'}</p>
                                   </>
-                                )
-                              }
+                                ),
+                              },
                             ]}
                             addons={[
                               autotip({
-                                emptyText: '暂无数据'
+                                emptyText: '暂无数据',
                               }),
                               // 对 type 列增加单选过滤支持
                               filterable({
@@ -410,13 +410,13 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                                 // 增加 "全部" 选项
                                 all: {
                                   value: ALL_VALUE,
-                                  text: '全部'
+                                  text: '全部',
                                 },
                                 // 选项列表
                                 options: [
                                   { value: 'OPEN', text: '公网' },
-                                  { value: 'INTERNAL', text: '内网' }
-                                ]
+                                  { value: 'INTERNAL', text: '内网' },
+                                ],
                               }),
                               radioable({
                                 value: selectedCLB, // 取的是 recordKey 字段的值
@@ -424,8 +424,8 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                                 onChange: (value, context) => {
                                   onChange(value);
                                   this.setState({ selectedCLB: value });
-                                }
-                              })
+                                },
+                              }),
                             ]}
                           />
                           <Pagination
