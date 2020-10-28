@@ -4,7 +4,18 @@
 import React from 'react';
 import { Form as FinalForm, Field } from 'react-final-form';
 import setFieldData from 'final-form-set-field-data';
-import { Card, Form, Select, SelectMultiple, Table, Pagination, Justify, Button, Input } from '@tencent/tea-component';
+import {
+  Card,
+  Form,
+  Select,
+  SelectMultiple,
+  Table,
+  Pagination,
+  Justify,
+  Button,
+  Input,
+  SearchBox
+} from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
 import { Cluster as ClusterType, PagingQuery } from '../../models';
@@ -18,7 +29,7 @@ import {
 } from '../../services/api';
 
 const isEqual = require('lodash.isequal');
-const { radioable } = Table.addons;
+const { radioable, filterable } = Table.addons;
 
 const labels = {
   cluster: '选择集群',
@@ -32,6 +43,12 @@ const labels = {
   instance: '选择实例'
 };
 
+const TYPE_TEXT = {
+  INTERNAL: '内网',
+  OPEN: '公网'
+};
+const ALL_VALUE = '__ALL__';
+
 const required = value => (value ? undefined : 'Required');
 
 const getStatus = meta => {
@@ -44,13 +61,13 @@ const getStatus = meta => {
   return meta.error ? 'error' : 'success';
 };
 
-interface PropTypes {
+type PropTypes = {
   clusterName: string; // 集群名称
 
   value?: any; // value 属性，和 onChange 对应的
 
   onChange?: (value) => void;
-}
+};
 
 interface StateTypes {
   clusterName: string; // 集群名称
@@ -72,6 +89,10 @@ interface StateTypes {
   pageSize: number; // 分页大小
 
   pageIndex: number; // 从1开始的页码
+
+  keyword: string;
+
+  type: string; // 筛选用的类型
 }
 
 interface IQuery {
@@ -115,19 +136,19 @@ const Cluster = ({ name, label, options, onChange }) => (
 );
 
 class InstanceEditor extends React.Component<PropTypes, StateTypes> {
-  defaultPageSize = 2; // 系统默认的分页大小
+  defaultPageSize = 10; // 前端默认的分页大小
   state = {
     data: this.props.value,
     clusterName: this.props.clusterName || '', // 如果提供了的话可以从props中获取
     clusters: [], // 平台侧下的集群列表
     namespaces: [],
-    // instances: [], // 全部实例列表
     instanceTotalCount: 0,
     importedInstances: [], // 已导入实例列表
     instanceList: [],
     pageIndex: 1,
     pageSize: this.defaultPageSize,
     keyword: '',
+    type: ALL_VALUE,
     selectedCLB: ''
   };
 
@@ -166,7 +187,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
     const importedInstances = await this.getImportedInstances(clusterName);
     const namespaces = await getNamespacesByCluster(clusterName);
     const instanceList = this.withImported(instances, importedInstances);
-    // this.setState({ clusterName, namespaces, instanceTotalCount, offset, instances, importedInstances, instanceList });
     this.setState({ clusterName, namespaces, instanceTotalCount, pageIndex, importedInstances, instanceList });
   };
 
@@ -186,7 +206,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
     };
     const [instanceTotalCount, instances] = await this.getInstances({ clusterName, pagination, keyword });
     const instanceList = this.withImported(instances, importedInstances);
-    // this.setState({ instanceTotalCount, offset, instances, instanceList });
     this.setState({ instanceTotalCount, pageIndex, instanceList });
   };
 
@@ -199,14 +218,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
   handleCLBTableChange = async pagination => {
     const { clusterName, keyword, importedInstances } = this.state;
     const { pageSize, pageIndex } = pagination;
-    // NOTE: 注意这里面有个问题，就是关键字变更的时候，如果没有重新点查询，这时候切换页码的话其实应该在原来的查询条件的基础上进行分页
-    // const filters = Object.keys(filtersArg).reduce((obj, key) => {
-    //   const newObj = { ...obj }
-    //   newObj[key] = getValue(filtersArg[key])
-    //   return newObj
-    // }, {})
-
-    // TODO: 加类型说明
     const query = {
       clusterName,
       pagination: {
@@ -215,9 +226,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
       },
       keyword
     };
-    // if (sorter.field) {
-    //   params.sorter = `${sorter.field}_${sorter.order}`
-    // }
 
     const [instanceTotalCount, instances] = await this.getInstances(query);
     const instanceList = this.withImported(instances, importedInstances);
@@ -231,8 +239,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
    * @param pagination
    */
   getInstances = async ({ clusterName, pagination, keyword = '' }: IQuery): Promise<[number, Instance[]]> => {
-    console.log('pagination@getInstanceList = ', pagination);
-    // const { limit, offset } = pagination;
     let [instanceTotalCount, instances] = await getAvailableInstancesByCluster(clusterName, pagination, keyword);
     return [instanceTotalCount, instances];
   };
@@ -264,11 +270,10 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
       data,
       clusters,
       instanceTotalCount,
-      // limit,
       pageSize,
-      // offset,
       pageIndex,
-      // instances,
+      keyword,
+      type,
       importedInstances,
       instanceList,
       namespaces,
@@ -301,6 +306,13 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
         return '请选择一个实例';
       }
     };
+
+    let filteredRecords = instanceList.slice();
+
+    // 根据网络类型筛选
+    if (type !== ALL_VALUE) {
+      filteredRecords = filteredRecords.filter(x => x.type === type);
+    }
 
     return (
       <FinalForm
@@ -344,99 +356,95 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                       message={getStatus(meta) === 'error' ? meta.error : '选择一个希望导入的 CLB 实例'}
                     >
                       <Card>
-                        <Table.ActionPanel>
-                          <Justify
-                            left={
-                              <Button htmlType="button" type="primary" onClick={this.handleSearchButtonClicked}>
-                                查询
-                              </Button>
-                            }
-                            right={
-                              <Form layout="inline">
-                                <Form.Item align="middle" label="CLB ID">
-                                  <Input />
-                                </Form.Item>
-                              </Form>
-                            }
+                        <Card.Body>
+                          <SearchBox
+                            // disabled={loading}
+                            value={keyword}
+                            onChange={keyword => this.setState({ keyword: keyword.trim() })}
+                            onSearch={this.handleSearchButtonClicked}
+                            onClear={() => this.setState({ keyword: '' })}
+                            placeholder="搜索CLBID/CLBName/VIP"
                           />
-                        </Table.ActionPanel>
-                        <Table
-                          verticalTop
-                          records={instanceList}
-                          rowDisabled={record => record.imported}
-                          recordKey="clbId"
-                          columns={[
-                            {
-                              key: 'clbId',
-                              header: 'CLB ID',
-                              render: instance => (
-                                <>
-                                  <p>
-                                    <a>{instance.clbId}</a>
-                                  </p>
-                                </>
-                              )
-                            },
-                            {
-                              key: 'clbName',
-                              header: 'CLB名称'
-                            },
-                            {
-                              key: 'vips',
-                              header: 'VIP',
-                              render: instance => (
-                                <>{instance.vips && instance.vips.map(vip => <p key={vip}>{vip}</p>)}</>
-                              )
-                            },
-                            {
-                              key: 'type',
-                              header: '网络类型',
-                              render: instance => (
-                                <>
-                                  <p>{instance.type === 'OPEN' ? '公网' : '内网'}</p>
-                                </>
-                              )
-                            }
-                          ]}
-                          addons={[
-                            autotip({
-                              // isLoading: loading,
-                              // isError: Boolean(error),
-                              // isFound: Boolean(keyword),
-                              // onClear: () => setKeyword(""),
-                              // onRetry: load,
-                              // foundKeyword: keyword,
-                              emptyText: '暂无数据'
-                            }),
-                            radioable({
-                              value: selectedCLB, // 取的是 recordKey 字段的值
-                              rowSelect: true,
-                              onChange: (value, context) => {
-                                onChange(value);
-                                this.setState({ selectedCLB: value });
+                          <Table
+                            verticalTop
+                            records={filteredRecords}
+                            rowDisabled={record => record.imported}
+                            recordKey="clbId"
+                            columns={[
+                              {
+                                key: 'clbId',
+                                header: 'CLB ID',
+                                render: instance => instance.clbId
+                              },
+                              {
+                                key: 'clbName',
+                                header: 'CLB名称'
+                              },
+                              {
+                                key: 'vips',
+                                header: 'VIP',
+                                render: instance => (
+                                  <>{instance.vips && instance.vips.map(vip => <p key={vip}>{vip}</p>)}</>
+                                )
+                              },
+                              {
+                                key: 'type',
+                                header: '网络类型',
+                                render: instance => (
+                                  <>
+                                    <p>{instance.type === 'OPEN' ? '公网' : '内网'}</p>
+                                  </>
+                                )
                               }
-                              // render: (element, { disabled }) => {
-                              //   return disabled ? <Icon type="loading" /> : element;
-                              // },
-                            })
-                          ]}
-                        />
-                        <Pagination
-                          recordCount={instanceTotalCount}
-                          pageSizeOptions={[1, 2, 10, 20, 30, 50, 100]}
-                          pageIndex={pageIndex}
-                          pageSize={pageSize}
-                          onPagingChange={query => {
-                            console.log('query = ', query);
-                            // 获取新的可用clb列表数据
-                            this.handleCLBTableChange(query);
-                          }}
-                          stateTextVisible={true}
-                          pageSizeVisible={true}
-                          pageIndexVisible={true}
-                          jumpVisible={true}
-                          endJumpVisible={true}
-                        />
+                            ]}
+                            addons={[
+                              autotip({
+                                emptyText: '暂无数据'
+                              }),
+                              // 对 type 列增加单选过滤支持
+                              filterable({
+                                type: 'single',
+                                column: 'type',
+                                value: type,
+                                onChange: value => this.setState({ type: value }),
+                                // 增加 "全部" 选项
+                                all: {
+                                  value: ALL_VALUE,
+                                  text: '全部'
+                                },
+                                // 选项列表
+                                options: [
+                                  { value: 'OPEN', text: '公网' },
+                                  { value: 'INTERNAL', text: '内网' }
+                                ]
+                              }),
+                              radioable({
+                                value: selectedCLB, // 取的是 recordKey 字段的值
+                                rowSelect: true,
+                                onChange: (value, context) => {
+                                  onChange(value);
+                                  this.setState({ selectedCLB: value });
+                                }
+                              })
+                            ]}
+                          />
+                          <Pagination
+                            recordCount={instanceTotalCount}
+                            pageSizeOptions={[10, 20, 30, 50, 100]}
+                            pageIndex={pageIndex}
+                            pageSize={pageSize}
+                            onPagingChange={query => {
+                              console.log('query = ', query);
+                              // 获取新的可用clb列表数据
+                              this.handleCLBTableChange(query);
+                            }}
+                            stateTextVisible={true}
+                            pageSizeVisible={true}
+                            pageIndexVisible={true}
+                            jumpVisible={true}
+                            endJumpVisible={true}
+                          />
+                        </Card.Body>
                       </Card>
                     </Form.Item>
                   )}
@@ -444,8 +452,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                 <Field
                   name="scope"
                   required
-                  // validateOnBlur
-                  // validateFields={[]}
                   validate={value => {
                     return !value ? '请选择命名空间' : undefined;
                   }}

@@ -6,6 +6,7 @@ import { Instance, ImportedInstance } from '../models/instance';
 
 const _ = require('lodash');
 const { get, isEmpty } = require('lodash');
+const querystring = require('querystring');
 
 function alertError(error, url) {
   let message = `错误码：${error.response.status}，错误描述：${error.response.statusText}`;
@@ -243,13 +244,40 @@ export async function removeInstance(clusterName, clbId) {
  * 获取指定集群下可选的的CLB实例列表
  * @param clusterName
  */
-export async function getAvailableInstancesByCluster(clusterName, pagination: PagingQuery, keyword = ''): Promise<[number, Instance[]]> {
+export async function getAvailableInstancesByCluster(
+  clusterName,
+  pagination: PagingQuery,
+  keyword = ''
+): Promise<[number, Instance[]]> {
   let result = [];
   let totalCount = 0;
   console.log('pagination@getAvailableInstancesByCluster = ', pagination);
   const { pageIndex = 1, pageSize = 20 } = pagination; // 设置一下默认值
+  const query = {
+    namespace: 'kube-system',
+    name: 'lbcf-tkestack-clb-driver',
+    action: 'driverProxy',
+    api: 'listCLB',
+    apiPort: 80,
+    offset: (pageIndex - 1) * pageSize,
+    limit: pageSize
+  };
+  if (
+    new RegExp(/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/).test(
+      keyword
+    )
+  ) {
+    // vip
+    Object.assign(query, { vip: keyword });
+  } else if (new RegExp(/^lb-[a-z0-9]{8}$/).test(keyword)) {
+    // clbID, lb-开头，总共11位长
+    Object.assign(query, { clbID: keyword });
+  } else {
+    Object.assign(query, { clbName: keyword });
+  }
   // TODO: 用querystring把参数按照对象进行处理
-  const url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&api=listCLB&apiPort=80&offset=${(pageIndex - 1) * pageSize}&limit=${pageSize}`;
+  const url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?${querystring.stringify(query)}`;
+  // const url = `/apis/platform.tkestack.io/v1/clusters/${clusterName}/lbcflbdrivers?namespace=kube-system&name=lbcf-tkestack-clb-driver&action=driverProxy&api=listCLB&apiPort=80&offset=${(pageIndex - 1) * pageSize}&limit=${pageSize}`;
   // NOTE: 比较含糊这种硬编码的apiPort=80在不同的环境下会不会变化
   const params: RequestParams = {
     method: Method.get,

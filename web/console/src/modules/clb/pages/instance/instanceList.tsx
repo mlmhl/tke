@@ -51,8 +51,7 @@ export class InstanceList extends React.Component<PropTypes> {
     clusterName: '',
     clusters: [],
     instanceList: [],
-    dialogVisible: true,
-    // dialogVisible: false,
+    dialogVisible: false,
     alertVisible: false,
     currentItem: {
       clusterName: '',
