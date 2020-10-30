@@ -94,7 +94,7 @@ const loadingElement: JSX.Element = (
 
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), {
-    dispatch
+    dispatch,
   });
 
 @connect(state => state, mapDispatchToProps)
@@ -276,7 +276,7 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
               router.navigate(
                 Object.assign({}, urlParams, { mode: operator.actionType }),
                 Object.assign({}, route.queries, {
-                  resourceIns: resource.metadata.name
+                  resourceIns: resource.metadata.name,
                 })
               );
             }
@@ -364,10 +364,10 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
               router.navigate(
                 Object.assign({}, urlParams, {
                   mode: 'update',
-                  tab: operator.actionType
+                  tab: operator.actionType,
                 }),
                 Object.assign({}, route.queries, {
-                  resourceIns: resource.metadata.name
+                  resourceIns: resource.metadata.name,
                 })
               );
             }
@@ -560,7 +560,7 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
         protocol: 'http',
         host: item.host,
         path: item.http.paths[0].path || '',
-        backend: item.http.paths[0].backend
+        backend: item.http.paths[0].backend,
       };
     });
 
@@ -763,7 +763,7 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
               actions.resource.selectMultipleResource(
                 ffResourceList.list.data.records.filter(item => keys.indexOf(item.id as string) !== -1)
               );
-            }
+            },
           })
         );
         return;
@@ -772,7 +772,7 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
         key: item + uuid(),
         header: fieldInfo.headTitle,
         width: fieldInfo.width,
-        render: x => this._renderBodyCell(x, fieldInfo, item + uuid())
+        render: x => this._renderBodyCell(x, fieldInfo, item + uuid()),
       };
 
       if (fieldInfo.headCell) {
@@ -834,9 +834,16 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
     // 选择当前的具体的resouce
     actions.resource.select(resource);
     // 进行路由的跳转
+    // 业务侧下，如果是命名空间列表的话（urlParams.type==='namespace', urlParams.resourceName==='np'），路由跳转的时候需要更新URL中的clusterId，从resource.spec.clusterId获取
     router.navigate(
       Object.assign({}, urlParams, { mode: 'detail' }),
-      Object.assign({}, route.queries, { resourceIns: resource.metadata.name })
+      Object.assign(
+        {},
+        route.queries,
+        urlParams.type === 'namespace' && urlParams.resourceName === 'np' && resource.spec.clusterId
+          ? { resourceIns: resource.metadata.name, clusterId: resource.spec.clusterId }
+          : { resourceIns: resource.metadata.name }
+      )
     );
   }
 }
