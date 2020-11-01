@@ -1,3 +1,6 @@
+/**
+ * 业务管理 - 编辑管理员
+ */
 import { t } from '@tencent/tea-app/lib/i18n';
 import * as React from 'react';
 import { TransferTable, TransferTableProps } from '../../common/components';

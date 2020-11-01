@@ -212,6 +212,7 @@ export class TransferTable<T> extends React.Component<TransferTableProps<T>, Tra
     } else {
       finallist = list;
     }
+    console.log('finallist.data.records@SourceTalbe = ', finallist.data.records);
 
     /**
      * 判断是否需要展示loading态
@@ -253,9 +254,11 @@ export class TransferTable<T> extends React.Component<TransferTableProps<T>, Tra
               targetKeys={selections.map(selection => selection[recordKey])}
               disabled={rowDisabled}
               onChange={keys => {
+                // 把选中的记录中存在于数据源中的记录作为选中记录
                 let listSelection = finallist.data.records.filter(record => {
                   return keys.indexOf(record[recordKey] as string) !== -1;
                 });
+                // 存在右列但是不存在左列的记录压入到选中的记录中
                 keys.forEach(key => {
                   if (listSelection.findIndex(item => item[recordKey] === key) === -1) {
                     let finder = selections.find(item => item[recordKey] === key);
