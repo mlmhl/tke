@@ -51,6 +51,8 @@ const restActions = {
         if (isSuccessWorkflow(modifyAdminstrator)) {
           dispatch(restActions.modifyAdminstrator.reset());
           dispatch(restActions.fetchAdminstratorInfo());
+          dispatch(FFModelManagerActions.changeKeyword(''));
+          dispatch(FFModelManagerActions.performSearch(''));
           dispatch(projectActions.clearEdition());
         }
       }
