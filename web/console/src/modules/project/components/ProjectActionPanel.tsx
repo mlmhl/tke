@@ -1,3 +1,6 @@
+/**
+ * 业务管理操作区
+ */
 import * as React from 'react';
 import { connect } from 'react-redux';
 
@@ -21,7 +24,7 @@ const mapDispatchToProps = (dispatch) =>
 export class ProjectActionPanel extends React.Component<RootProps, {}> {
   componentDidMount() {
     const { actions } = this.props;
-    actions.project.poll({});
+    actions.project.fetch({});
     actions.project.projectUserInfo.applyFilter({});
     actions.manager.applyFilter({});
     actions.manager.fetchAdminstratorInfo();
@@ -50,6 +53,8 @@ export class ProjectActionPanel extends React.Component<RootProps, {}> {
               <Button
                 type="primary"
                 onClick={() => {
+                  actions.manager.changeKeyword('');
+                  actions.manager.performSearch('');
                   actions.manager.initAdminstrator();
                   actions.manager.modifyAdminstrator.start();
                 }}
@@ -81,6 +86,8 @@ export class ProjectActionPanel extends React.Component<RootProps, {}> {
         targets={[projectEdition]}
         params={{}}
         postAction={() => {
+          actions.manager.changeKeyword('');
+          actions.manager.performSearch('');
           actions.project.clearEdition();
         }}
         width={700}
