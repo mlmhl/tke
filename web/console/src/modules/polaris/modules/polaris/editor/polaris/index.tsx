@@ -314,14 +314,14 @@ const PolarisEditor = (
         labels: {
           'type.bind': 'polaris'
         },
-        name: ruleName,
+        name: 'polaris-' + ruleName,
         namespace: selectedNamespaceId,
       },
       spec: {
         loadBalancers: [
           {
             driver: 'lbcf-polaris-driver',
-            name: serviceName,
+            name: serviceName.replace(':', '-'),
             spec: {
               namespace: polarisNamespace,
               service: serviceName,
