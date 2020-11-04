@@ -12,6 +12,13 @@ const displayField: DisplayField = {
     isLink: true, // 用于判断该值是否为链接
     isClip: true
   },
+  status: {
+    dataField: ['status.phase'],
+    dataFormat: dataFormatConfig['status'],
+    width: '8%',
+    headTitle: t('状态'),
+    noExsitedValue: defaulNotExistedValue
+  },
   clusterName: {
     dataField: ['spec.clusterId', 'spec.clusterDisplayName'],
     dataFormat: dataFormatConfig['text'],
@@ -19,25 +26,27 @@ const displayField: DisplayField = {
     headTitle: t('归属集群'),
     noExsitedValue: defaulNotExistedValue
   },
-  status: {
-    dataField: ['status.phase'],
-    dataFormat: dataFormatConfig['status'],
+  zone: {
+    // business: BusinessVersionObj.shared_cluster,
+    dataField: ['metadata.labels'],
+    dataFormat: dataFormatConfig['zone'],
     width: '10%',
-    headTitle: t('状态'),
+    headTitle: t('可用区'),
     noExsitedValue: defaulNotExistedValue
   },
-  creationTimestamp: {
-    dataField: ['metadata.creationTimestamp'],
-    dataFormat: dataFormatConfig['time'],
+  zoneHard: {
+    // business: BusinessVersionObj.shared_cluster,
+    dataField: ['metadata.labels'],
+    dataFormat: dataFormatConfig['zoneHard'],
     width: '10%',
-    headTitle: t('创建时间'),
+    headTitle: t('可用区资源限制'),
     noExsitedValue: defaulNotExistedValue
   },
   hard: {
     dataField: ['spec.hard'],
     dataFormat: dataFormatConfig['resourceLimit'],
-    width: '10%',
-    headTitle: t('资源限制'),
+    width: '12%',
+    headTitle: t('namespace资源限制'),
     noExsitedValue: defaulNotExistedValue
   },
   used: {
@@ -49,28 +58,44 @@ const displayField: DisplayField = {
   },
   business: {
     dataField: ['metadata.annotations.cmdb.io/bsiPath'],
-    dataFormat: dataFormatConfig['cmdb'],
-    width: '15%',
+    dataFormat: dataFormatConfig['cmdbBusiness'],
+    width: '12%',
     headTitle: t('业务'),
     noExsitedValue: defaulNotExistedValue
   },
   theOperator: {
     dataField: ['metadata.annotations.cmdb.io/operator'],
-    dataFormat: dataFormatConfig['cmdb'],
-    width: '10%',
+    shareClusterDataField: ['metadata.labels.teg.tkex.oa.com/creator'],
+    dataFormat: dataFormatConfig['cmdbOperator'],
+    width: '8%',
     headTitle: t('负责人'),
+    shareClusterHeadTitle: t('创建人'),
+    noExsitedValue: defaulNotExistedValue
+  },
+  creationTimestamp: {
+    dataField: ['metadata.creationTimestamp'],
+    dataFormat: dataFormatConfig['time'],
+    width: '10%',
+    headTitle: t('创建时间'),
     noExsitedValue: defaulNotExistedValue
   },
   operator: {
     dataField: [''],
     dataFormat: dataFormatConfig['operator'],
-    width: '10%',
+    width: '',
     headTitle: t('操作'),
-    operatorList: [{
-      name: t('编辑'),
-      actionType: 'modify-namespace',
-      isInMoreOp: false
-    }]
+    operatorList: [
+      {
+        name: t('查看访问凭证'),
+        actionType: 'view-access-credentials',
+        isInMoreOp: false
+      },
+      {
+        name: t('编辑'),
+        actionType: 'modify-namespace',
+        isInMoreOp: false
+      }
+    ]
   }
 };
 

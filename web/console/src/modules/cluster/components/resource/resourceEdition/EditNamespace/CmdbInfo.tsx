@@ -14,12 +14,12 @@ import {
   fetchBsiPath3List,
   fetchUserList,
   getLoginUserInfo
-} from '../../../WebAPI/CMDBPartAPI';
+} from '../../../../WebAPI/CMDBPartAPI';
 const { useState, useEffect, useRef, useImperativeHandle } = React;
 
 insertCSS(
-  'CMDBInfoComponentCss',
-  `
+    'CMDBInfoComponentCss',
+    `
     .CMDB-creat-section .tea-form .tea-form__controls--text {
       padding-top: 0;
     }
@@ -31,6 +31,7 @@ insertCSS(
     }
   `
 );
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 export interface DefaultBusinessInfo {
   cmdb?: boolean;
   department?: string;
@@ -43,9 +44,10 @@ export interface DefaultBusinessInfo {
   bsiPathIds?: string;
   all?: boolean;
 }
-export const EditResourceBusinessInfo = (
-  props: { defaultBusinessInfo?: any; hasPod?: boolean; isModify?: boolean },
-  ref
+
+export const CmdbInfo = (
+    props: { defaultBusinessInfo?: any; hasPod?: boolean; isModify?: boolean },
+    ref
 ) => {
   const { register, watch, handleSubmit, reset, control, setValue, getValues, triggerValidation, errors } = useForm({
     mode: 'onBlur'
@@ -188,50 +190,56 @@ export const EditResourceBusinessInfo = (
       {cmdb && (
         <div className="CMDB-modify-content">
           <Form>
-            <Form.Item label={t('部门')} showStatusIcon={false}>
-              <Controller
-                as={
-                  <Select
-                    searchable
-                    boxSizeSync
-                    size="m"
-                    type="simulate"
-                    appearence="button"
-                    options={departmentList}
-                  />
-                }
-                name="department"
-                control={control}
-              />
-            </Form.Item>
+            {
+              !WEBPACK_CONFIG_SHARED_CLUSTER && (
+                <>
+                  <Form.Item label={t('部门')} showStatusIcon={false}>
+                    <Controller
+                      as={
+                        <Select
+                          searchable
+                          boxSizeSync
+                          size="m"
+                          type="simulate"
+                          appearence="button"
+                          options={departmentList}
+                        />
+                      }
+                      name="department"
+                      control={control}
+                    />
+                  </Form.Item>
+                  <Form.Item label="业务" showStatusIcon={false}>
+                    <Controller
+                      as={
+                        <Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={bsiPath1List} />
+                      }
+                      name="bsiPath1"
+                      control={control}
+                    />
 
-            <Form.Item label="业务" showStatusIcon={false}>
-              <Controller
-                as={
-                  <Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={bsiPath1List} />
-                }
-                name="bsiPath1"
-                control={control}
-              />
+                    <Controller
+                      as={
+                        <Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={bsiPath2List} />
+                      }
+                      name="bsiPath2"
+                      control={control}
+                      className="bsi-path"
+                    />
 
-              <Controller
-                as={
-                  <Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={bsiPath2List} />
-                }
-                name="bsiPath2"
-                control={control}
-                className="bsi-path"
-              />
+                    <Controller
+                      as={
+                        <Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={bsiPath3List} />
+                      }
+                      name="bsiPath3"
+                      control={control}
+                      className="bsi-path"
+                    />
+                  </Form.Item>
+                </>
+              )
+            }
 
-              <Controller
-                as={
-                  <Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={bsiPath3List} />
-                }
-                name="bsiPath3"
-                control={control}
-                className="bsi-path"
-              />
-            </Form.Item>
             <Form.Item label="负责人" showStatusIcon={false}>
               <Controller
                 as={<Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={userList} />}
@@ -246,7 +254,7 @@ export const EditResourceBusinessInfo = (
                 control={control}
               />
             </Form.Item>
-            {hasPod && (
+            {hasPod && !WEBPACK_CONFIG_SHARED_CLUSTER && (
               <Form.Item label="自动同步所有pod">
                 <Controller
                   as={<Switch defaultValue={defaultBusinessInfo && defaultBusinessInfo.all ? true : false} />}
@@ -257,7 +265,7 @@ export const EditResourceBusinessInfo = (
             )}
           </Form>
         </div>
-      )}
+        )}
     </section>
   );
 };

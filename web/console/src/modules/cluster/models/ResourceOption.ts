@@ -42,6 +42,14 @@ export interface ResourceFilter {
   specificName?: string;
 
   meshId?: string;
+
+  search?: string;
+
+  selectedArea?: string;
+
+  selectedZone?: string;
+
+  isSharedCluster?: boolean;
 }
 
 export interface DifferentInterfaceResourceOperation {

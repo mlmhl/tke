@@ -5,7 +5,7 @@ import { bindActionCreators } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import { ContentView, Justify } from '@tencent/tea-component';
 
-import { isEmpty } from '../../../common/utils';
+import { cloneDeep, isEmpty } from '../../../common/utils';
 import { allActions } from '../../actions';
 import { SubRouter } from '../../models';
 import { router } from '../../router';
@@ -21,6 +21,7 @@ import { ResourceDeleteDialog } from './resourceTableOperation/ResourceDeleteDia
 import { ResourceEventPanel } from './resourceTableOperation/ResourceEventPanel';
 import { ResourceLogPanel } from './resourceTableOperation/ResourceLogPanel';
 import { ResourceTablePanel } from './resourceTableOperation/ResourceTablePanel';
+import { AreaMap } from '../../constants/Config';
 
 const loadingElement: JSX.Element = (
   <div>
@@ -28,7 +29,7 @@ const loadingElement: JSX.Element = (
     &nbsp; <span className="text">{t('加载中...')}</span>
   </div>
 );
-
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 export interface ResourceListPanelProps extends RootProps {
   /** subRouterList */
   subRouterList: SubRouter[];
@@ -43,6 +44,25 @@ export class ResourceListPanel extends React.Component<ResourceListPanelProps, {
     let { subRoot, route, namespaceList, subRouterList } = this.props,
       urlParams = router.resolve(route),
       { resourceInfo } = subRoot;
+
+    /** namespace filter的逻辑数据 */
+    const { rawProjectList = [], projectSelection } = this.props;
+    let newAreaMap = cloneDeep(AreaMap);
+    if (projectSelection && WEBPACK_CONFIG_SHARED_CLUSTER) {
+      const selectedProject = rawProjectList.filter(item => item.metadata.name === projectSelection)[0];
+      const { spec = {}} = selectedProject || {};
+      const { zones = [] } = spec || {};
+      zones.forEach(item => {
+        // zone的格式为：ap-nanjing-1
+        const zone = item.zone;
+        const [prefix, area, number] = zone.split('-');
+        item.value = zone;
+        item.text = AreaMap[area] ? AreaMap[area].text + number + '区' : '';
+        const zoneMap = newAreaMap[area]['zone'] || {};
+        zoneMap[zone] = item;
+        newAreaMap[area]['zoneMap'] = zoneMap;
+      });
+    }
 
     let content: JSX.Element;
     let headTitle: string = '';
@@ -68,8 +88,8 @@ export class ResourceListPanel extends React.Component<ResourceListPanelProps, {
           loadingElement
         ) : (
           <React.Fragment>
-            <ResourceActionPanel />
-            <ResourceTablePanel />
+            <ResourceActionPanel newAreaMap={newAreaMap} />
+            <ResourceTablePanel newAreaMap={newAreaMap} />
           </React.Fragment>
         );
         headTitle = resourceInfo.headTitle;

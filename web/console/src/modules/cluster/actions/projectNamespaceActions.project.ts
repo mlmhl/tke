@@ -1,4 +1,4 @@
-import { extend, FetchOptions, generateFetcherActionCreator, RecordSet } from '@tencent/ff-redux';
+import { createFFObjectActions, extend, FetchOptions, generateFetcherActionCreator, RecordSet } from '@tencent/ff-redux';
 import { generateQueryActionCreator } from '@tencent/qcloud-redux-query';
 
 import { resourceConfig } from '../../../../config';
@@ -12,6 +12,7 @@ import * as WebAPI from '../WebAPI';
 import { clusterActions } from './clusterActions';
 import { namespaceActions } from './namespaceActions';
 import { setProjectName } from '@helper';
+import { NamespaceCert, NamespaceFilter } from '@src/modules/project/models/Namespace';
 
 type GetState = () => RootState;
 const fetchOptions: FetchOptions = {
@@ -72,6 +73,10 @@ const restActions = {
       dispatch({
         type: ActionType.InitProjectList,
         payload: userProjectList
+      });
+      dispatch({
+        type: ActionType.InitRawProjectList,
+        payload: portal.rawProjects
       });
       let defaultProjectName = projectSelection
         ? projectSelection
@@ -146,7 +151,21 @@ const restActions = {
       // 获取当前集群所有开启的Addon
       dispatch(clusterActions.fetchClusterAddon(cluster.metadata.name, 1));
     };
-  }
+  },
+
+  /**
+   * 访问凭证
+   */
+  namespaceKubectlConfig: createFFObjectActions<NamespaceCert, NamespaceFilter>({
+    actionName: FFReduxActionName.NamespaceKubectlConfig,
+    fetcher: async (query, getState: GetState) => {
+      let response = await WebAPI.fetchNamespaceKubectlConfig(query);
+      return response;
+    },
+    getRecord: (getState: GetState) => {
+      return getState().namespaceKubectlConfig;
+    }
+  }),
 };
 
 export const projectNamespaceActions = extend(fetchProjectNamespaceActions, queryProjectNamespaceActions, restActions);

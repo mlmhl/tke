@@ -187,6 +187,15 @@ export interface DisplayFiledProps {
 
   /** 操作列表 */
   operatorList?: OperatorProps[];
+
+  /** 业务，用于区分相同分支的不同业务代码*/
+  business?: string;
+
+  /** 共享集群业务的数据项 */
+  shareClusterDataField?: string[];
+
+  /** 共享集群业务的数据项 */
+  shareClusterHeadTitle?: string;
 }
 
 /** resourceList当中操作列表 */
@@ -199,6 +208,9 @@ export interface OperatorProps {
 
   /** 是否放在更多当中 */
   isInMoreOp: boolean;
+
+  /** 业务，用于区分相同分支的不同业务代码*/
+  business?: string;
 }
 
 /**

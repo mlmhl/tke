@@ -20,7 +20,7 @@ import { EditResourceVisualizationPanel } from './EditResourceVisualizationPanel
 import { EditSecretPanel } from './EditSecretPanel';
 import { EditServicePanel } from './EditServicePanel';
 import { SubHeaderPanel } from './SubHeaderPanel';
-import { EditBusinessNamespacePanel } from './EditBusinessNamespacePanel';
+import { EditBusinessNamespacePanel } from './EditNamespace/EditBusinessNamespacePanel';
 
 interface EditResourcePanelState {
   /** edited data */

@@ -5,7 +5,7 @@ export { ServiceEdit, ServiceEditJSONYaml, ServicePorts, Selector, CLB } from '.
 export { ResourceOption, Resource, ResourceFilter, DifferentInterfaceResourceOperation } from './ResourceOption';
 export { SubRootState } from './SubRoot';
 
-export { Namespace, NamespaceEdit, NamespaceEditJSONYaml } from './Namespace';
+export { Namespace, NamespaceEdit, NamespaceEditJSONYaml, NamespaceCert, NamespaceFilter } from './Namespace';
 export { NamespaceCreation } from './NamespaceCreation';
 export { NamespaceOperator } from './NamespaceOperator';
 
@@ -42,3 +42,4 @@ export { LbcfEdit, LbcfBGJSONYaml, LbcfLBJSONYaml } from './LbcfEdit';
 export { DetailResourceOption } from './DetailResourceOption';
 export { LbcfResource, BackendGroup, BackendRecord } from './Lbcf';
 export * from './ContainerEnv';
+export { UserInfo } from './User';

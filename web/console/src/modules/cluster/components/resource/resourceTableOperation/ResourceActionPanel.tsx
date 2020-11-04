@@ -20,6 +20,7 @@ import { RootProps } from '../../ClusterApp';
 import { TellIsNeedFetchNS } from '../ResourceSidebarPanel';
 import { PlatformContext, IPlatformContext, PlatformTypeEnum } from '@/Wrapper';
 
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 interface ResouceActionPanelState {
   /** 是否开启自动刷新 */
   isOpenAutoRenew?: boolean;
@@ -32,23 +33,50 @@ interface ResouceActionPanelState {
 
   /** 监控组件属性 */
   monitorPanelProps?: MonitorPanelProps;
+
+  /** 区域相关数据 */
+  newAreaMap?: any;
+
+  /** 选中的地域 */
+  selectedArea?: string;
+
+  selectedZone?: string;
+}
+
+interface ResourceActionProps extends RootProps {
+  actions?: typeof allActions;
+  newAreaMap?: any;
 }
 
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
 
 @connect(state => state, mapDispatchToProps)
-export class ResourceActionPanel extends React.Component<RootProps, ResouceActionPanelState> {
+export class ResourceActionPanel extends React.Component<ResourceActionProps, ResouceActionPanelState> {
   static contextType = PlatformContext;
   context: IPlatformContext;
 
   constructor(props, context) {
     super(props, context);
+    const { newAreaMap } = props;
     this.state = {
       isOpenAutoRenew: false,
       searchBoxValues: [],
-      searchBoxLength: 0
+      searchBoxLength: 0,
+      newAreaMap,
+      selectedArea: '',
+      selectedZone: ''
     };
+  }
+
+  componentDidUpdate(prevProps: Readonly<RootProps>, prevState: Readonly<ResouceActionPanelState>, snapshot?: any): void {
+    const { searchBoxValues: prevSearchBoxValues, selectedArea: prevSelectedArea, selectedZone: prevSelectedZone } = prevState;
+    const { searchBoxValues, selectedArea, selectedZone } = this.state;
+    if (JSON.stringify(prevSearchBoxValues) !== JSON.stringify(searchBoxValues) || selectedArea !== prevSelectedArea || selectedZone !== prevSelectedZone) {
+      this._handleClickForTagSearch({ tags: searchBoxValues, selectedArea, selectedZone });
+      // actions.resource.changeKeyword(search);
+      // actions.resource.performSearch(search);
+    }
   }
 
   render() {
@@ -72,6 +100,8 @@ export class ResourceActionPanel extends React.Component<RootProps, ResouceActio
           }
           right={
             <React.Fragment>
+              {WEBPACK_CONFIG_SHARED_CLUSTER && resourceName === 'np' && this._renderAreaSelect()}
+              {WEBPACK_CONFIG_SHARED_CLUSTER && resourceName === 'np' && this._renderZoneSelect()}
               {TellIsNeedFetchNS(resourceName) && this._renderNamespaceSelect()}
               {this._renderTagSearchBox()}
               {this._renderAutoRenew()}
@@ -173,6 +203,48 @@ export class ResourceActionPanel extends React.Component<RootProps, ResouceActio
     router.navigate(Object.assign({}, urlParams, { mode: 'create' }), route.queries);
   }
 
+  private _renderAreaSelect() {
+    const { newAreaMap } = this.props;
+    return (
+      <Select
+        searchable
+        boxSizeSync
+        type="simulate"
+        appearence="button"
+        size="m"
+        options={Object.values(newAreaMap)}
+        onChange={value => {
+          this.setState({
+            selectedArea: value
+          });
+        }}
+        placeholder={t('请选择地域')}
+      />
+    );
+  }
+
+  private _renderZoneSelect() {
+    const { newAreaMap } = this.props;
+    const { selectedArea } = this.state;
+    return (
+      <Select
+        searchable
+        boxSizeSync
+        type="simulate"
+        appearence="button"
+        size="m"
+        style={{ marginRight: 10 }}
+        options={selectedArea && newAreaMap[selectedArea].zoneMap ? (Object.values(newAreaMap[selectedArea].zoneMap) || []) : []}
+        onChange={value => {
+          this.setState({
+            selectedZone: value
+          });
+        }}
+        placeholder={t('请选择可用区')}
+      />
+    );
+  }
+
   /** 生成命名空间选择列表 */
   private _renderNamespaceSelect() {
     let { actions, namespaceList, namespaceSelection } = this.props;
@@ -270,7 +342,6 @@ export class ResourceActionPanel extends React.Component<RootProps, ResouceActio
     // 受控展示的values
     // const values = resourceQuery.search ? this.state.searchBoxValues : isNeedFetchNamespace ? defaultValue : [];
     const values = ffResourceList.query.search ? this.state.searchBoxValues : [];
-
     const isShow = !isEmpty(resourceInfo) && resourceInfo.actionField && resourceInfo.actionField.search.isAvailable;
 
     return isShow ? (
@@ -280,7 +351,14 @@ export class ResourceActionPanel extends React.Component<RootProps, ResouceActio
           attributes={attributes}
           value={values}
           onChange={tags => {
-            this._handleClickForTagSearch(tags);
+            this.setState({
+              searchBoxValues: tags,
+              searchBoxLength: tags.length
+            });
+            // if (isEmpty(tags)) {
+            //   const { selectedArea, selectedZone } = this.state;
+            //   this._handleClickForTagSearch({ tags, selectedArea, selectedZone });
+            // }
           }}
         />
       </div>
@@ -290,33 +368,46 @@ export class ResourceActionPanel extends React.Component<RootProps, ResouceActio
   }
 
   /** 搜索框的操作，不同的搜索进行相对应的操作 */
-  private _handleClickForTagSearch(tags) {
+  private _handleClickForTagSearch({ tags = [], selectedArea = '', selectedZone = '' }) {
     let { actions, subRoot } = this.props,
       { resourceOption } = subRoot,
       { ffResourceList } = resourceOption;
 
     // 这里是控制tagSearch的展示
-    this.setState({
-      searchBoxValues: tags,
-      searchBoxLength: tags.length
-    });
+    // this.setState({
+    //   searchBoxValues: tags,
+    //   searchBoxLength: tags.length
+    // });
 
     // 如果检测到 tags的长度变化，并且key为 resourceName 去掉了，则清除搜索条件
     if (
       tags.length === 0 ||
       (tags.length === 1 && ffResourceList.query.search && tags[0].attr && tags[0].attr.key !== 'resourceName')
     ) {
-      actions.resource.changeKeyword('');
-      actions.resource.performSearch('');
+      if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+        actions.resource.changeKeyword('');
+        actions.resource.performSearch('');
+        actions.resource.applyFilter({ search: '', selectedArea, selectedZone, isSharedCluster: true });
+      } else {
+        actions.resource.changeKeyword('');
+        actions.resource.performSearch('');
+        actions.resource.applyFilter({ search: '' });
+      }
+      return;
     }
-
     tags.forEach(tagItem => {
       let attrKey = tagItem.attr ? tagItem.attr.key : null;
       if (attrKey === 'resourceName' || attrKey === null) {
-        // let oldSerach = resourceQuery.search;
         let search = tagItem.values[0].name;
-        actions.resource.changeKeyword(search);
-        actions.resource.performSearch(search);
+        if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+          actions.resource.changeKeyword(search);
+          actions.resource.performSearch(search);
+          actions.resource.applyFilter({ search, selectedArea, selectedZone, isSharedCluster: true });
+        } else {
+          actions.resource.changeKeyword(search);
+          actions.resource.performSearch(search);
+          actions.resource.applyFilter({ search });
+        }
       }
     });
   }

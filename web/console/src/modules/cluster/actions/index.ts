@@ -22,6 +22,7 @@ import { createICAction } from './createICAction';
 import { lbcfEditActions } from './lbcfEditActions';
 
 import { projectNamespaceActions } from './projectNamespaceActions.project';
+import { userActions } from './useActions';
 
 export const allActions = {
   dialog: dialogActions,
@@ -47,5 +48,6 @@ export const allActions = {
   clusterCreation: clusterCreationAction,
   projectNamespace: projectNamespaceActions,
   createIC: createICAction,
-  lbcf: lbcfEditActions
+  lbcf: lbcfEditActions,
+  user: userActions,
 };

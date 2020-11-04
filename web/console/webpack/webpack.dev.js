@@ -11,6 +11,15 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const version = process.argv[2] || 'tke';
 const lng = process.argv[3] || 'zh';
 
+/**
+ * version_keyword: 区分版本用的变量，值如下(同VersionObj中内容)：
+ *    'shared_cluster' -- 共享集群版本
+ */
+const { version_keyword = '' } = process.env;
+const BusinessVersionObj = {
+  shared_cluster: 'shared_cluster'
+};
+// console.log('process.env & process.argv: ', version_keyword, process.argv);
 module.exports = {
   devtool: 'eval-source-map',
   mode: 'development',
@@ -97,7 +106,12 @@ module.exports = {
       checkSyntacticErrors: true
     }),
 
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
+
+    new webpack.DefinePlugin({
+      WEBPACK_CONFIG_BUSINESS: JSON.stringify(version_keyword),
+      WEBPACK_CONFIG_SHARED_CLUSTER: JSON.stringify(version_keyword === BusinessVersionObj.shared_cluster ? true : false)
+    })
   ],
 
   resolve: {

@@ -43,22 +43,46 @@ const listResourceActions = createFFListActions<Resource, ResourceFilter>({
       response = _reduceGameGateResource(clusterVersion, ffResourceList.query, resourceInfo, isClearData);
     } else if (resourceName === 'np') {
       let list = [];
+      const { filter: { search = '', selectedArea = '', selectedZone = '', isSharedCluster = false }} = query;
       projectNamespaceList.data.records.forEach(item => {
-        list.push({
-          id: uuid(),
-          metadata: { name: item.spec.namespace, creationTimestamp: item.metadata.creationTimestamp },
-          spec: {
-            clusterId: item.spec.clusterName,
-            clusterVersion: item.spec.clusterVersion,
-            clusterDisplayName: item.spec.clusterDisplayName,
-            hard: item.spec.hard
-          },
-          status: {
-            phase: item.status.phase,
-            used: item.status.used || {}
-          },
-          originalDataBak: item
-        });
+        let zone = '';
+        let area = '';
+        const { metadata = {}, spec = {}} = item;
+        const { labels = {}} = metadata;
+        if (isSharedCluster) {
+          // 分割的值 eg：ap-nanjing
+          area = labels['teg.tkex.oa.com/region'] ? labels['teg.tkex.oa.com/region'].split('-')[1] : '';
+
+          Object.keys(labels).forEach(key => {
+            if (key.indexOf('zone.teg.tkex.oa.com') !== -1) {
+              // 分割的key eg: zone.teg.tkex.oa.com/ap-nanjing-1
+              zone = key.split('/')[1];
+            }
+          });
+        }
+        const { namespace: namespaceName } = spec;
+        if (namespaceName.indexOf(search) !== -1 && (area === selectedArea || !selectedArea) && (zone === selectedZone || !selectedZone)) {
+          list.push({
+            id: uuid(),
+            metadata: {
+              name: item.spec.namespace,
+              creationTimestamp: item.metadata.creationTimestamp,
+              labels: item.metadata.labels,
+              annotations: item.metadata.annotations
+            },
+            spec: {
+              clusterId: item.spec.clusterName,
+              clusterVersion: item.spec.clusterVersion,
+              clusterDisplayName: item.spec.clusterDisplayName,
+              hard: item.spec.hard
+            },
+            status: {
+              phase: item.status.phase,
+              used: item.status.used || {}
+            },
+            originalDataBak: item
+          });
+        }
       });
       const result: RecordSet<Resource> = {
         recordCount: list.length,

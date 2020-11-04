@@ -11,7 +11,7 @@ import { resourceConfig } from '../../../../../../config/resourceConfig';
 import { FormItem, InputField, TipInfo } from '../../../../common/components';
 import { FixedFormLayout, FormLayout, MainBodyLayout } from '../../../../common/layouts';
 import { ResourceInfo } from '../../../../common/models';
-import { getWorkflowError, isEmpty } from '../../../../common/utils';
+import { getWorkflowError, isEmpty, cloneDeep } from '@src/modules/common/utils';
 import { allActions } from '../../../actions';
 import { validateWorkloadActions } from '../../../actions/validateWorkloadActions';
 import {
@@ -48,10 +48,12 @@ import { ReduceServiceAnnotations, ReduceServiceJSONData, ReduceServicePorts } f
 import { EditServicePortMapPanel } from './EditServicePortMapPanel';
 import { ResourceEditHostPathDialog } from './ResourceEditHostPathDialog';
 import { ResourceSelectConfigDialog } from './ResourceSelectConfigDialog';
-import { EditResourceBusinessInfo } from './EditResourceBusinessInfo';
+import { CmdbInfo } from './EditNamespace/CmdbInfo';
+import { SharedClusterCmdbInfo, InitialData, SharedClusterCmdbData } from './EditNamespace/SharedClusterCmdbInfo';
 import { reduceNs } from '../../../../../../helpers';
 const { forwardRef } = React;
-const NewEditResourceBusinessInfo = forwardRef(EditResourceBusinessInfo);
+const NewCmdbInfo = forwardRef(CmdbInfo);
+const NewSharedClusterCmdbInfo = forwardRef(SharedClusterCmdbInfo);
 /** service YAML当中的type映射 */
 const serviceTypeMap = {
   LoadBalancer: 'LoadBalancer',
@@ -74,7 +76,7 @@ insertCSS(
 }
 `
 );
-
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 interface EditResourceVisualizationPanelState {
   /** isOpenAdvanced */
   isOpenAdvancedSetting?: boolean;
@@ -89,6 +91,7 @@ const mapDispatchToProps = dispatch =>
 @connect(state => state, mapDispatchToProps)
 export class EditResourceVisualizationPanel extends React.Component<RootProps, EditResourceVisualizationPanelState> {
   private myCMDBComponentRef: any;
+  private mySharedClusterCMDBRef: any;
   constructor(props, context) {
     super(props, context);
     this.state = {
@@ -96,6 +99,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       isOpenServiceAdvancedSetting: false
     };
     this.myCMDBComponentRef = React.createRef();
+    this.mySharedClusterCMDBRef = React.createRef();
   }
 
   componentDidMount() {
@@ -144,7 +148,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   }
 
   render() {
-    let { actions, subRoot, namespaceList, route, cluster } = this.props,
+    let { actions, subRoot, namespaceList, route, cluster, projectSelection = '', rawProjectList = [] } = this.props,
       urlParams = router.resolve(route),
       { workloadEdit, modifyResourceFlow, applyResourceFlow, serviceEdit, isNeedExistedLb, addons } = subRoot,
       {
@@ -204,10 +208,17 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     let isDeploymentOrStateful =
       workloadType === 'deployment' || workloadType === 'statefulset' || workloadType === 'tapp';
 
-    let namespaceOptions = namespaceList.data.records.map(item => ({
-      value: item.name,
-      text: item.name
-    }));
+    let namespaceOptions = namespaceList.data.records.map(namespace => {
+      const { name, zoneText } = namespace;
+      let text = name;
+      if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+        text = name + (zoneText ? `(${zoneText})` : '');
+      }
+      return {
+        value: name,
+        text,
+      };
+    });
 
     let finalResourceTypeList = [];
     ResourceTypeList.forEach(list => {
@@ -218,6 +229,21 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       }
     });
 
+    /** 共享集群新增模块初始数据 */
+    const selectedProject = rawProjectList.filter(item => item.metadata.name === projectSelection)[0] || {};
+    const { metadata = {}} = selectedProject;
+    const { annotations = {}, labels = {}} = metadata;
+    const department = annotations['teg.tkex.oa.com/department'] || '';
+    const business1 = annotations['teg.tkex.oa.com/business1'] || '';
+    const business2 = annotations['teg.tkex.oa.com/business2'] || '';
+    const business2Id = labels['teg.tkex.oa.com/business2-id'] || '';
+    const sharedClusterCmdbInitialData: InitialData = {
+      department,
+      business1,
+      business2,
+      business2Id
+    };
+
     return (
       <MainBodyLayout>
         <FormLayout>
@@ -226,8 +252,15 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               className="form-list jiqun fixed-layout"
               style={isDeploymentOrStateful ? {} : { paddingBottom: '50px' }}
             >
+              {
+                WEBPACK_CONFIG_SHARED_CLUSTER && (
+                  <FormItem>
+                    <NewSharedClusterCmdbInfo ref={this.mySharedClusterCMDBRef} initialData={sharedClusterCmdbInitialData} />
+                  </FormItem>
+                )
+              }
               <FormItem label={t('业务信息')}>
-                <NewEditResourceBusinessInfo ref={this.myCMDBComponentRef} />
+                <NewCmdbInfo ref={this.myCMDBComponentRef} />
               </FormItem>
               <FormItem label={t('工作负载名')}>
                 <InputField
@@ -505,8 +538,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   /** 处理提交请求 */
   /* eslint-disable */
   private async _handleSubmit() {
-    let { actions, subRoot, route, region, clusterVersion } = this.props,
+    let { actions, subRoot, route, region, clusterVersion, userInfo } = this.props,
       { mode, workloadEdit, serviceEdit } = subRoot;
+    const creator = userInfo.object.data && userInfo.object.data.name || '';
 
     actions.validate.workload.validateWorkloadEdit();
     if (validateWorkloadActions._validateWorkloadEdit(workloadEdit, serviceEdit)) {
@@ -538,6 +572,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         oversoldRatio,
         isOpenCronHpa
       } = workloadEdit;
+
 
       // 当前该资源的具体配置
       let workloadResourceInfo: ResourceInfo = resourceConfig(clusterVersion)[workloadType];
@@ -606,29 +641,50 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       }
 
       const CMDBData = this.myCMDBComponentRef.current.getCMDBData();
-      // labelsInfo['cmdb'] = CMDBData.cmdb;
-      if (CMDBData.cmdb) {
-        if (CMDBData.bakOperator) {
-          templateAnnotations['cmdb.io/bakOperator'] = CMDBData.bakOperator.join(',');
+      const templateLabels = cloneDeep(labelsInfo);
+
+      const {cmdb, department, departmentId, bsiPath, operator, bakOperator } = CMDBData;
+
+      if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+        const sharedClusterCmdbData: SharedClusterCmdbData = this.mySharedClusterCMDBRef.current.getSharedClusterCmdbData();
+        const { moduleId, moduleName } = sharedClusterCmdbData;
+
+        /** label */
+        templateLabels['teg.tkex.oa.com/module-id'] = moduleId.toString();
+        templateLabels['teg.tkex.oa.com/creator'] = creator;
+
+        /** annotation */
+        if(moduleName) {
+          templateAnnotations['teg.tkex.oa.com/module'] = moduleName;
         }
-        if (CMDBData.bsiPath) {
-          templateAnnotations['cmdb.io/bsiPath'] = CMDBData.bsiPath;
+      }
+      if (cmdb) {
+
+        /** label */
+        templateLabels['cmdb'] = 'true';
+
+        /** annotation */
+        if (department) {
+          templateAnnotations['cmdb.io/depName'] = department;
         }
-        if (CMDBData.operator) {
-          templateAnnotations['cmdb.io/operator'] = CMDBData.operator;
+        if (departmentId) {
+          templateAnnotations['cmdb.io/depId'] = departmentId + '';
         }
-        if (CMDBData.department) {
-          templateAnnotations['cmdb.io/depName'] = CMDBData.department;
+        if (bsiPath) {
+          templateAnnotations['cmdb.io/bsiPath'] = bsiPath;
         }
-        if (CMDBData.departmentId) {
-          templateAnnotations['cmdb.io/depId'] = CMDBData.departmentId + '';
+        if (operator) {
+          templateAnnotations['cmdb.io/operator'] = operator;
+        }
+        if (bakOperator) {
+          templateAnnotations['cmdb.io/bakOperator'] = bakOperator.join(',');
         }
       }
 
       // template的内容，因为cronJob是放在 jobTemplate当中
       let templateContent = {
         metadata: {
-          labels: CMDBData.cmdb ? { ...labelsInfo, cmdb: 'true' } : labelsInfo,
+          labels: isEmpty(templateLabels) ? undefined : templateLabels,
           annotations: isEmpty(templateAnnotations) ? undefined : templateAnnotations
         },
         spec: {

@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 
 import {
-    createFFListReducer, generateWorkflowReducer, RecordSet, reduceToPayload
+  createFFListReducer, createFFObjectReducer, generateWorkflowReducer, RecordSet, reduceToPayload
 } from '@tencent/ff-redux';
 import { generateFetcherReducer } from '@tencent/qcloud-redux-fetcher';
 import { generateQueryReducer } from '@tencent/qcloud-redux-query';
@@ -47,6 +47,8 @@ export const RootReducer = combineReducers({
 
   projectList: reduceToPayload(ActionType.InitProjectList, []),
 
+  rawProjectList: reduceToPayload(ActionType.InitRawProjectList, []),
+
   projectSelection: reduceToPayload(ActionType.ProjectSelection, ''),
 
   region: createFFListReducer(FFReduxActionName.REGION),
@@ -57,5 +59,9 @@ export const RootReducer = combineReducers({
 
   isShowTips: reduceToPayload(ActionType.IsShowTips, false),
 
-  isI18n: reduceToPayload(ActionType.isI18n, false)
+  isI18n: reduceToPayload(ActionType.isI18n, false),
+
+  namespaceKubectlConfig: createFFObjectReducer(FFReduxActionName.NamespaceKubectlConfig),
+
+  userInfo: createFFObjectReducer(FFReduxActionName.UserInfo),
 });

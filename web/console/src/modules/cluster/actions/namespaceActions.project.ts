@@ -6,6 +6,7 @@ import { RootState } from '../models';
 import { router } from '../router';
 import { projectNamespaceActions } from './projectNamespaceActions.project';
 import { resourceActions } from './resourceActions';
+import { AreaMap } from '@src/modules/cluster/constants/Config';
 
 type GetState = () => RootState;
 const fetchOptions: FetchOptions = {
@@ -25,9 +26,22 @@ const fetchNamespaceActions = generateFetcherActionCreator({
     projectNamespaceList.data.records
       .filter(item => item.status.phase === 'Available')
       .forEach(item => {
+        const { labels = {}} = item.metadata;
+        let zone = '';
+        let zoneText = '';
+        Object.keys(labels).forEach(key => {
+          if (key.indexOf('zone.teg.tkex.oa.com') !== -1) {
+            zone = key.split('/')[1];
+          }
+        });
+        if (zone) {
+          const [prefix, area, number] = zone.split('-');
+          zoneText = AreaMap[area] ? AreaMap[area].text + number + '区' : '';
+        }
         namespaceList.push({
           id: uuid(),
           name: item.metadata.name,
+          zoneText: zoneText,
           displayName: `${item.spec.namespace}(${item.spec.clusterName})`,
           clusterVersion: item.spec.clusterVersion,
           clusterId: item.spec.clusterVersion,

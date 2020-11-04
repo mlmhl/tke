@@ -18,6 +18,8 @@ export interface Namespace extends Identifiable {
   clusterName?: string;
 
   namespace?: string;
+
+  zoneText?: string;
 }
 
 /** 可视化创建的namespace的相关配置 */
@@ -58,4 +60,18 @@ interface NamespaceMetadata {
 
   /** namespace的名称 */
   name: string;
+}
+
+export interface NamespaceFilter {
+  /**业务Id */
+  projectId?: string;
+
+  np?: string;
+}
+
+export interface NamespaceCert {
+  certPem: string;
+  keyPem: string;
+  caCertPem: string;
+  apiServer: string;
 }

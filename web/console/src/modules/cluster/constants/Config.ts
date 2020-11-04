@@ -12,7 +12,11 @@ export const FFReduxActionName = {
   Resource_Detail_Info: 'Resource_Detail_Info',
   LBCF_DRIVER: 'LBCF_DRIVER',
 
-  COMPUTER_WORKLOAD: 'COMPUTER_WORKLOAD'
+  COMPUTER_WORKLOAD: 'COMPUTER_WORKLOAD',
+
+  NamespaceKubectlConfig: 'NamespaceKubectlConfig',
+
+  UserInfo: 'UserInfo',
 
 };
 /** ========================= end FFRedux的相关配置 ======================== */
@@ -47,7 +51,11 @@ export const NamespaceStatus = {
   Terminating: {
     text: 'Terminating',
     classname: 'text-restart'
-  }
+  },
+  Failed: {
+    text: 'Failed',
+    classname: 'text-danger'
+  },
 };
 
 export const PvcStatus = {
@@ -791,3 +799,38 @@ export const podRemoteShellOptions = [
     text: '/bin/sh'
   }
 ];
+
+export const AreaMap = {
+  guangzhou: {
+    value: 'guangzhou',
+    text: '广州',
+  },
+  shenzhen: {
+    value: 'shenzhen',
+    text: '深圳'
+  },
+  nanjing: {
+    value: 'nanjing',
+    text: '南京'
+  },
+  hongkong: {
+    value: 'hongkong',
+    text: '香港'
+  },
+  chongqing: {
+    value: 'chongqing',
+    text: '重庆'
+  },
+  chengdu: {
+    value: 'chengdu',
+    text: '成都'
+  },
+  beijing: {
+    value: 'beijing',
+    text: '北京'
+  },
+  shanghai: {
+    value: 'shanghai',
+    text: '上海'
+  }
+};

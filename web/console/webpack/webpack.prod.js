@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const HappyPack = require('happypack');
 const os = require('os');
 const happyThreadPool = HappyPack.ThreadPool({
@@ -17,6 +18,15 @@ const filename = (process.argv[6] && process.argv[6].split('=')[1]) || 'index2';
 // const version = 'tke';
 // const lng = 'zh';
 
+/**
+ * version_keyword: 区分版本用的变量，值如下(同VersionObj中内容)：
+ *    'shared_cluster' -- 共享集群版本
+ */
+const { version_keyword = '' } = process.env;
+const BusinessVersionObj = {
+  shared_cluster: 'shared_cluster'
+};
+console.log('process.env & process.argv production: ', version_keyword, process.argv);
 module.exports = {
   mode: 'production',
   entry: {
@@ -99,6 +109,11 @@ module.exports = {
     new ForkTsCheckerWebpackPlugin({
       async: false,
       checkSyntacticErrors: true
+    }),
+
+    new webpack.DefinePlugin({
+      WEBPACK_CONFIG_BUSINESS: JSON.stringify(version_keyword),
+      WEBPACK_CONFIG_SHARED_CLUSTER: JSON.stringify(version_keyword === BusinessVersionObj.shared_cluster ? true : false)
     })
   ],
 

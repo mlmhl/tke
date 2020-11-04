@@ -7,22 +7,26 @@ import {
 import { Method } from '../../../../helpers/reduceNetwork';
 import { Region, RegionFilter, RequestParams, Resource, ResourceInfo, Validation } from '../../common/models';
 import { resourceTypeToUnit, ProjectResourceLimit }  from '../../common/components';
+import { NamespaceFilter } from '../models';
 const _cloneDeep = require('lodash/cloneDeep');
 const _isEmpty = require('lodash/isEmpty');
 
 interface EditNamespaceParams {
-  projectId: string; // 业务ID
-  namespaceName: string; // 命名空间名称
-  clusterName: string; // 集群名称
-  resourceLimits?: ProjectResourceLimit[]; // 资源限制
-  cmdb: boolean; // CMDB模块开关状态
-  department?: string; // 部门
-  departmentId?: string; // 部门ID
-  bsiPath?: string; // 业务
-  bsiPathIds?: string; // 业务IDS
-  operator?: string; // 负责人
-  bakOperator?: string[]; // 备份负责人
-  all?: boolean; // 自动同步所有pod
+  // projectId?: string; // 业务ID
+  // namespaceName?: string; // 命名空间名称
+  // clusterName?: string; // 集群名称
+  // resourceLimits?: ProjectResourceLimit[]; // 资源限制
+  // cmdb?: boolean; // CMDB模块开关状态
+  // department?: string; // 部门
+  // departmentId?: string; // 部门ID
+  // bsiPath?: string; // 业务
+  // bsiPathIds?: string; // 业务IDS
+  // operator?: string; // 负责人
+  // bakOperator?: string[]; // 备份负责人
+  // all?: boolean; // 自动同步所有pod
+
+  spec?: any;
+  metadata?: any;
   // [props: string]: any;
 }
 
@@ -49,113 +53,56 @@ function _reduceProjectLimit(projectResourceLimit: ProjectResourceLimit[] = []) 
   return hardInfo;
 }
 
+export async function editNamespace({ newNamespace, projectId }: { newNamespace: any; projectId: string}) {
+  const isEditNamespace = true;
+  const result = await changeNamespace({ newNamespace, projectId, isEditNamespace });
+  return result;
+}
+
+export async function createNamespace({ namespaceInfo, projectId }: { namespaceInfo: EditNamespaceParams; projectId: string}) {
+  const result = await changeNamespace({ namespaceInfo, projectId });
+  return result;
+}
+
 /**
  * 创建&编辑Namespace
  * @param namespaces： 创建 || 编辑 页填写的namespace信息
  * @param selectedNamespace：选中要编辑的namespace
  */
-export async function editNamespace({ namespaces, selectedNamespace }: { namespaces: EditNamespaceParams; selectedNamespace?: any }) {
+async function changeNamespace({ namespaceInfo, newNamespace, projectId, isEditNamespace }: { namespaceInfo?: EditNamespaceParams; newNamespace?: any; isEditNamespace?: boolean; projectId: string }) {
   try {
     let NamespaceResourceInfo: ResourceInfo = resourceConfig().namespaces;
     let url = reduceK8sRestfulPath({
       resourceInfo: NamespaceResourceInfo,
-      specificName: namespaces.projectId,
+      specificName: projectId,
       extraResource: 'namespaces'
     });
-
-    const {
-      clusterName,
-      namespaceName,
-      projectId,
-      resourceLimits,
-      cmdb,
-      department,
-      departmentId,
-      bsiPath,
-      bsiPathIds,
-      operator,
-      bakOperator,
-      all
-    } = namespaces;
+    const { headTitle, group, version } = NamespaceResourceInfo;
 
     /** 构建参数 */
     let requestParams = {
-          kind: NamespaceResourceInfo.headTitle,
-          apiVersion: `${NamespaceResourceInfo.group}/${NamespaceResourceInfo.version}`,
-          spec: {
-            clusterName,
-            namespace: namespaceName,
-            projectName: projectId,
-            hard: _reduceProjectLimit(resourceLimits),
-          }
+          kind: headTitle,
+          apiVersion: `${group}/${version}`,
         };
     let method = 'POST';
-    const metadata = {};
-    const annotations = {};
-    if (cmdb) {
-      metadata['labels'] = { cmdb: 'true' };
-      if (all) {
-        metadata['labels']['cmdb.all'] = 'true';
-      }
-      if (department) {
-        annotations['cmdb.io/depName'] = department;
-      }
-      if (departmentId) {
-        annotations['cmdb.io/depId'] = departmentId ? String(departmentId) : undefined;
-      }
-      if (bsiPath) {
-        annotations['cmdb.io/bsiPath'] = bsiPath;
-      }
-      if (bsiPathIds) {
-        annotations['cmdb.io/bsiPathIds'] = bsiPathIds;
-      }
-      if (operator) {
-        annotations['cmdb.io/operator'] = operator;
-      }
-      if (bakOperator) {
-        annotations['cmdb.io/bakOperator'] = bakOperator.join(',');
-      }
-      if (JSON.stringify(annotations) !== '{}') {
-        metadata['annotations'] = annotations;
-      }
-    }
-    if (JSON.stringify(metadata) !== '{}') {
-      requestParams['metadata'] = metadata;
-    }
-    if (!_isEmpty(selectedNamespace)) {
-      //修改
+
+    if (isEditNamespace) {
+      // 编辑命名空间
       method = 'PUT';
-      url += '/' + selectedNamespace.metadata.name;
-      const newSelectedNamespace = _cloneDeep(selectedNamespace);
-      newSelectedNamespace.kind = NamespaceResourceInfo.headTitle;
-      newSelectedNamespace.apiVersion = `${NamespaceResourceInfo.group}/${NamespaceResourceInfo.version}`;
-      newSelectedNamespace.spec.hard = _reduceProjectLimit(resourceLimits);
-      newSelectedNamespace.spec.projectName = projectId;
-      if (!cmdb) {
-        if (newSelectedNamespace.metadata.labels) {
-          delete newSelectedNamespace.metadata.labels.cmdb;
-          delete newSelectedNamespace.metadata.labels['cmdb.all'];
-        }
-        delete newSelectedNamespace.metadata.annotations;
-      } else {
-        if (newSelectedNamespace.metadata.labels) {
-          newSelectedNamespace.metadata.labels.cmdb = 'true';
-          if (all) {
-            newSelectedNamespace.metadata.labels['cmdb.all'] = 'true';
-          } else {
-            delete newSelectedNamespace.metadata.labels['cmdb.all'];
-          }
-        } else {
-          newSelectedNamespace.metadata.labels = {
-            cmdb: 'true'
-          };
-          if (all) {
-            newSelectedNamespace.metadata.labels['cmdb.all'] = 'true';
-          }
-        }
-        newSelectedNamespace.metadata.annotations = annotations;
+      url += '/' + newNamespace.metadata.name;
+      newNamespace.kind = headTitle;
+      newNamespace.apiVersion = `${group}/${version}`;
+      requestParams = newNamespace;
+    } else {
+      // 创建命名空间
+      const {
+        spec = {},
+        metadata = {},
+      } = namespaceInfo || {};
+      requestParams['spec'] = spec;
+      if (JSON.stringify(metadata) !== '{}') {
+        requestParams['metadata'] = metadata;
       }
-      requestParams = newSelectedNamespace;
     }
 
     let params: RequestParams = {
@@ -205,4 +152,43 @@ export async function fetchNamespaceByMetaName({ projectId, namespaceName }: { p
       throw error;
     }
   }
+}
+
+/** 访问凭证数据接口 */
+export async function fetchNamespaceKubectlConfig(query: QueryState<NamespaceFilter>) {
+  let {
+    filter: { projectId, np }
+  } = query;
+  let NamespaceResourceInfo: ResourceInfo = resourceConfig().namespaces;
+  let url = reduceK8sRestfulPath({
+    resourceInfo: NamespaceResourceInfo,
+    specificName: projectId,
+    extraResource: `namespaces/${np}/certificate`
+  });
+
+  /** 构建参数 */
+  let method = 'GET';
+  let params: RequestParams = {
+    method,
+    url
+  };
+  let result = {
+    certPem: '',
+    keyPem: '',
+    caCertPem: '',
+    apiServer: ''
+  };
+  try {
+    let response = await reduceNetworkRequest(params);
+    if (response.code === 0 && response.data.status.certificate) {
+      result = {
+        certPem: response.data.status.certificate.certPem,
+        keyPem: response.data.status.certificate.keyPem,
+        caCertPem: response.data.status.certificate.caCertPem,
+        apiServer: response.data.status.certificate.apiServer
+      };
+    }
+  } catch (error) {}
+
+  return result;
 }

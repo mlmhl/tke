@@ -75,6 +75,9 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
       resourceType === 'resource' || resourceType === 'service' || resourceType === 'config' || resource === 'pvc';
     actions.resource.toggleIsNeedFetchNamespace(isNeedFetchNamespace ? true : false);
     actions.projectNamespace.initProjectList();
+
+    // 获取用户信息并存储在redux中
+    actions.user.fetch();
   }
 
   componentWillReceiveProps(nextProps: RootProps) {

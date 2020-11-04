@@ -4,9 +4,9 @@ import { connect } from 'react-redux';
 
 import { K8SUNIT, valueLabels1000, valueLabels1024 } from '@helper/k8sUnitUtil';
 import { resourceLimitTypeToText, resourceTypeToUnit } from '@src/modules/project/constants/Config';
-import { Bubble, TableColumn, Text } from '@tea/component';
+import { Bubble, TableColumn, Text, Button, Modal, ExternalLink, Tooltip } from '@tea/component';
 import { selectable } from '@tea/component/table/addons/selectable';
-import { TablePanel } from '@tencent/ff-component';
+import { FormPanel, TablePanel } from '@tencent/ff-component';
 import { bindActionCreators, uuid } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
@@ -19,7 +19,9 @@ import { ResourceLoadingIcon, ResourceStatus } from '../../../constants/Config';
 import { Resource } from '../../../models';
 import { router } from '../../../router';
 import { RootProps } from '../../ClusterApp';
+import AccessCredentialsDialog from './AccessCredentialsDialog';
 
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 /** 判断resource是否需要展示loading状态
  * @param resourceName: string  资源的名称，如deployment
  * @param item: Resource 当前实例
@@ -92,13 +94,24 @@ const loadingElement: JSX.Element = (
   <i style={{ verticalAlign: 'middle', marginLeft: '5px' }} className="n-loading-icon" />
 );
 
+interface ResourceTableProps extends RootProps {
+  actions?: typeof allActions;
+  newAreaMap?: any;
+}
+
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), {
     dispatch
   });
 
 @connect(state => state, mapDispatchToProps)
-export class ResourceTablePanel extends React.Component<RootProps, {}> {
+export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> {
+  state = {
+    isShowKuctlDialog: false,
+    selectedResource: null,
+    newAreaMap: this.props.newAreaMap
+  };
+
   componentWillUnmount() {
     let { actions } = this.props;
     // 离开页面的话，清空当前的轮询操作
@@ -114,7 +127,7 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
   /** 展示普通的text */
   private _reduceText(showData: any, fieldInfo: DisplayFiledProps, resource: Resource, clipId: string) {
     let showContent;
-    if (fieldInfo.isLink) {
+    if (fieldInfo.isLink && !WEBPACK_CONFIG_SHARED_CLUSTER) {
       if (fieldInfo.isClip) {
         showContent = (
           <Bubble
@@ -378,6 +391,37 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
       );
     };
 
+    /**
+     * 查看访问凭证
+     */
+    const renderKubctlConfigButton = (operator: OperatorProps) => {
+      const { metadata = {}, status = {}, spec = {}} = resource.originalDataBak || {};
+      const { name = '', namespace = '' } = metadata;
+      const { phase = '' } = status;
+      const { clusterType = '', clusterName = '' } = spec;
+      let disabledOp = phase === 'Terminating';
+      let disabledCert = clusterType === 'Imported';
+      // let disabledCert = false;
+
+      return (
+        <LinkButton
+          key={'kubectl'}
+          disabled={disabledOp || disabledCert || clusterName === 'global'}
+          errorTip={clusterName === 'global' ? 'global集群暂不支持' : null}
+          tipDirection="right"
+          onClick={() => {
+            actions.projectNamespace.namespaceKubectlConfig.applyFilter({
+              projectId: namespace,
+              np: name
+            });
+            this.setState({ isShowKuctlDialog: true, selectedResource: resource });
+          }}
+        >
+          {t('查看访问凭证')}
+        </LinkButton>
+      );
+    };
+
     let btns = [];
     operatorList.forEach(operatorItem => {
       if (operatorItem.actionType === 'modify' || operatorItem.actionType === 'modify-namespace') {
@@ -393,6 +437,8 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
         operatorItem.actionType === 'updateBG'
       ) {
         btns.push(renderUpdateResourcePart(operatorItem));
+      } else if (WEBPACK_CONFIG_SHARED_CLUSTER && operatorItem.actionType === 'view-access-credentials') {
+        btns.push(renderKubctlConfigButton(operatorItem));
       }
     });
     return btns;
@@ -643,8 +689,35 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
     );
   }
 
+  private _reduceResourceZone(showData, isReturnHard = false) {
+    const { newAreaMap } = this.state;
+    let zoneStr = '';
+    let areaText = '-';
+    let hard;
+    Object.keys(showData).forEach(key => {
+      if (key.indexOf('zone.teg.tkex.oa.com') !== -1) {
+        // 要找的字符串举例: zone.teg.tkex.oa.com/ap-nanjing-1
+        zoneStr = key.split('/')[1];
+      }
+    });
+    if (zoneStr) {
+      const [prefix, area, number] = zoneStr.split('-');
+      console.log('zoneStr & newAreaMap is:', zoneStr, newAreaMap, newAreaMap[area]);
+      const zoneMap = newAreaMap[area]['zoneMap'];
+      areaText = zoneMap ? zoneMap[zoneStr]['text'] : '-';
+      hard = zoneMap ? zoneMap[zoneStr]['hard'] : '';
+      if (isReturnHard) {
+        return zoneMap ? zoneMap[zoneStr]['hard'] : '';
+      }
+    }
+    if (isReturnHard) {
+      return hard;
+    }
+    return <span>{areaText}</span>;
+  }
+
   private _reduceResourceLimit(showData) {
-    let resourceLimitKeys = showData !== '-' ? Object.keys(showData) : [];
+    let resourceLimitKeys = showData && showData !== '-' ? Object.keys(showData) : [];
     let content = resourceLimitKeys.map((item, index) => (
       <Text parent="p" key={index}>{`${resourceLimitTypeToText[item]}:${
         resourceTypeToUnit[item] === 'MiB'
@@ -661,26 +734,12 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
   /** 获取最终展示的数据 */
   private _getFinalData(dataFieldIns, resource: Resource) {
     let result = resource;
-
-    // 处理类似 "cmdb.io/bsiPath" 字段存在的情况，这个字段拆分成了dataFieldIns中最后的2个元素
-    const newDataFieldIns = [];
-    for (let i = 0, length = dataFieldIns.length; i < length; i++) {
-      if (dataFieldIns[i] === 'cmdb') {
-        newDataFieldIns.push(dataFieldIns[i] + '.' + dataFieldIns[i + 1]);
-        ++i;
-      } else {
-        newDataFieldIns.push(dataFieldIns[i]);
-      }
-    }
-    if (dataFieldIns.includes('cmdb')) {
-      result = resource.originalDataBak;
-    }
-    for (let index = 0; index < newDataFieldIns.length; index++) {
+    for (let index = 0; index < dataFieldIns.length; index++) {
       // 如果result不为一个 Object，则遍历结束
       if (typeof result !== 'object') {
         break;
       }
-      result = result[newDataFieldIns[index]]; // 这里做一下处理，防止因为配错找不到
+      result = result[dataFieldIns[index]]; // 这里做一下处理，防止因为配错找不到
     }
 
     // 返回空值，是因为如果不存在值，则使用配置文件的默认值
@@ -697,8 +756,22 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
 
     // fieldInfo当中的 dataField是一个数组，可以同时输入多个值
     let showData: any = [];
-    fieldInfo.dataField.forEach(item => {
-      let dataFieldIns = item.split('.');
+    const dataFeild = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.shareClusterDataField ? fieldInfo.shareClusterDataField : fieldInfo.dataField;
+    dataFeild.forEach(item => {
+      let annotationsDataFieldKey = '';
+      let newItem = item;
+      const dataFieldKey = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.dataFormat === 'cmdbOperator' ? 'labels' : 'annotations';
+      // 'metadata.annotations.cmdb.io/operator' || 'metadata.labels.teg.tkex.oa.com/creator'
+      const startOfAnnoIndex = item.indexOf(dataFieldKey);
+      if (startOfAnnoIndex !== -1) {
+        const endOfAnnoIndex = startOfAnnoIndex + dataFieldKey.length;
+        newItem = item.substr(0, endOfAnnoIndex);
+        annotationsDataFieldKey = item.substring(endOfAnnoIndex + 1);
+      }
+      let dataFieldIns = newItem.split('.');
+      if (dataFieldIns && annotationsDataFieldKey) {
+        dataFieldIns.push(annotationsDataFieldKey);
+      }
       let data: any = this._getFinalData(dataFieldIns, resource);
       // 如果返回的为 '' ，即找不到这个对象，则使用配置文件所设定的默认值
       showData.push(data === '' ? fieldInfo.noExsitedValue : data);
@@ -732,6 +805,15 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
       content = this._reducebackendGroups(showData);
     } else if (fieldInfo.dataFormat === 'resourceLimit') {
       content = this._reduceResourceLimit(showData);
+    } else if (fieldInfo.dataFormat === 'zone') {
+      content = this._reduceResourceZone(showData);
+    } else if (fieldInfo.dataFormat === 'zoneHard') {
+      const hard = this._reduceResourceZone(showData, true);
+      if (hard) {
+        content = this._reduceResourceLimit(hard);
+      } else {
+        content = '-';
+      }
     } else {
       content = this._reduceText(showData, fieldInfo, resource, clipId);
     }
@@ -741,9 +823,11 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
 
   /** 生成table的表格信息 */
   private _renderTablePanel() {
-    let { actions, subRoot } = this.props,
+    let { actions, subRoot, route } = this.props,
       { resourceOption, resourceInfo, resourceName } = subRoot,
       { ffResourceList, resourceMultipleSelection } = resourceOption;
+    const { type } = router.resolve(route);
+    const { isShowKuctlDialog, selectedResource } = this.state;
     let addons = [];
 
     let displayField = !isEmpty(resourceInfo) && resourceInfo.displayField ? resourceInfo.displayField : {};
@@ -754,6 +838,15 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
 
       // 操作的按钮现在都换成在tablePanel当中去展示
       if (fieldInfo.dataFormat === 'operator') return;
+
+      // 如果业务不是共享集群不展示相应的列
+      if (true !== WEBPACK_CONFIG_SHARED_CLUSTER && (fieldInfo.dataFormat === 'zone' || fieldInfo.dataFormat === 'zoneHard')) {
+        return;
+      }
+      // 如果是共享集群不展示相应的列
+      if (WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.dataFormat === 'cmdbBusiness') {
+        return;
+      }
 
       if (fieldInfo.dataFormat === 'checker') {
         addons.push(
@@ -770,7 +863,14 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
       }
       let columnInfo: TableColumn<Resource> = {
         key: item + uuid(),
-        header: fieldInfo.headTitle,
+        header: <Tooltip title={fieldInfo.headTitle}>
+          {
+            WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.shareClusterHeadTitle ?
+              fieldInfo.shareClusterHeadTitle
+                :
+              fieldInfo.headTitle
+          }
+        </Tooltip>,
         width: fieldInfo.width,
         render: x => this._renderBodyCell(x, fieldInfo, item + uuid())
       };
@@ -796,33 +896,42 @@ export class ResourceTablePanel extends React.Component<RootProps, {}> {
     });
 
     const columns: TableColumn<Resource>[] = showField;
-
+    const close = () => {
+      this.setState({ isShowKuctlDialog: false });
+    };
     return (
-      <TablePanel
-        columns={columns}
-        operationsWidth={240}
-        getOperations={x =>
-          this._renderOperationCell(
-            x,
-            Object.values(displayField).find(fieldInfo => fieldInfo.dataFormat === 'operator')
-          )
-        }
-        action={actions.resource}
-        model={ffResourceList}
-        emptyTips={t('您选择的该资源的列表为空，您可以切换到其他命名空间')}
-        addons={addons}
-        rowDisabled={record => {
-          if (resourceName === 'np') {
-            return IsResourceShowLoadingIcon(resourceName, record);
-          } else {
-            return false;
+      <>
+        <TablePanel
+          columns={columns}
+          operationsWidth={240}
+          getOperations={x =>
+            this._renderOperationCell(
+              x,
+              Object.values(displayField).find(fieldInfo => fieldInfo.dataFormat === 'operator')
+            )
           }
-        }}
-        isNeedContinuePagination={true}
-        onRetry={() => {
-          actions.resource.resetPaging();
-        }}
-      />
+          action={actions.resource}
+          model={ffResourceList}
+          emptyTips={t('您选择的该资源的列表为空，您可以切换到其他命名空间')}
+          addons={addons}
+          rowDisabled={record => {
+            if (resourceName === 'np') {
+                return IsResourceShowLoadingIcon(resourceName, record);
+              } else {
+                return false;
+              }
+            }
+          }
+          isNeedContinuePagination={true}
+          onRetry={() => {
+              actions.resource.resetPaging();
+            }
+          }
+        />
+        {
+          type === 'namespace' && WEBPACK_CONFIG_SHARED_CLUSTER && <AccessCredentialsDialog isShowing={isShowKuctlDialog} close={close} selectedResource={selectedResource} />
+        }
+      </>
     );
   }
 

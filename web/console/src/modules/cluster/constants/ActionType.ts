@@ -287,6 +287,7 @@ export const SecV_Password = 'SecV_Password';
 export const InitClusterList = 'InitClusterList';
 export const ClusterSelection = 'ClusterSelection';
 export const InitProjectList = 'InitProjectList';
+export const InitRawProjectList = 'InitRawProjectList';
 export const ProjectSelection = 'ProjectSelection';
 export const FetchProjectNamespace = 'FetchProjectNamespace';
 export const QueryProjectNamespace = 'QueryProjectNamespace';

@@ -7,9 +7,11 @@ import { ClusterCreationState } from './ClusterCreationState';
 import { Clustercredential } from './Clustercredential';
 import { CreateIC } from './CreateIC';
 import { DialogState } from './DialogState';
-import { Namespace } from './Namespace';
+import { Namespace, NamespaceCert, NamespaceFilter } from './Namespace';
 import { Resource, ResourceFilter } from './ResourceOption';
 import { SubRootState } from './SubRoot';
+import { UserInfo } from './User';
+import { FFObjectModel } from '../../../../lib/ff-redux/src/object/Model';
 
 type ResourceModifyFlow = WorkflowState<CreateResource, number>;
 type CreateICFlow = WorkflowState<CreateIC, number>;
@@ -79,6 +81,14 @@ export interface RootState {
   /** projectList */
   projectList?: any[];
 
+  /** 比 projectList相对全量的list数据*/
+  rawProjectList?: any[];
+
   /** projectSelection */
   projectSelection?: string;
+
+  /**namespaceTable */
+  namespaceKubectlConfig?: FFObjectModel<NamespaceCert, NamespaceFilter>;
+
+  userInfo?: FFObjectModel<UserInfo, any>;
 }
