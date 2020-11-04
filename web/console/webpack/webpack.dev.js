@@ -109,7 +109,6 @@ module.exports = {
     new webpack.HotModuleReplacementPlugin(),
 
     new webpack.DefinePlugin({
-      WEBPACK_CONFIG_BUSINESS: JSON.stringify(version_keyword),
       WEBPACK_CONFIG_SHARED_CLUSTER: JSON.stringify(version_keyword === BusinessVersionObj.shared_cluster ? true : false)
     })
   ],
