@@ -10,11 +10,12 @@ import { ResourceInfo, RequestParams } from './src/modules/common/models';
 import { resourceConfig } from './config';
 import { isEmpty } from './src/modules/common/utils';
 import * as classnames from 'classnames';
-import { Button, Icon, Text, Bubble, NavMenu, List, Select } from '@tencent/tea-component';
+import { Button, Icon, Text, Bubble, NavMenu, List, Select, Tooltip } from '@tencent/tea-component';
 
 import * as Sentry from '@sentry/browser';
 import * as emonitor from '@tencent/emonitor';
 import * as BeaconAction from '@tencent/beacon-web-sdk';
+import { insertCSS } from '@/lib/ff-redux';
 
 Sentry.init({ dsn: 'https://f5911fc91ca24d35a41ed8389446e525@report.url.cn/sentry/2795' });
 
@@ -32,6 +33,12 @@ let beacon = new BeaconAction({
 });
 beacon.reportPV();
 
+insertCSS(
+    'wrapper-style',
+    `
+      .wrapper-nav-right .tea-dropdown__value{ display: inline }
+    `
+);
 // @ts-ignore
 const routerSea = seajs.require('router');
 /**平台管理员,业务成员,游客,未初始化 */
@@ -649,6 +656,9 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
    * 展示顶部导航栏
    */
   private _renderTopBar(query: string) {
+    const { userInfo } = this.state;
+    const { name = '', extra = {}} = userInfo;
+    const { tenantid = [] } = extra;
     return (
       <NavMenu
         left={
@@ -662,6 +672,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
           <React.Fragment>
             <NavMenu.Item
               type="dropdown"
+              className="wrapper-nav-right"
               overlay={() => (
                 <List type="option">
                   <List.Item
@@ -675,7 +686,9 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
                 </List>
               )}
             >
-              {this.state.userInfo.name}
+              <Tooltip title={`${name}(${tenantid[0] || '-'})`}>
+                {`${name}(${tenantid[0] || '-'})`}
+              </Tooltip>
             </NavMenu.Item>
           </React.Fragment>
         }
