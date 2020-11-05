@@ -46,7 +46,7 @@ const ProjectSelector = React.memo((props: {
         appearence="button"
         size="m"
         options={projectList}
-        style={{ width: '130px', marginRight: '5px' }}
+        // style={{ width: '130px', marginRight: '5px' }}
         value={selectedProjectId}
         onChange={selectProjectId => {
           setSelectedProjectId(selectProjectId);

@@ -22,7 +22,7 @@ const NamespaceSelector = React.memo((props: {
 }) => {
   const scopeDispatch = useContext(DispatchContext);
   const scopeState = useContext(StateContext);
-  const { isPlatform } = scopeState;
+  const { isPlatform, namespaceId } = scopeState;
   const { namespaceList = [] } = props;
 
   /**
@@ -31,7 +31,7 @@ const NamespaceSelector = React.memo((props: {
   const [selectedNamespaceId, setSelectedNamespaceId] = useState();
   const [groups, setGroups] = useState({});
   useEffect(() => {
-    if (!isEmpty(namespaceList)) {
+    if (!isEmpty(namespaceList) && !namespaceId) {
       const { value: defaultNamespaceId, groupKey: clusterId, namespaceId } = namespaceList[0];
       setSelectedNamespaceId(defaultNamespaceId);
       // if平台侧  else业务侧
@@ -57,7 +57,7 @@ const NamespaceSelector = React.memo((props: {
         });
       }
     }
-  }, [namespaceList]);
+  }, [namespaceList, namespaceId]);
 
   const selectStyle = useMemo(() => ({ display: 'inline-block', marginLeft: '5px', fontSize: '12px', verticalAlign: 'middle' }), []);
   return (
