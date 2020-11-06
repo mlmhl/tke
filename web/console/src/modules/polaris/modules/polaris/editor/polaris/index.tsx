@@ -338,7 +338,7 @@ const PolarisEditor = (
     async function addPolaris() {
       const addPolarisResult = await createPolaris({
         namespaceId: selectedNamespaceId,
-        clusterId,
+        clusterId: cluster || clusterId,
         polarisData
       });
       if (addPolarisResult) {
@@ -659,57 +659,55 @@ const PolarisEditor = (
       <hr />
       <Form.Title>容器参数</Form.Title>
       <Form>
-        {
-          isPlatform ? (
-            <Form.Item
-              required
-              label={t('集群')}
-              showStatusIcon={false}
-              status={errors.cluster ? 'error' : 'success'}
-              message={errors.cluster && errors.cluster.message}
+        <Form.Item
+          required
+          label={t('集群')}
+          showStatusIcon={false}
+          style={isPlatform ? {} : { display: 'none' }}
+          status={errors.cluster ? 'error' : 'success'}
+          message={errors.cluster && errors.cluster.message}
             >
-              <Controller
-                as={
-                  <Select
-                    searchable
-                    boxSizeSync
-                    type="simulate"
-                    appearence="button"
-                    size="l"
-                    options={clusterList}
-                  />
+          <Controller
+            as={
+              <Select
+                searchable
+                boxSizeSync
+                type="simulate"
+                appearence="button"
+                size="l"
+                options={clusterList}
+              />
                   }
-                name="cluster"
-                control={control}
-                rules={{ required: t('无选中集群') }}
-              />
-            </Form.Item>
-          ) : (
-            <Form.Item
-              required
-              label={t('业务')}
-              showStatusIcon={false}
-              status={errors.project ? 'error' : 'success'}
-              message={errors.project && errors.project.message}
+            name="cluster"
+            control={control}
+            rules={{ required: t('无选中集群') }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          required
+          label={t('业务')}
+          style={isPlatform ? { display: 'none' } : {}}
+          showStatusIcon={false}
+          status={errors.project ? 'error' : 'success'}
+          message={errors.project && errors.project.message}
               >
-              <Controller
-                as={
-                  <Select
-                    searchable
-                    boxSizeSync
-                    type="simulate"
-                    appearence="button"
-                    size="l"
-                    options={projectList}
-                  />
-                }
-                name="project"
-                control={control}
-                rules={{ required: t('无选中业务') }}
+          <Controller
+            as={
+              <Select
+                searchable
+                boxSizeSync
+                type="simulate"
+                appearence="button"
+                size="l"
+                options={projectList}
               />
-            </Form.Item>
-          )
-        }
+                }
+            name="project"
+            control={control}
+            rules={{ required: t('无选中业务') }}
+          />
+        </Form.Item>
         <Form.Item
           required
           label={t('命名空间')}
