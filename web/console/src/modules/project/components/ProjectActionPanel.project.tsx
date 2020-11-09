@@ -5,13 +5,7 @@ import { Button, Justify, SearchBox } from '@tea/component';
 import { bindActionCreators } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
-import { WorkflowDialog } from '../../common/components';
 import { allActions } from '../actions';
-import { projectActions } from '../actions/projectActions';
-import { Manager } from '../models';
-import { router } from '../router';
-import { CreateProjectPanel } from './CreateProjectPanel';
-import { EditProjectManagerPanel } from './EditProjectManagerPanel';
 import { RootProps } from './ProjectApp';
 
 const mapDispatchToProps = dispatch =>

@@ -18,7 +18,6 @@ import { namespaceActions } from '../actions/namespaceActions';
 import { NamespaceStatus, resourceLimitTypeToText, resourceTypeToUnit, PlatformTypeEnum } from '../constants/Config';
 import { Namespace, NamespaceOperator, Project } from '../models';
 import { router } from '../router';
-// import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
 import { RootProps } from './ProjectApp';
 import { reduceNs } from '@helper/urlUtil';
 

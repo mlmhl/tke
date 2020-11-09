@@ -1,3 +1,6 @@
+/**
+ * 业务详情
+ */
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { ContentView, TabPanel, Tabs } from '@tea/component';
