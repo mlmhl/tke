@@ -25,6 +25,14 @@ interface ProjectMetadata {
   [props: string]: any;
 }
 
+type SpecZoneType = {
+  clusterName: string;
+
+  zone: string;
+
+  hard?: StatusResource;
+};
+
 interface ProjectSpec {
   /** project名称 */
   displayName: string;
@@ -33,11 +41,14 @@ interface ProjectSpec {
   members: string[];
 
   /** project分配的quota */
-  clusters: {
+  clusters?: {
     [props: string]: {
       hard?: StatusResource;
     };
   };
+
+  /** project分配的quota，可用区级别[共享集群] */
+  zones?: Array<SpecZoneType>;
 
   parentProjectName?: string;
 }
@@ -68,8 +79,11 @@ export interface ProjectEdition extends Identifiable {
   displayName: string;
   v_displayName: Validation;
 
-  clusters: {
+  isSharingCluster: boolean;  // 是否为共享集群
+
+  clusters?: {
     name: string;
+    zone?: string; // 可用区
     v_name: Validation;
     resourceLimits: ProjectResourceLimit[];
   }[];

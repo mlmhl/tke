@@ -6,6 +6,9 @@ export interface Cluster extends Identifiable {
 
   /** 名称 */
   clusterName?: string;
+
+  /** 可用区[共享集群] */
+  zones?: Array<string>;
 }
 
 export interface ClusterFilter {

@@ -1,16 +1,14 @@
+/**
+ * 业务详情 - 基本信息
+ */
 import * as React from 'react';
 
-import { K8SUNIT, valueLabels1000, valueLabels1024 } from '@helper/k8sUnitUtil';
-import { Bubble, Button, Modal, StatusTip, Table, TableColumn, Text } from '@tea/component';
 import { FormPanel } from '@tencent/ff-component';
 import { t } from '@tencent/tea-app/lib/i18n';
-import { autotip } from '@tencent/tea-component/lib/table/addons';
 
 import { dateFormatter } from '../../../../helpers';
-import { getWorkflowError } from '../../common';
-import { WorkflowDialog, CreateProjectResourceLimitPanel } from '../../common/components';
+import { WorkflowDialog } from '../../common/components';
 import { DialogBodyLayout } from '../../common/layouts';
-import { resourceLimitTypeToText, resourceTypeToUnit } from '../constants/Config';
 import { EditProjectManagerPanel } from './EditProjectManagerPanel';
 import { EditProjectNamePanel } from './EditProjectNamePanel';
 import { RootProps } from './ProjectApp';

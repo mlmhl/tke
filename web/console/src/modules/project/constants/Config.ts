@@ -137,6 +137,8 @@ export const initProjectEdition: ProjectEdition = {
   displayName: '',
   v_displayName: initValidator,
   members: [],
+  // isSharingCluster: false,
+  isSharingCluster: true,
   clusters: [{ name: '', v_name: initValidator, resourceLimits: [] }],
 
   parentProject: '',

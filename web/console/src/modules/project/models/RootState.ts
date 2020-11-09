@@ -31,6 +31,11 @@ type ProjectEditWorkflow = WorkflowState<ProjectEdition, void>;
 type NamespaceWorkflow = WorkflowState<Namespace, NamespaceOperator>;
 type NamespaceEditWorkflow = WorkflowState<NamespaceEdition, NamespaceOperator>;
 type userWorkflow = WorkflowState<Member, any>;
+type ClusterZoneType = {
+  clusterId: string;
+  clusterDisplayName: string;
+  zone: string;
+}
 
 export interface RootState {
   /** 路由 */

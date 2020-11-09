@@ -164,15 +164,6 @@ export class RuleList extends React.Component<PropTypes> {
     // 增加一个属性confirmVisible记录是否显示popconfirm的状态
     this.setState({ rules: rules.map(item => ({ ...item, confirmVisible: false })) });
   };
-  // getList = async (clusterName, namespaceValue) => {
-  //   let { namespaces } = this.state;
-  //   let namespaceItem = namespaces.find(item => (this.state.isPlatform ? item.name : item.fullName) === namespaceValue);
-  //   // TODO: 注意这个地方的 namespaceValue 和 namespaceName 是不一样的，在平台侧和业务侧下面
-  //   let { name: namespacenName } = namespaceItem;
-  //   let rules = await getRuleList(clusterName, namespacenName);
-  //   // 增加一个属性confirmVisible记录是否显示popconfirm的状态
-  //   this.setState({ rules: rules.map(item => ({ ...item, confirmVisible: false })) });
-  // };
 
   /**
    * 增加一个刷新图标按钮用来刷新列表数据

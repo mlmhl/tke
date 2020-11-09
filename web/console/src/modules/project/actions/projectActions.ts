@@ -301,17 +301,35 @@ const restActions = {
     };
   },
 
+  /**
+   * 变更：对普通集群的clusters和共享集群的zones做了兼容
+   * @param project
+   */
   initEdition: (project: Project) => {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
       let {
         manager: { list }
       } = getState();
       let {
-        spec: { clusters }
+        spec: { clusters: specClusters, zones: specZones }
       } = project;
-      let clusterKeys = clusters ? Object.keys(clusters) : [];
-      let clustersInfo = clusterKeys.map(cluster => {
-        let hard = clusters[cluster].hard;
+      let isSharingCluster = false;
+      let limitList = [];
+      if (specClusters) {
+        limitList = Object.keys(specClusters).map(item => ({
+          name: item,
+          hard: specClusters[item].hard
+        }));
+      }
+      if (specZones) {
+        isSharingCluster = true;
+        limitList = specZones.map(({ clusterName, zone, hard }) => ({
+          name: clusterName,
+          zone,
+          hard
+        }));
+      }
+      let clustersInfo = limitList.map(({ name, zone, hard }) => {
         let hardInfo = hard
           ? Object.keys(hard).map(key => {
               let value = hard[key];
@@ -324,11 +342,15 @@ const restActions = {
               return Object.assign({}, initProjectResourceLimit, { type: key, id: uuid(), value });
             })
           : [];
-        return {
-          name: cluster,
+        let result = {
+          name,
           v_name: initValidator,
           resourceLimits: hardInfo
         };
+        if (specZones) {
+          Object.assign(result, { zone });
+        }
+        return result;
       });
       dispatch({
         type: ActionType.UpdateProjectEdition,
@@ -348,6 +370,7 @@ const restActions = {
             }
           }),
           parentProject: project.spec.parentProjectName ? project.spec.parentProjectName : '',
+          isSharingCluster,
           clusters: clustersInfo,
           status: project.status
         }
@@ -372,7 +395,25 @@ const restActions = {
     };
   },
 
-  //删除project集群
+  // 更新project集群[共享集群]
+  updateClusterZones: (index: number, clusterId: string, zoneName: string) => {
+    return async (dispatch: Redux.Dispatch, getState: GetState) => {
+      let { projectEdition } = getState(),
+        { clusters } = projectEdition;
+      let newClusterZones = deepClone(clusters);
+      if (newClusterZones[index]) {
+        newClusterZones[index].name = clusterId;
+        newClusterZones[index].zone = zoneName;
+      }
+
+      dispatch({
+        type: ActionType.UpdateProjectEdition,
+        payload: Object.assign({}, getState().projectEdition, { clusters: newClusterZones })
+      });
+    };
+  },
+
+  // 删除project集群
   deleteClusters: (index: number) => {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
       let { projectEdition } = getState(),
@@ -389,7 +430,7 @@ const restActions = {
     };
   },
 
-  //添加project集群
+  // 添加project集群
   addClusters: () => {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
       let { projectEdition } = getState(),
@@ -423,18 +464,21 @@ const restActions = {
     };
   },
 
+  // 增加对共享集群验证的兼容
   validateClustersName: (index: number) => {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
       let {
-        projectEdition: { clusters }
+        projectEdition: { clusters, isSharingCluster }
       } = getState();
       let newClusters = deepClone(clusters);
       if (newClusters[index]) {
-        let filter = newClusters.filter(item => item.name === newClusters[index].name);
+        let filter = newClusters.filter(
+          item => item.name === newClusters[index].name && (!isSharingCluster || item.zone === newClusters[index].zone)
+        );
         if (!newClusters[index].name) {
           newClusters[index].v_name = {
             status: 2,
-            message: '集群名称不能为空'
+            message: isSharingCluster ? '可用区名称不能为空' : '集群名称不能为空'
           };
         } else if (filter.length > 1) {
           newClusters[index].v_name = {
