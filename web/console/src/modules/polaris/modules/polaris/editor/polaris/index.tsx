@@ -321,7 +321,7 @@ const PolarisEditor = (
         loadBalancers: [
           {
             driver: 'lbcf-polaris-driver',
-            name: serviceName.replace(':', '-'),
+            name: ruleName,
             spec: {
               namespace: polarisNamespace,
               service: serviceName,
