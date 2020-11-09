@@ -117,10 +117,6 @@ interface ListenerType {
   protocol: string;
 
   port: string;
-
-  // host: string; // Domain
-  //
-  // path: string; // Url
 }
 
 // 转发规则
@@ -184,8 +180,6 @@ interface ListenerRule extends Listener {
 }
 
 interface PropTypes {
-  // clusterName: string; // 集群名称
-
   projects: Project[]; // 业务列表
 
   value?: RuleType; // value 属性，和 onChange 对应的
@@ -235,8 +229,6 @@ interface StateTypes {
   occupied: ListenerRule[]; // 已占用规则/监听器列表
 
   isPlatform: boolean;
-
-  // expandedKeys: string[];
 }
 
 // 规则名称文本框
@@ -780,8 +772,6 @@ class RuleEditor extends React.Component<PropTypes, StateTypes> {
     clusters: [], // 平台侧下的集群列表
     instances: [],
     namespaces: [],
-    // selectedCLB: '',
-    // isShareRule: true,
     listenerList: [], // 现有监听器列表
     ruleList: [], // 现有规则列表
     occupied: [], // 现有规则列表
@@ -805,7 +795,6 @@ class RuleEditor extends React.Component<PropTypes, StateTypes> {
       host: '',
       path: '',
     },
-    // expandedKeys: [],
   };
 
   componentDidMount() {
@@ -833,13 +822,6 @@ class RuleEditor extends React.Component<PropTypes, StateTypes> {
    * 如果用户在列表页选择了业务和命名空间，就使用用户选择的【也就是说传到Editor里面的时候value里面的project, namespace是有数据的】，然后加载对应的可选CLB实例列表和命名空间列表
    */
   loadData = async () => {
-    // const { isPlatform, project, namespace } = this.state;
-    // if (!isEmpty(project)) {
-    //   await this.getProjectNamespaces(project);
-    // }
-    // if (isPlatform) {
-    //   await this.getClusterList();
-    // }
     let clusters = await getAllClusters();
     this.setState({ clusters }, () => {
       this.getCache();
@@ -1126,7 +1108,6 @@ class RuleEditor extends React.Component<PropTypes, StateTypes> {
     };
 
     const onFormChange = formState => {
-      // console.log('onFormChange, formState = ', formState);
       let { onChange } = this.props;
       // 在这里更新一下state，使跟UI保持同步。其他几个字段都有自己的单独的onChange处理方法
       let { listener, scope, name, transferRule } = formState.values;

@@ -96,7 +96,6 @@ export class CreateProjectPanel extends React.Component<
 
   render() {
     let { projectEdition, actions, project, route, createProject, cluster, platformType } = this.props;
-    console.log('cluser = ', cluster);
 
     let projectListOpions = project.list.data.records.map(item => {
       return { text: `${item.metadata.name}(${item.spec.displayName})`, value: item.metadata.name };
@@ -128,7 +127,6 @@ export class CreateProjectPanel extends React.Component<
           const data = accu.concat(clusterZones);
           return data;
         }, []);
-        console.log('clusterZones = ', clusterZones);
         const clusterZoneList = clusterZones.map(({ zone, clusterId }) => ({
           value: zone,
           groupKey: clusterId,

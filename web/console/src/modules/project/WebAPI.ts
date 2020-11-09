@@ -412,7 +412,6 @@ export async function fetchClusterList(query: QueryState<ClusterFilter>) {
           return accu;
         }, []);
         Object.assign(cluster, { zones });
-        console.log('zones = ', zones);
       }
       return cluster;
     });

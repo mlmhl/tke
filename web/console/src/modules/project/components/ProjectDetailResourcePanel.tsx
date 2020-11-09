@@ -64,21 +64,25 @@ export class ProjectDetailResourcePanel extends React.Component<RootProps, {}> {
       if (specClusters) {
         const clusters = Object.keys(specClusters);
         limitList = clusters.map(item => ({
+          key: item,
           name: item,
           hard: projectDetail.spec.clusters[item].hard
         }));
       }
       if (specZones) {
-        limitList = specZones.map(({ clusterName, zone, hard }) => ({ name: clusterName, zone, hard }));
+        limitList = specZones.map(({ clusterName, zone, hard }) => ({
+          key: `${clusterName}_${zone}`,
+          name: clusterName,
+          zone,
+          hard
+        }));
       }
     }
     let projectId = projectDetail && projectDetail.metadata.name;
-    // let finalClusterList =
     let enableOp = platformType === PlatformTypeEnum.Manager;
     const zoneItem = {
       key: 'zone',
       header: t('可用区'),
-      // width: '20%',
       render: x => (
         <div>
           <span className="text-overflow">{x.zone}</span>
@@ -89,7 +93,6 @@ export class ProjectDetailResourcePanel extends React.Component<RootProps, {}> {
       {
         key: 'name',
         header: t('集群'),
-        // width: '20%',
         render: x => (
           <div>
             <span className="text-overflow">{x.name}</span>
@@ -97,13 +100,11 @@ export class ProjectDetailResourcePanel extends React.Component<RootProps, {}> {
         )
       },
       {
-        // width: '55%',
         key: 'resourceLimit',
         header: t('集群配额'),
         render: x => <React.Fragment>{this.formatResourceLimit(x.hard)}</React.Fragment>
       },
       {
-        // width: '25%',
         key: 'operation',
         header: t('操作'),
         render: (x, recordkey, recordIndex) => {
@@ -148,7 +149,7 @@ export class ProjectDetailResourcePanel extends React.Component<RootProps, {}> {
       <div style={{ width: 500 }}>
         <Table
           columns={columns}
-          recordKey={'name'}
+          recordKey="key"
           records={limitList}
           addons={[
             autotip({
