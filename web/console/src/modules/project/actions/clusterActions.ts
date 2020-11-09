@@ -11,41 +11,11 @@ const FFModelClusterActions = createFFListActions<Cluster, ClusterFilter>({
   actionName: 'cluster',
   fetcher: async (query, getState: GetState) => {
     let response = await WebAPI.fetchClusterList(query);
-    console.log('response@fetchClusterList = ', response);
     return response;
   },
   getRecord: (getState: GetState) => {
     return getState().cluster;
   },
-  // onFinish: (record, dispatch, getState: GetState) => {
-  //   const clusters = [...record.data.records];
-  //   const zones = clusters.reduce(
-  //     (accu, current, arr) => {
-  //       return accu;
-  //     },
-  //     {
-  //       'cls-c9pmn57w': ['test000', 'test111']
-  //     }
-  //   );
-  //   const clusterZone = [
-  //     {
-  //       clusterId: 'cls-c9pmn57w',
-  //       clusterDisplayName: '共享集群测试',
-  //       zone: 'ap-nanjing-1'
-  //     },
-  //     {
-  //       clusterId: 'cls-c9pmn57w',
-  //       clusterDisplayName: '共享集群测试',
-  //       zone: 'ap-nanjing-2'
-  //     },
-  //     {
-  //       clusterId: 'global',
-  //       clusterDisplayName: 'TKE',
-  //       zone: 'ap-beijing-1'
-  //     }
-  //   ];
-  //   dispatch(restActions.updateClusterZone(clusterZone));
-  // }
 });
 
 const restActions = {

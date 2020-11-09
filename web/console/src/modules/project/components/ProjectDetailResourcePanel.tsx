@@ -64,12 +64,18 @@ export class ProjectDetailResourcePanel extends React.Component<RootProps, {}> {
       if (specClusters) {
         const clusters = Object.keys(specClusters);
         limitList = clusters.map(item => ({
+          key: item,
           name: item,
           hard: projectDetail.spec.clusters[item].hard
         }));
       }
       if (specZones) {
-        limitList = specZones.map(({ clusterName, zone, hard }) => ({ name: clusterName, zone, hard }));
+        limitList = specZones.map(({ clusterName, zone, hard }) => ({
+          key: `${clusterName}_${zone}`,
+          name: clusterName,
+          zone,
+          hard
+        }));
       }
     }
     let enableOp = platformType === PlatformTypeEnum.Platform;
@@ -142,7 +148,7 @@ export class ProjectDetailResourcePanel extends React.Component<RootProps, {}> {
       <div style={{ width: 500 }}>
         <Table
           columns={columns}
-          recordKey={'name'}
+          recordKey="key"
           records={limitList}
           addons={[
             autotip({
