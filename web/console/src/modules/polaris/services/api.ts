@@ -418,7 +418,7 @@ export async function polarisInstallCheckByCluster({ clusterId }: { clusterId: s
   let result;
   const url = `/apis/platform.tkestack.io/v1/clusters/${clusterId}/polaris?action=isInstalled`;
   let params: RequestParams = {
-    method: Method.get,
+    method: Method.put,
     url,
   };
 
