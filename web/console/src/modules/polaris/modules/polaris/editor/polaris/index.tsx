@@ -660,7 +660,7 @@ const PolarisEditor = (
       <Form.Title>容器参数</Form.Title>
       <Form>
         <Form.Item
-          required
+          required={isPlatform ? true : false}
           label={t('集群')}
           showStatusIcon={false}
           style={isPlatform ? {} : { display: 'none' }}
@@ -680,12 +680,13 @@ const PolarisEditor = (
                   }
             name="cluster"
             control={control}
-            rules={{ required: t('无选中集群') }}
+            defaultValue={clusterId}
+            rules={isPlatform ? { required: t('无选中集群') } : {}}
           />
         </Form.Item>
 
         <Form.Item
-          required
+          required={isPlatform ? false : true}
           label={t('业务')}
           style={isPlatform ? { display: 'none' } : {}}
           showStatusIcon={false}
@@ -705,7 +706,8 @@ const PolarisEditor = (
                 }
             name="project"
             control={control}
-            rules={{ required: t('无选中业务') }}
+            defaultValue={projectId}
+            rules={isPlatform ? {} : { required: t('无选中业务') }}
           />
         </Form.Item>
         <Form.Item
@@ -729,6 +731,7 @@ const PolarisEditor = (
             }
             name="namespace"
             control={control}
+            defaultValue={isPlatform ? namespaceId : `${clusterId}-${namespaceId}`}
             rules={{ required: t('无选中命名空间') }}
           />
         </Form.Item>
