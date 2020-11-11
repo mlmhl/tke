@@ -10,30 +10,19 @@ import { RootState } from '../../models';
 import { router } from '../../router';
 import { StrategyActionPanel } from './StrategyActionPanel';
 import { StrategyDetailsPanel } from './StrategyDetailsPanel';
-import { StrategyHeadPanel } from './StrategyHeadPanel';
 import { StrategyTablePanel } from './StrategyTablePanel';
 
-import { UserPanel } from '@src/modules/uam/components/user/UserPanel';
-import { GroupPanel } from '@src/modules/uam/components/group/GroupPanel';
 const { Body, Content } = Layout;
 const { useState, useEffect } = React;
 
 export interface RootProps extends RootState {
   actions?: typeof allActions;
 }
-//
-// const mapDispatchToProps = dispatch =>
-//   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
 
-// @connect(state => state, mapDispatchToProps)
-export const StrategyApp = (props) => {
-  const state = useSelector((state) => state);
-  const dispatch = useDispatch();
-  const { actions } = bindActionCreators({ actions: allActions }, dispatch);
-  const { route } = state;
-  // useEffect(() => {
-  //   actions.strategy.poll();
-  // }, []);
+export const StrategyApp = props => {
+  const route = useSelector(state => state.route);
+  // const dispatch = useDispatch();
+  // const { actions } = bindActionCreators({ actions: allActions }, dispatch);
 
   let urlParam = router.resolve(route);
   const { module, sub, action } = urlParam;
@@ -93,29 +82,4 @@ export const StrategyApp = (props) => {
       </Body>
     </Layout>
   );
-  //
-  // return (
-  //   <React.Fragment>
-  //     {sub ? (
-  //       <ContentView>
-  //         <ContentView.Header>
-  //           <StrategyHeadPanel />
-  //         </ContentView.Header>
-  //         <ContentView.Body>
-  //           <StrategyDetailsPanel />
-  //         </ContentView.Body>
-  //       </ContentView>
-  //     ) : (
-  //       <ContentView>
-  //         <ContentView.Header>
-  //           <StrategyHeadPanel />
-  //         </ContentView.Header>
-  //         <ContentView.Body>
-  //           <StrategyActionPanel />
-  //           <StrategyTablePanel />
-  //         </ContentView.Body>
-  //       </ContentView>
-  //     )}
-  //   </React.Fragment>
-  // );
 };
