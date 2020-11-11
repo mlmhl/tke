@@ -34,6 +34,7 @@ import { ResourceInfo, RequestParams } from '../common/models';
 import { resourceConfig } from '../../../config';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import { METHODS } from 'http';
+import { is } from '@/node_modules/immer/dist/utils/common';
 
 // @ts-ignore
 const tips = seajs.require('tips');
@@ -261,22 +262,18 @@ export async function fetchStrategyList(query: QueryState<StrategyFilter>) {
   let strategys: Strategy[] = [];
   let recordCount = 0;
   const { search, paging, filter } = query;
-  console.log('fetchStrategyList query is:', query);
+  const { type, isSharedCluster } = filter;
 
-  let key = 'spec.scope!';
-  if (filter.type === 'platform') {
+  let key = 'spec.scope';
+  if (type === 'platform' && isSharedCluster === false) {
     key = 'spec.scope!';
-  } else if (filter.type === 'business') {
-    key = 'spec.scope';
   }
 
   const queryObj = {
     fieldSelector: {
-      [key]: 'project',
+      [key]: isSharedCluster ? type : 'project',
       keyword: search || ''
-    },
-    // continue: undefined,
-    // limit: paging.pageSize
+    }
   };
   try {
     const resourceInfo: ResourceInfo = resourceConfig()['policy'];

@@ -11,7 +11,7 @@ import { router } from '../../router';
 import { StrategyActionPanel } from './StrategyActionPanel';
 import { StrategyDetailsPanel } from './StrategyDetailsPanel';
 import { StrategyTablePanel } from './StrategyTablePanel';
-
+import { TabType } from '../../constants/Config';
 const { Body, Content } = Layout;
 const { useState, useEffect } = React;
 
@@ -26,10 +26,11 @@ export const StrategyApp = props => {
 
   let urlParam = router.resolve(route);
   const { module, sub, action } = urlParam;
-
+  const { platform, business, realProject } = TabType;
   const tabs = [
-    { id: 'platform', label: '平台策略' },
-    { id: 'business', label: '业务策略' },
+    { id: platform, label: '平台策略' },
+    { id: business, label: '业务策略' },
+    { id: realProject, label: '真实业务策略' },
   ];
 
   let header;
@@ -51,29 +52,36 @@ export const StrategyApp = props => {
               ceiling
               animated={false}
               tabs={tabs}
-              activeId={sub || 'platform'}
+              activeId={sub || platform}
               onActive={(value) => {
                 router.navigate({ module: 'strategy', sub: value.id });
               }}
             >
-              <TabPanel id="platform">
+              <TabPanel id={platform}>
                 {action === 'detail' ? (
                   <StrategyDetailsPanel />
                 ) : (
                   <>
-                    <StrategyActionPanel type="platform" />
-                    <StrategyTablePanel type="platform" />
+                    <StrategyActionPanel type={platform} />
+                    <StrategyTablePanel type={platform} />
                   </>
                 )}
               </TabPanel>
-              <TabPanel id="business">
+              <TabPanel id={business}>
                 {action === 'detail' ? (
                   <StrategyDetailsPanel />
                 ) : (
                   <>
-                    <StrategyActionPanel type="business" />
-                    <StrategyTablePanel type="business" />
+                    <StrategyActionPanel type={business} />
+                    <StrategyTablePanel type={business} />
                   </>
+                )}
+              </TabPanel>
+              <TabPanel id={realProject}>
+                {action === 'detail' ? (
+                  <StrategyDetailsPanel />
+                ) : (
+                  <StrategyTablePanel type={realProject} />
                 )}
               </TabPanel>
             </Tabs>

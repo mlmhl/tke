@@ -12,9 +12,12 @@ import { allActions } from '../../actions';
 import { router } from '../../router';
 import { Strategy, GroupFilter } from '../../models';
 import { GroupAssociateWorkflowDialog } from './associate/GroupAssociateWorkflowDialog';
+import { TabType } from '../../constants/Config';
+
 const { useState, useEffect } = React;
 const _isEqual = require('lodash/isEqual');
 
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 export const StrategyTablePanel = (props) => {
   const state = useSelector((state) => state);
   const dispatch = useDispatch();
@@ -24,6 +27,7 @@ export const StrategyTablePanel = (props) => {
   const associatedUsersListRecords = associatedUsersList.list.data.records.map((item) => item.metadata.name);
   const userListRecords = userList.list.data.records;
   const { sub } = router.resolve(route);
+  const { platform, realProject } = TabType;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [userMsgsValue, setUserMsgsValue] = useState({
@@ -34,7 +38,7 @@ export const StrategyTablePanel = (props) => {
   const [currentStrategy, setCurrentStrategy] = useState({ id: undefined });
 
   useEffect(() => {
-    actions.strategy.poll({ type });
+    actions.strategy.poll({ type, isSharedCluster: WEBPACK_CONFIG_SHARED_CLUSTER });
   }, [type]);
   useEffect(() => {
     // 关联用户
@@ -96,9 +100,15 @@ export const StrategyTablePanel = (props) => {
       key: 'service',
       header: t('服务类型'),
       render: (item) => <Text parent="div">{item.spec.category || '-'}</Text>,
-    },
-    { key: 'operation', header: t('操作'), render: (user) => _renderOperationCell(user) },
+    }
   ];
+  if (type !== realProject) {
+    columns.push({
+      key: 'operation',
+      header: t('操作'),
+      render: (user) => _renderOperationCell(user)
+    });
+  }
 
   return (
     <React.Fragment>
@@ -214,7 +224,7 @@ export const StrategyTablePanel = (props) => {
   function _renderOperationCell(strategy: Strategy) {
     return (
       <React.Fragment>
-        {sub !== 'business' && (
+        {sub === platform && (
           <>
             <LinkButton
               tipDirection="right"

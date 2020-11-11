@@ -29,8 +29,7 @@ import { User } from '../../models';
 import { router } from '../../router';
 import { GroupActionPanel } from './detail/GroupActionPanel';
 import { GroupTablePanel } from './detail/GroupTablePanel';
-import { RoleActionPanel } from './detail/RoleActionPanel';
-import { RoleTablePanel } from './detail/RoleTablePanel';
+import { TabType } from '../../constants/Config';
 
 const { useState, useEffect, useRef } = React;
 const _isEqual = require('lodash/isEqual');
@@ -59,17 +58,17 @@ export const StrategyDetailsPanel = () => {
 
   const { sub } = router.resolve(route);
   const categoryId = route.queries['id'];
+  const { business, platform, realProject } = TabType;
 
   let tabs;
-  if (sub === 'business') {
-    tabs = [{ id: 'actions', label: '策略语法' }];
-  } else {
+  if (sub === platform) {
     tabs = [
       { id: 'actions', label: '策略语法' },
       { id: 'users', label: '关联用户' },
-      { id: 'groups', label: '关联用户组' },
-      // { id: 'roles', label: '已关联角色' },
+      { id: 'groups', label: '关联用户组' }
     ];
+  } else {
+    tabs = [{ id: 'actions', label: '策略语法' }];
   }
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -378,10 +377,6 @@ export const StrategyDetailsPanel = () => {
               <GroupActionPanel />
               <GroupTablePanel />
             </TabPanel>
-            {/*<TabPanel id="roles">*/}
-            {/*  <RoleActionPanel />*/}
-            {/*  <RoleTablePanel />*/}
-            {/*</TabPanel>*/}
           </Tabs>
         </Card.Body>
       </Card>
