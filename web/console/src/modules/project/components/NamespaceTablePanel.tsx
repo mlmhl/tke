@@ -158,7 +158,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
     } = this.props;
     const urlParams = router.resolve(route);
     let enableOp =
-      platformType === PlatformTypeEnum.Manager ||
+      platformType === PlatformTypeEnum.Platform ||
       (platformType === PlatformTypeEnum.Business &&
         userManagedProjects.list.data.records.find(
           item => item.name === (projectDetail ? projectDetail.metadata.name : null)
@@ -235,7 +235,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
     if (enableOp) {
       buttons.push([renderDeleteButton()]);
     }
-    if (platformType === PlatformTypeEnum.Manager) {
+    if (platformType === PlatformTypeEnum.Platform) {
       buttons.push([renderMigartionButton()]);
     }
 

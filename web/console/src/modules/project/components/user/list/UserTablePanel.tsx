@@ -21,10 +21,10 @@ export const UserTablePanel = () => {
   const { isShowing, toggle } = useModal(false);
   const [editUser, setEditUser] = useState();
   const { userList, route, platformType, userManagedProjects, projectDetail } = state;
-
+  const { Platform, Business } = PlatformTypeEnum;
   let enableOp =
-    platformType === PlatformTypeEnum.Manager ||
-    (platformType === PlatformTypeEnum.Business &&
+    platformType === Platform ||
+    (platformType === Business &&
       userManagedProjects.list.data.records.find(
         item => item.name === (projectDetail ? projectDetail.metadata.name : null)
       ));

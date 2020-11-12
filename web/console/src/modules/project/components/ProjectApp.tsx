@@ -52,7 +52,7 @@ class ProjectApp extends React.Component<RootProps, {}> {
     /// #endif
 
     /// #if tke
-    props.actions.bussiness.initPlatformType(PlatformTypeEnum.Manager);
+    props.actions.bussiness.initPlatformType(PlatformTypeEnum.Platform);
     /// #endif
   }
   render() {

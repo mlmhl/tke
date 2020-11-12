@@ -13,9 +13,10 @@ export const UserActionPanel = props => {
   const dispatch = useDispatch();
   const { actions } = bindActionCreators({ actions: allActions }, dispatch);
   const { route, userList, projectDetail, platformType, userManagedProjects } = state;
+  const { Platform, Business } = PlatformTypeEnum;
   let enableOp =
-    platformType === PlatformTypeEnum.Manager ||
-    (platformType === PlatformTypeEnum.Business &&
+    platformType === Platform ||
+    (platformType === Business &&
       userManagedProjects.list.data.records.find(
         item => item.name === (projectDetail ? projectDetail.metadata.name : null)
       ));

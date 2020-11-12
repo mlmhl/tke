@@ -10,6 +10,7 @@ const _cloneDeep = require('lodash/cloneDeep');
 const { useState, useEffect } = React;
 const { scrollable, selectable, removeable } = Table.addons;
 
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 export function RoleModifyDialog(props) {
   const state = useSelector(state => state);
   const dispatch = useDispatch();
@@ -125,33 +126,37 @@ export function RoleModifyDialog(props) {
                   <Text>只读成员</Text>
                   <Text parent="div">预设业务角色，仅能够查看业务下资源</Text>
                 </Radio>
-                <Radio name="custom">
-                  <Text>自定义</Text>
-                  <Transfer
-                    leftCell={
-                      <Transfer.Cell
-                        scrollable={false}
-                        title="为这个用户自定义独立的权限"
-                        tip="支持按住 shift 键进行多选"
-                        header={<SearchBox value={inputValue} onChange={value => setInputValue(value)} />}
-                      >
-                        <SourceTable
-                          dataSource={strategyList}
-                          targetKeys={targetKeys}
-                          onChange={keys => setTargetKeys(keys)}
-                        />
-                      </Transfer.Cell>
-                    }
-                    rightCell={
-                      <Transfer.Cell title={`已选择 (${targetKeys.length})`}>
-                        <TargetTable
-                          dataSource={strategyList.filter(i => targetKeys.includes(i.id))}
-                          onRemove={key => setTargetKeys(targetKeys.filter(i => i !== key))}
-                        />
-                      </Transfer.Cell>
-                    }
-                  />
-                </Radio>
+                {
+                  !WEBPACK_CONFIG_SHARED_CLUSTER && (
+                  <Radio name="custom">
+                    <Text>自定义</Text>
+                    <Transfer
+                      leftCell={
+                        <Transfer.Cell
+                          scrollable={false}
+                          title="为这个用户自定义独立的权限"
+                          tip="支持按住 shift 键进行多选"
+                          header={<SearchBox value={inputValue} onChange={value => setInputValue(value)} />}
+                              >
+                          <SourceTable
+                            dataSource={strategyList}
+                            targetKeys={targetKeys}
+                            onChange={keys => setTargetKeys(keys)}
+                          />
+                        </Transfer.Cell>
+                            }
+                      rightCell={
+                        <Transfer.Cell title={`已选择 (${targetKeys.length})`}>
+                          <TargetTable
+                            dataSource={strategyList.filter(i => targetKeys.includes(i.id))}
+                            onRemove={key => setTargetKeys(targetKeys.filter(i => i !== key))}
+                          />
+                        </Transfer.Cell>
+                            }
+                    />
+                  </Radio>
+                  )
+                }
               </Radio.Group>
             </Form.Item>
           </Form>

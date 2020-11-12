@@ -27,7 +27,7 @@ export class NamespaceActionPanel extends React.Component<RootProps, {}> {
   render() {
     let { actions, namespace, route, platformType, userManagedProjects, projectDetail } = this.props;
     let enableOp =
-      platformType === PlatformTypeEnum.Manager ||
+      platformType === PlatformTypeEnum.Platform ||
       (platformType === PlatformTypeEnum.Business &&
         userManagedProjects.list.data.records.find(
           item => item.name === (projectDetail ? projectDetail.metadata.name : null)

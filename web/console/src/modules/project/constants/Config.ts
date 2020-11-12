@@ -193,7 +193,10 @@ export const FFReduxActionName = {
 };
 export enum PlatformTypeEnum {
   /** 平台 */
-  Manager = 'manager',
+  // Manager = 'manager',
+
+  /** 平台 */
+  Platform = 'platform',
 
   /** 业务 */
   Business = 'business'

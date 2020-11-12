@@ -60,7 +60,7 @@ export class ProjectDetailResourcePanel extends React.Component<RootProps, {}> {
         hard: projectDetail.spec.clusters[item].hard
       };
     });
-    let enableOp = platformType === PlatformTypeEnum.Manager;
+    let enableOp = platformType === PlatformTypeEnum.Platform;
     const columns: TableColumn<{ name: string; hard: any }>[] = [
       {
         key: 'name',

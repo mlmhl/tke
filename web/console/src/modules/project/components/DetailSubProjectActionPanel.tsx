@@ -38,7 +38,7 @@ export class DetailSubProjectActionPanel extends React.Component<RootProps, {}> 
     let { actions, project, projectDetail, route, platformType, userManagedProjects } = this.props;
     let buttons = [];
     if (
-      platformType === PlatformTypeEnum.Manager ||
+      platformType === PlatformTypeEnum.Platform ||
       (platformType === PlatformTypeEnum.Business &&
         userManagedProjects.list.data.records.find(
           item => item.name === (projectDetail ? projectDetail.metadata.name : null)
@@ -58,7 +58,7 @@ export class DetailSubProjectActionPanel extends React.Component<RootProps, {}> 
         </Button>
       );
     }
-    if (platformType === PlatformTypeEnum.Manager) {
+    if (platformType === PlatformTypeEnum.Platform) {
       buttons.push(
         <Button
           type="primary"

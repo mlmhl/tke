@@ -153,7 +153,7 @@ export class DetailSubProjectPanel extends React.Component<RootProps, any> {
 
   private _renderOperationCell(project: Project) {
     const { actions, platformType } = this.props;
-    let enableOp = platformType === PlatformTypeEnum.Manager;
+    let enableOp = platformType === PlatformTypeEnum.Platform;
     const renderDeleteButton = () => {
       return (
         <Button
