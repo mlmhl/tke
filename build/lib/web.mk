@@ -30,10 +30,10 @@ endif
 web.build.console:
 	@echo "===========> Building the console web app"
 	@mkdir -p $(ROOT_DIR)/web/console/build
-	@cd $(ROOT_DIR)/web/console && $(NPM) run build
+	@cd $(ROOT_DIR)/web/console && $(NPM) run shared_cluster_build
 
 .PHONY: web.build.installer
 web.build.installer:
 	@echo "===========> Building the installer web app"
 	@mkdir -p $(ROOT_DIR)/web/installer/build
-	@cd $(ROOT_DIR)/web/installer && $(NPM) run build
+	@cd $(ROOT_DIR)/web/installer && $(NPM) run shared_cluster_build
