@@ -25,7 +25,6 @@ const restActions = {
     };
   },
 
-  // updateClusterZone: (zones: Zone[]) => {
   updateClusterZone: zones => {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
       dispatch({ type: ActionType.UpdateClusterZone, payload: zones });
