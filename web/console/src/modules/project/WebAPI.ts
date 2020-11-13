@@ -19,7 +19,19 @@ import {
   ProjectEdition,
   ProjectFilter
 } from './models';
-import { ProjectResourceLimit, UserManagedProject, UserManagedProjectFilter } from './models/Project';
+import {
+  ProjectResourceLimit,
+  UserManagedProject,
+  UserManagedProjectFilter,
+  CMDBDepartmentType,
+  CMDBBusinessLevelOneType,
+  CMDBBusinessLevelTwoType,
+  DepartmentType,
+  BusinessLevelOneType,
+  BusinessLevelTwoType
+} from './models/Project';
+
+const cmdbURL = 'http://c.oa.com/api/?api_key=tencent_suanli_gaia';
 
 // 返回标准操作结果
 function operationResult<T>(target: T[] | T, error?: any): OperationResult<T>[] {
@@ -226,12 +238,37 @@ export async function editProject(projects: ProjectEdition[]) {
         spec: {
           displayName: currentProject.displayName,
           members: currentProject.members.map(m => m.name),
-          // clusters: clusterObject,
-          zones: clusterZones,
           parentProjectName: currentProject.parentProject ? currentProject.parentProject : undefined
         }
       },
       method = 'POST';
+
+    if (currentProject.isSharingCluster) {
+      const { cmdbInfo } = currentProject;
+      // labels 不支持中文，各种名称放到注解中
+      const userName = sessionStorage.getItem('userName');
+      requestParams = Object.assign(
+        requestParams,
+        { spec: { ...requestParams.spec, zones: clusterZones }},
+        {
+          metadata: {
+            annotations: {
+              'teg.tkex.oa.com/department': cmdbInfo.departmentName,
+              'teg.tkex.oa.com/business1': cmdbInfo.businessLevelOneName,
+              'teg.tkex.oa.com/business2': cmdbInfo.businessLevelTwoName
+            },
+            labels: {
+              'teg.tkex.oa.com/creator': userName,
+              'teg.tkex.oa.com/department_id': String(cmdbInfo.departmentId),
+              'teg.tkex.oa.com/business1_id': String(cmdbInfo.businessLevelOneId),
+              'teg.tkex.oa.com/business2_id': String(cmdbInfo.businessLevelTwoId)
+            }
+          }
+        }
+      );
+    } else {
+      requestParams = Object.assign(requestParams, { spec: { ...requestParams.spec, clusters: clusterObject }});
+    }
 
     if (currentProject.id) {
       //修改
@@ -426,6 +463,102 @@ export async function fetchClusterList(query: QueryState<ClusterFilter>) {
 }
 
 /**
+ * 获取cmdb部门列表
+ * 注意是POST方法
+ */
+export async function fetchCMDBDepartmentList(): Promise<DepartmentType[]> {
+  let url = cmdbURL;
+  let method = 'POST';
+  let params: RequestParams = {
+    method,
+    url,
+    data: {
+      method: 'GetDeptInfo',
+      params: {},
+      jsonrpc: '2.0',
+      id: String(Math.floor(Math.random() * 999999))
+    }
+  };
+
+  let response = await reduceNetworkRequest(params);
+  let departmentList = [];
+  if (response.code === 0) {
+    departmentList = response.data.result.data.map((item: CMDBDepartmentType) => ({
+      id: item.Id,
+      name: item.Name
+    }));
+  }
+
+  return departmentList;
+}
+
+/**
+ * 获取一级业务列表
+ * 查询条件是部门名称
+ * @param departmentName
+ */
+export async function fetchCMDBBusinessLevelOneList(departmentName: string): Promise<BusinessLevelOneType[]> {
+  let url = cmdbURL;
+  let method = 'POST';
+  let params: RequestParams = {
+    method,
+    url,
+    data: {
+      method: 'GetBussiness1Info', // 注意这个地方是 GetBussiness1Info，而不是 GetBusiness1Info.因为设计接口的人拼写错了
+      params: {
+        dept_name: departmentName
+      },
+      jsonrpc: '2.0',
+      id: String(Math.floor(Math.random() * 999999))
+    }
+  };
+
+  let response = await reduceNetworkRequest(params);
+  let businessLevelOneList = [];
+  if (response.code === 0) {
+    businessLevelOneList = response.data.result.data.map((item: CMDBBusinessLevelOneType) => ({
+      id: item.bs1NameId,
+      name: item.bs1Name
+    }));
+  }
+
+  return businessLevelOneList;
+}
+
+/**
+ * 获取二级业务列表
+ * 查询条件是一级业务的id
+ * @param businessLevelOneId
+ */
+export async function fetchCMDBBusinessLevelTwoList(businessLevelOneId: number): Promise<BusinessLevelTwoType[]> {
+  let url = cmdbURL;
+  let method = 'POST';
+  let params: RequestParams = {
+    method,
+    url,
+    data: {
+      method: 'GetBussiness2Info', // 同一级业务获取接口，这里也是接口定义的拼写错误
+      params: {
+        bs1_name_id: businessLevelOneId
+      },
+      jsonrpc: '2.0',
+      id: String(Math.floor(Math.random() * 999999))
+    }
+  };
+
+  let response = await reduceNetworkRequest(params);
+  let businessLevelTwoList = [];
+  if (response.code === 0) {
+    businessLevelTwoList = response.data.result.data.map((item: CMDBBusinessLevelTwoType) => ({
+      id: item.bs2NameId,
+      name: item.bs2Name
+    }));
+  }
+
+  return businessLevelTwoList;
+}
+
+/**
  * Namespace编辑
  */
 export async function editNamespace(namespaces: NamespaceEdition[], op: NamespaceOperator) {
@@ -554,23 +687,6 @@ export async function fetchUser(query: QueryState<ManagerFilter>) {
 
   return result;
 }
-
-/**
- * 查询登陆用户信息
- * @param query
- */
-// export async function fetchLoginUserInfo() {
-//   let userInfo: ResourceInfo = resourceConfig()['info'];
-//   let url = reduceK8sRestfulPath({ resourceInfo: userInfo });
-//   let method = 'GET';
-//   let params: RequestParams = {
-//     method,
-//     url
-//   };
-//   let response = await reduceNetworkRequest(params);
-//
-//   return response;
-// }
 
 /**
  *

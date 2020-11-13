@@ -19,7 +19,7 @@ import * as ActionType from '../constants/ActionType';
 import { initProjectEdition, initProjectResourceLimit, resourceTypeToUnit } from '../constants/Config';
 import { Project, ProjectEdition, ProjectFilter, RootState } from '../models';
 import { Manager } from '../models/Manager';
-import { ProjectResourceLimit } from '../models/Project';
+import { ProjectResourceLimit, CMDBInfoType } from '../models/Project';
 import { router } from '../router';
 import * as WebAPI from '../WebAPI';
 
@@ -226,6 +226,16 @@ const restActions = {
       dispatch({
         type: ActionType.UpdateProjectEdition,
         payload: Object.assign({}, getState().projectEdition, { displayName: value })
+      });
+    };
+  },
+
+  // 编辑cmdb信息
+  inputProjectCMDBInfo: (value: CMDBInfoType) => {
+    return async (dispatch: Redux.Dispatch, getState: GetState) => {
+      dispatch({
+        type: ActionType.UpdateProjectEdition,
+        payload: Object.assign({}, getState().projectEdition, { cmdbInfo: value })
       });
     };
   },
