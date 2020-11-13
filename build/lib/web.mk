@@ -36,4 +36,4 @@ web.build.console:
 web.build.installer:
 	@echo "===========> Building the installer web app"
 	@mkdir -p $(ROOT_DIR)/web/installer/build
-	@cd $(ROOT_DIR)/web/installer && $(NPM) run shared_cluster_build
+	@cd $(ROOT_DIR)/web/installer && $(NPM) run build
