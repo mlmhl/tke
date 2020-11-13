@@ -131,12 +131,14 @@ export const initProjectResourceLimit = {
   v_value: initValidator
 };
 
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 export const initProjectEdition: ProjectEdition = {
   id: '',
   resourceVersion: '',
   displayName: '',
   v_displayName: initValidator,
   members: [],
+  isSharingCluster: WEBPACK_CONFIG_SHARED_CLUSTER,
   clusters: [{ name: '', v_name: initValidator, resourceLimits: [] }],
 
   parentProject: '',

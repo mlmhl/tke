@@ -19,7 +19,19 @@ import {
   ProjectEdition,
   ProjectFilter
 } from './models';
-import { ProjectResourceLimit, UserManagedProject, UserManagedProjectFilter } from './models/Project';
+import {
+  ProjectResourceLimit,
+  UserManagedProject,
+  UserManagedProjectFilter,
+  CMDBDepartmentType,
+  CMDBBusinessLevelOneType,
+  CMDBBusinessLevelTwoType,
+  DepartmentType,
+  BusinessLevelOneType,
+  BusinessLevelTwoType
+} from './models/Project';
+
+const cmdbURL = 'http://c.oa.com/api/?api_key=tencent_suanli_gaia';
 
 // 返回标准操作结果
 function operationResult<T>(target: T[] | T, error?: any): OperationResult<T>[] {
@@ -192,11 +204,12 @@ export async function editProject(projects: ProjectEdition[]) {
   try {
     let projectResourceInfo: ResourceInfo = resourceConfig()['projects'];
     let url = reduceK8sRestfulPath({ resourceInfo: projectResourceInfo });
+    const currentProject = projects[0];
 
     /** 构建参数 */
 
     let clusterObject = {};
-    projects[0].clusters.forEach(cluster => {
+    currentProject.clusters.forEach(cluster => {
       let resourceLimitObject = {};
       cluster.resourceLimits.forEach(resourceLimit => {
         resourceLimitObject[resourceLimit.type] = resourceLimit.value;
@@ -207,37 +220,76 @@ export async function editProject(projects: ProjectEdition[]) {
       clusterObject[cluster.name] = { hard: resourceLimitObject };
     });
 
+    let clusterZones = [];
+    currentProject.clusters.forEach(cluster => {
+      let resourceLimitObject = {};
+      cluster.resourceLimits.forEach(resourceLimit => {
+        resourceLimitObject[resourceLimit.type] = resourceLimit.value;
+        if (resourceTypeToUnit[resourceLimit.type] === 'MiB') {
+          resourceLimitObject[resourceLimit.type] += 'Mi';
+        }
+      });
+      clusterZones.push({ clusterName: cluster.name, zone: cluster.zone, hard: resourceLimitObject });
+    });
+
     let requestParams = {
         kind: projectResourceInfo.headTitle,
         apiVersion: `${projectResourceInfo.group}/${projectResourceInfo.version}`,
         spec: {
-          displayName: projects[0].displayName,
-          members: projects[0].members.map(m => m.name),
-          clusters: clusterObject,
-          parentProjectName: projects[0].parentProject ? projects[0].parentProject : undefined
+          displayName: currentProject.displayName,
+          members: currentProject.members.map(m => m.name),
+          parentProjectName: currentProject.parentProject ? currentProject.parentProject : undefined
         }
       },
       method = 'POST';
 
-    if (projects[0].id) {
+    if (currentProject.isSharingCluster) {
+      const { cmdbInfo } = currentProject;
+      // labels 不支持中文，各种名称放到注解中
+      const userName = sessionStorage.getItem('userName');
+      requestParams = Object.assign(
+        requestParams,
+        { spec: { ...requestParams.spec, zones: clusterZones }},
+        {
+          metadata: {
+            annotations: {
+              'teg.tkex.oa.com/department': cmdbInfo.departmentName,
+              'teg.tkex.oa.com/business1': cmdbInfo.businessLevelOneName,
+              'teg.tkex.oa.com/business2': cmdbInfo.businessLevelTwoName
+            },
+            labels: {
+              'teg.tkex.oa.com/creator': userName,
+              'teg.tkex.oa.com/department_id': String(cmdbInfo.departmentId),
+              'teg.tkex.oa.com/business1_id': String(cmdbInfo.businessLevelOneId),
+              'teg.tkex.oa.com/business2_id': String(cmdbInfo.businessLevelTwoId)
+            }
+          }
+        }
+      );
+    } else {
+      requestParams = Object.assign(requestParams, { spec: { ...requestParams.spec, clusters: clusterObject }});
+    }
+
+    if (currentProject.id) {
       //修改
       method = 'PUT';
-      url += '/' + projects[0].id;
+      url += '/' + currentProject.id;
       requestParams = JSON.parse(
         JSON.stringify({
           kind: projectResourceInfo.headTitle,
           apiVersion: `${projectResourceInfo.group}/${projectResourceInfo.version}`,
           metadata: {
-            name: projects[0].id,
-            resourceVersion: projects[0].resourceVersion
+            name: currentProject.id,
+            resourceVersion: currentProject.resourceVersion
           },
           spec: {
-            displayName: projects[0].displayName ? projects[0].displayName : null,
-            members: projects[0].members.length ? projects[0].members.map(m => m.name) : null,
-            clusters: clusterObject,
-            parentProjectName: projects[0].parentProject ? projects[0].parentProject : null
+            displayName: currentProject.displayName ? currentProject.displayName : null,
+            members: currentProject.members.length ? currentProject.members.map(m => m.name) : null,
+            // clusters: clusterObject,
+            zones: clusterZones,
+            parentProjectName: currentProject.parentProject ? currentProject.parentProject : null
           },
-          status: projects[0].status
+          status: currentProject.status
         })
       );
     }
@@ -368,6 +420,7 @@ export async function fetchRegionList(query?: QueryState<RegionFilter>) {
 
 /**
  * 集群列表的查询
+ * Note: 针对共享集群的变更，从metdata.labels这个对象中取出key形为zone.teg.tkex.oa.com/xxx的记录，其中xxx即为一个可用区的名称
  * @param query 集群列表查询的一些过滤条件
  */
 export async function fetchClusterList(query: QueryState<ClusterFilter>) {
@@ -386,7 +439,18 @@ export async function fetchClusterList(query: QueryState<ClusterFilter>) {
   if (response.code === 0) {
     let list = response.data;
     clusterList = list.items.map(item => {
-      return { id: uuid(), clusterId: item.metadata.name, clusterName: item.spec.displayName };
+      const cluster = { id: uuid(), clusterId: item.metadata.name, clusterName: item.spec.displayName };
+      if (item.metadata.labels) {
+        const zones = Object.keys(item.metadata.labels).reduce((accu, item, arr) => {
+          if (new RegExp(/^zone.teg.tkex.oa.com\/*/).test(item)) {
+            const zone = item.replace(/^zone.teg.tkex.oa.com\//, '');
+            accu.push(zone);
+          }
+          return accu;
+        }, []);
+        Object.assign(cluster, { zones });
+      }
+      return cluster;
     });
   }
 
@@ -396,6 +460,102 @@ export async function fetchClusterList(query: QueryState<ClusterFilter>) {
   };
 
   return result;
+}
+
+/**
+ * 获取cmdb部门列表
+ * 注意是POST方法
+ */
+export async function fetchCMDBDepartmentList(): Promise<DepartmentType[]> {
+  let url = cmdbURL;
+  let method = 'POST';
+  let params: RequestParams = {
+    method,
+    url,
+    data: {
+      method: 'GetDeptInfo',
+      params: {},
+      jsonrpc: '2.0',
+      id: String(Math.floor(Math.random() * 999999))
+    }
+  };
+
+  let response = await reduceNetworkRequest(params);
+  let departmentList = [];
+  if (response.code === 0) {
+    departmentList = response.data.result.data.map((item: CMDBDepartmentType) => ({
+      id: item.Id,
+      name: item.Name
+    }));
+  }
+
+  return departmentList;
+}
+
+/**
+ * 获取一级业务列表
+ * 查询条件是部门名称
+ * @param departmentName
+ */
+export async function fetchCMDBBusinessLevelOneList(departmentName: string): Promise<BusinessLevelOneType[]> {
+  let url = cmdbURL;
+  let method = 'POST';
+  let params: RequestParams = {
+    method,
+    url,
+    data: {
+      method: 'GetBussiness1Info', // 注意这个地方是 GetBussiness1Info，而不是 GetBusiness1Info.因为设计接口的人拼写错了
+      params: {
+        dept_name: departmentName
+      },
+      jsonrpc: '2.0',
+      id: String(Math.floor(Math.random() * 999999))
+    }
+  };
+
+  let response = await reduceNetworkRequest(params);
+  let businessLevelOneList = [];
+  if (response.code === 0) {
+    businessLevelOneList = response.data.result.data.map((item: CMDBBusinessLevelOneType) => ({
+      id: item.bs1NameId,
+      name: item.bs1Name
+    }));
+  }
+
+  return businessLevelOneList;
+}
+
+/**
+ * 获取二级业务列表
+ * 查询条件是一级业务的id
+ * @param businessLevelOneId
+ */
+export async function fetchCMDBBusinessLevelTwoList(businessLevelOneId: number): Promise<BusinessLevelTwoType[]> {
+  let url = cmdbURL;
+  let method = 'POST';
+  let params: RequestParams = {
+    method,
+    url,
+    data: {
+      method: 'GetBussiness2Info', // 同一级业务获取接口，这里也是接口定义的拼写错误
+      params: {
+        bs1_name_id: businessLevelOneId
+      },
+      jsonrpc: '2.0',
+      id: String(Math.floor(Math.random() * 999999))
+    }
+  };
+
+  let response = await reduceNetworkRequest(params);
+  let businessLevelTwoList = [];
+  if (response.code === 0) {
+    businessLevelTwoList = response.data.result.data.map((item: CMDBBusinessLevelTwoType) => ({
+      id: item.bs2NameId,
+      name: item.bs2Name
+    }));
+  }
+
+  return businessLevelTwoList;
 }
 
 /**
@@ -527,23 +687,6 @@ export async function fetchUser(query: QueryState<ManagerFilter>) {
 
   return result;
 }
-
-/**
- * 查询登陆用户信息
- * @param query
- */
-// export async function fetchLoginUserInfo() {
-//   let userInfo: ResourceInfo = resourceConfig()['info'];
-//   let url = reduceK8sRestfulPath({ resourceInfo: userInfo });
-//   let method = 'GET';
-//   let params: RequestParams = {
-//     method,
-//     url
-//   };
-//   let response = await reduceNetworkRequest(params);
-//
-//   return response;
-// }
 
 /**
  *

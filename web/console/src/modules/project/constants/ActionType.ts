@@ -81,3 +81,6 @@ export const UpdateGroupAssociation = 'UpdateGroupAssociation';
 export const UpdateGroupCreationState = 'UpdateGroupCreationState';
 export const UpdateGroupEditorState = 'UpdateGroupEditorState';
 export const UpdateGroupFilter = 'UpdateGroupFilter';
+
+/** 可用区 */
+export const UpdateClusterZone = 'UpdateClusterZone';

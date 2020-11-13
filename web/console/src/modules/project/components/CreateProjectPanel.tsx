@@ -1,24 +1,154 @@
+/**
+ * 平台管理 -> 业务管理 -> 新建业务
+ */
 import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { FormPanel } from '@tencent/ff-component';
 import { bindActionCreators, deepClone, isSuccessWorkflow, OperationState } from '@tencent/ff-redux';
 import { t } from '@tencent/tea-app/lib/i18n';
-import { Alert, Bubble, Button, Icon, Modal, Text } from '@tencent/tea-component';
+import { Alert, Bubble, Button, Icon, Modal, Text, Select, Form } from '@tencent/tea-component';
+import { isEqual } from 'lodash';
 
-import { getWorkflowError, RequestParams, ResourceInfo } from '../../common';
+import { getWorkflowError, isEmpty, RequestParams, ResourceInfo } from '../../common';
 import { allActions } from '../actions';
 import { projectActions } from '../actions/projectActions';
 import { resourceLimitTypeToText, resourceTypeToUnit, PlatformTypeEnum } from '../constants/Config';
 import { ProjectResourceLimit } from '../models/Project';
 import { router } from '../router';
 import { CreateProjectResourceLimitPanel } from '../../common/components';
-// import { CreateProjectResourceLimitPanel } from './CreateProjectResourceLimitPanel';
 import { EditProjectManagerPanel } from './EditProjectManagerPanel';
 import { RootProps } from './ProjectApp';
 import { resourceConfig } from '@config/resourceConfig';
 import { reduceK8sRestfulPath } from '@helper/urlUtil';
 import { Method, reduceNetworkRequest } from '@helper/reduceNetwork';
+import { fetchCMDBBusinessLevelTwoList, fetchCMDBBusinessLevelOneList, fetchCMDBDepartmentList } from '@src/modules/project/WebAPI';
+const { useEffect, useReducer } = React;
+
+function CMDBSelector(props) {
+  const { value, onChange } = props;
+  const initialState = {
+    currentDepartment: 0,
+    departmentList: [],
+    currentBusinessLevelOne: 0,
+    businessLevelOneList: [],
+    currentBusinessleveTwo: 0,
+    businessLevelTwoList: [],
+  };
+  const reducer = (state, action) => {
+    let nextState;
+    switch (action.type) {
+      case 'department':
+        nextState = { ...state, currentDepartment: action.payload };
+        break;
+      case 'departmentList':
+        nextState = { ...state, departmentList: action.payload };
+        break;
+      case 'businessLevelOne':
+        nextState = { ...state, currentBusinessLevelOne: action.payload };
+        break;
+      case 'businessLevelOneList':
+        nextState = { ...state, businessLevelOneList: action.payload };
+        break;
+      case 'businessLevelTwo':
+        nextState = { ...state, currentBusinessLevelTwo: action.payload };
+        break;
+      case 'businessLevelTwoList':
+        nextState = { ...state, businessLevelTwoList: action.payload };
+        break;
+      default:
+        nextState = state;
+    }
+    if (!isEqual(state, nextState)) {
+      if (onChange) {
+        const { currentDepartment, departmentList, currentBusinessLevelOne, businessLevelOneList, currentBusinessLevelTwo, businessLevelTwoList } = nextState;
+        const cmdbInfo = {
+          departmentName: currentDepartment,
+          departmentId: departmentList.find(item => item.name === currentDepartment) && departmentList.find(item => item.name === currentDepartment).id || 0,
+          businessLevelOneName: businessLevelOneList.find(item => item.id === currentBusinessLevelOne) && businessLevelOneList.find(item => item.id === currentBusinessLevelOne).name || '',
+          businessLevelOneId: currentBusinessLevelOne,
+          businessLevelTwoName: businessLevelTwoList.find(item => item.id === currentBusinessLevelTwo) && businessLevelTwoList.find(item => item.id === currentBusinessLevelTwo).name || '',
+          businessLevelTwoId: currentBusinessLevelTwo
+        };
+        onChange(cmdbInfo);
+      }
+    }
+    return nextState;
+  };
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  useEffect(() => {
+    const getDepartmentList = async () => {
+      const data = await fetchCMDBDepartmentList();
+      dispatch({ type: 'departmentList', payload: data });
+      return data;
+    };
+    getDepartmentList();
+  }, []);
+
+
+  useEffect(() => {
+    const { currentDepartment } = state;
+    const getBusinessLevelOneList = async () => {
+      const data = await fetchCMDBBusinessLevelOneList(currentDepartment);
+      dispatch({ type: 'businessLevelOneList', payload: data });
+      return data;
+    };
+    getBusinessLevelOneList();
+  }, [state.currentDepartment]);
+
+  useEffect(() => {
+    const { currentBusinessLevelOne } = state;
+    const getBusinessLevelTwoList = async () => {
+      const data = await fetchCMDBBusinessLevelTwoList(currentBusinessLevelOne);
+      dispatch({ type: 'businessLevelTwoList', payload: data });
+      return data;
+    };
+    getBusinessLevelTwoList();
+  }, [state.currentBusinessLevelOne]);
+
+  return (
+    <Form layout="inline">
+      <Form.Item label="部门">
+        <Select
+          value={state.currentDepartment}
+          onChange={value => dispatch({ type: 'department', payload: value })}
+          options={state.departmentList.map(item => ({ text: item.name, value: item.name }))}
+          searchable
+          type="simulate"
+          appearence="button"
+          size="m"
+          boxSizeSync
+          // placeholder="选择集群"
+        />
+      </Form.Item>
+      <Form.Item label="一级业务">
+        <Select
+          value={state.currentBusinessLevelOne}
+          onChange={value => dispatch({ type: 'businessLevelOne', payload: value })}
+          options={state.businessLevelOneList.map(item => ({ text: item.name, value: item.id }))}
+          searchable
+          type="simulate"
+          appearence="button"
+          size="m"
+          boxSizeSync
+        />
+      </Form.Item>
+      <Form.Item label="二级业务">
+        <Select
+          value={state.currentBusinessLevelTwo}
+          onChange={value => dispatch({ type: 'businessLevelTwo', payload: value })}
+          options={state.businessLevelTwoList.map(item => ({ text: item.name, value: item.id }))}
+          searchable
+          type="simulate"
+          appearence="button"
+          size="m"
+          boxSizeSync
+        />
+      </Form.Item>
+    </Form>
+  );
+}
 
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), {
@@ -116,6 +246,65 @@ export class CreateProjectPanel extends React.Component<
     }
 
     let failed = createProject.operationState === OperationState.Done && !isSuccessWorkflow(createProject);
+
+    const renderCluster = (item, index) => {
+      if (projectEdition.isSharingCluster) {
+        const clusterZones = cluster.list.data.records.reduce((accu, item, arr) => {
+          const { clusterId, clusterName, zones = [] } = item;
+          const clusterZones = zones.map(item => ({ clusterId, clusterDisplayName: clusterName, zone: item }));
+          const data = accu.concat(clusterZones);
+          return data;
+        }, []);
+        const clusterZoneList = clusterZones.map(({ zone, clusterId }) => ({
+          value: zone,
+          groupKey: clusterId,
+          text: zone
+        }));
+        const groups = clusterZones.reduce((accu, item, index, arr) => {
+          let { clusterId, clusterDisplayName, zone } = item;
+          if (!accu[clusterId]) {
+            accu[clusterId] = `${clusterId}(${clusterDisplayName})`;
+          }
+          return accu;
+        }, {});
+
+        return (
+          <Select
+            value={item.zone}
+            onChange={value => {
+              const { clusterId } = clusterZones.find(item => item.zone === value);
+              actions.project.updateClusterZones(index, clusterId, value);
+              actions.project.validateClustersName(index);
+            }}
+            searchable
+            type="simulate"
+            appearence="button"
+            size="m"
+            boxSizeSync
+            placeholder="选择可用区"
+            options={clusterZoneList}
+            groups={groups}
+          />
+        );
+      }
+
+      return (
+        <FormPanel.Select
+          label={t('集群')}
+          value={item.name}
+          model={finalClusterList}
+          action={actions.cluster}
+          valueField={x => x.clusterId}
+          displayField={x => `${x.clusterId}(${x.clusterName})`}
+          onChange={clusterId => {
+            actions.project.updateClusters(index, clusterId);
+            actions.project.validateClustersName(index);
+          }}
+          style={{ marginRight: 5 }}
+        ></FormPanel.Select>
+      );
+    };
+
     return (
       <FormPanel>
         <FormPanel.Item
@@ -131,6 +320,16 @@ export class CreateProjectPanel extends React.Component<
             }
           }}
         />
+        {projectEdition.isSharingCluster && (
+          <Form.Item label={t('CMDB业务')}>
+            <CMDBSelector
+              value={projectEdition.cmdbInfo}
+              onChange={value => {
+                actions.project.inputProjectCMDBInfo(value);
+              }}
+            />
+          </Form.Item>
+        )}
         <FormPanel.Item label={t('业务管理员')}>
           <div style={{ width: 600 }}>
             <EditProjectManagerPanel {...this.props} />
@@ -141,28 +340,14 @@ export class CreateProjectPanel extends React.Component<
             </Text>
           )}
         </FormPanel.Item>
-        <FormPanel.Item label={t('集群')}>
+        <FormPanel.Item label={projectEdition.isSharingCluster ? '集群和可用区' : '集群'}>
           {projectEdition.clusters.map((item, index) => {
             let resourceLimitContent = this.formatResourceLimit(item.resourceLimits);
             return (
               <React.Fragment key={index}>
                 <div style={{ marginBottom: 5 }} className={item.v_name.status === 2 ? 'is-error' : ''}>
                   <Bubble placement="top" content={item.v_name.status === 2 ? <p>{item.v_name.message}</p> : null}>
-                    <div style={{ display: 'inline-block' }}>
-                      <FormPanel.Select
-                        label={t('集群')}
-                        value={item.name}
-                        model={finalClusterList}
-                        action={actions.cluster}
-                        valueField={x => x.clusterId}
-                        displayField={x => `${x.clusterId}(${x.clusterName})`}
-                        onChange={clusterId => {
-                          actions.project.updateClusters(index, clusterId);
-                          actions.project.validateClustersName(index);
-                        }}
-                        style={{ marginRight: 5 }}
-                      ></FormPanel.Select>
-                    </div>
+                    <div style={{ display: 'inline-block' }}>{renderCluster(item, index)}</div>
                   </Bubble>
                   <Button
                     type={'link'}
@@ -196,17 +381,19 @@ export class CreateProjectPanel extends React.Component<
           </Button>
         </FormPanel.Item>
 
-        <FormPanel.Item label={t('上级业务')}>
-          <FormPanel.Select
-            label={t('上级业务')}
-            options={projectListOpions}
-            value={projectEdition.parentProject}
-            disabled={platformType === PlatformTypeEnum.Business}
-            onChange={value => {
-              actions.project.inputParentPorject(value);
-            }}
-          />
-        </FormPanel.Item>
+        {!projectEdition.isSharingCluster && (
+          <FormPanel.Item label={t('上级业务')}>
+            <FormPanel.Select
+              label={t('上级业务')}
+              options={projectListOpions}
+              value={projectEdition.parentProject}
+              disabled={platformType === PlatformTypeEnum.Business}
+              onChange={value => {
+                actions.project.inputParentPorject(value);
+              }}
+            />
+          </FormPanel.Item>
+        )}
         <FormPanel.Footer>
           <React.Fragment>
             <Button

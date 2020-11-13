@@ -1,3 +1,6 @@
+/**
+ * 资源限制
+ */
 import * as React from 'react';
 import { K8SUNIT, valueLabels1000, valueLabels1024 } from '@helper/k8sUnitUtil';
 import { deepClone, Identifiable, uuid } from '@tencent/ff-redux';
