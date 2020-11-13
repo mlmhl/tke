@@ -417,6 +417,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
         this.getUserList();
       }
       localStorage.setItem('tenantId', tenantId || '');
+      sessionStorage.setItem('userName', userInfo.name);
       this.setState({
         userInfo,
       });

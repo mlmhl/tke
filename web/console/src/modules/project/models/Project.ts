@@ -69,6 +69,45 @@ interface StatusResource {
   [props: string]: string;
 }
 
+export type CMDBInfoType = {
+  departmentName: string;
+  departmentId: number;
+  businessLevelOneName: string;
+  businessLevelOneId: number;
+  businessLevelTwoName: string;
+  businessLevelTwoId: number;
+};
+
+export type CMDBDepartmentType = {
+  Id: number;
+  Name: string;
+}
+
+export type DepartmentType = {
+  id: number;
+  name: string;
+}
+
+export type CMDBBusinessLevelOneType = {
+  bs1NameId: number;
+  bs1Name: string;
+}
+
+export type BusinessLevelOneType = {
+  BusinessLevelOneId: number;
+  BusinesslevelOneName: string;
+}
+
+export type CMDBBusinessLevelTwoType = {
+  bs2NameId: number;
+  bs2Name: string;
+}
+
+export type BusinessLevelTwoType = {
+  BusinessLevelTwoId: number;
+  BusinesslevelTwoName: string;
+}
+
 export interface ProjectEdition extends Identifiable {
   id: string;
 
@@ -78,6 +117,8 @@ export interface ProjectEdition extends Identifiable {
 
   displayName: string;
   v_displayName: Validation;
+
+  cmdbInfo?: CMDBInfoType; // cmdb业务信息（部门，一级业务，二级业务）
 
   isSharingCluster: boolean;  // 是否为共享集群
 
