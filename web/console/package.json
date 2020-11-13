@@ -21,7 +21,7 @@
     "shared_cluster_dev": "npm run dev --keyword=shared_cluster",
     "shared_cluster_dev_project": "npm run dev_project --keyword=shared_cluster",
     "shared_cluster_build_project": "npm run build_project --keyword=shared_cluster",
-    "shared_cluster_build": "npm run build_console && npm run shared_cluster_build_project",
+    "shared_cluster_build": "npm run shared_cluster_build_console && npm run shared_cluster_build_project",
     "build": "npm run build_console && npm run build_project",
     "eslint": "eslint src --ext .ts,.tsx",
     "test": "echo \"Error: no test specified\" && exit 1"
