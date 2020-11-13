@@ -20,7 +20,7 @@ const getStatus = meta => {
   return meta.error ? 'error' : 'success';
 };
 
-interface InstanceInfo {
+type InstanceInfo = {
   name: string; // 规则名称
 
   type: string; // 类型
@@ -31,19 +31,17 @@ interface InstanceInfo {
 
   vip: string;
 
+  vipIsp: string;
+
   scope: string[]; // 共享的命名空间
 
   disabled: boolean;
-}
+};
 
 interface PropTypes {
   clusterName: string; // 集群名称
 
-  // namespace: string;
-
   name: string;
-
-  // context: string; // 业务侧/平台侧
 }
 
 interface Cluster {
@@ -137,7 +135,7 @@ class InstanceDetail extends React.Component<PropTypes, StateTypes> {
 
   render = () => {
     let { clusterName, instanceInfo, namespaces, mode, scope: newScope } = this.state;
-    let { name, type, clbID, clbName, vip, disabled, scope = [] } = instanceInfo;
+    let { name, type, clbID, clbName, vip, vipIsp, disabled, scope = [] } = instanceInfo;
     let namespaceList = [];
     if (mode === 'view') {
       namespaceList = scope.map(item => ({ namespace: item }));
@@ -166,6 +164,9 @@ class InstanceDetail extends React.Component<PropTypes, StateTypes> {
           </Form.Item>
           <Form.Item label="VIP">
             <Form.Text>{vip}</Form.Text>
+          </Form.Item>
+          <Form.Item label="运营商">
+            <Form.Text>{vipIsp}</Form.Text>
           </Form.Item>
         </Form>
         <Form layout="vertical">

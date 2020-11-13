@@ -26,11 +26,13 @@ import {
   enableInstance,
   removeInstance,
 } from '../../services/api';
+import { Cluster as ClusterType } from '../../models';
+import { Instance, ImportedInstance } from '../../models/instance';
 
 const { at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
 const { Body, Header } = ContentView;
 
-const convert = item => ({ ...item });
+const convert = item => ({ ...item, confirmVisible: false });
 
 interface Project {
   id: string;
@@ -43,11 +45,48 @@ interface PropTypes {
   value?: any;
 }
 
-export class InstanceList extends React.Component<PropTypes> {
+interface InstanceForTable extends ImportedInstance {
+  confirmVisible: boolean;
+}
+
+type ItemType = {
+  clusterName: string;
+
+  clbId: string;
+
+  scope: Array<string>;
+};
+
+type SelectedItemType = {
+  name: string;
+
+  clbId: string;
+};
+
+interface StateTypes {
+  clusterName: string; // 集群名称
+
+  clusters: ClusterType[];
+
+  instanceList: InstanceForTable[]; // 数据加工后可以给表格组件使用的数据
+
+  dialogVisible: boolean;
+
+  alertVisible: boolean;
+
+  currentItem: ItemType;
+
+  valid: boolean;
+
+  detailVisible: boolean;
+
+  selectedItem: SelectedItemType;
+}
+
+export class InstanceList extends React.Component<PropTypes, StateTypes> {
   index = 0;
 
   state = {
-    data: this.props.value,
     clusterName: '',
     clusters: [],
     instanceList: [],
@@ -62,7 +101,7 @@ export class InstanceList extends React.Component<PropTypes> {
     detailVisible: false,
     selectedItem: {
       name: '',
-      clbID: '',
+      clbId: '',
     },
   };
 
@@ -86,8 +125,8 @@ export class InstanceList extends React.Component<PropTypes> {
    */
   getList = async clusterName => {
     let instances = await getImportedInstancesByCluster(clusterName);
-    let instanceList = instances.map(item => convert(item));
-    this.setState({ instanceList: instanceList.map(item => ({ ...item, confirmVisible: false })) });
+    let instanceList: InstanceForTable[] = instances.map(item => convert(item));
+    this.setState({ instanceList });
   };
 
   /**
@@ -131,7 +170,7 @@ export class InstanceList extends React.Component<PropTypes> {
   };
 
   handleSubmitItem = async () => {
-    let { data, currentItem } = this.state;
+    let { currentItem } = this.state;
     let { clusterName, clbId, scope } = currentItem;
 
     try {
@@ -139,16 +178,9 @@ export class InstanceList extends React.Component<PropTypes> {
         lbID: clbId,
         scope,
       };
-      // if (!isEdit) {
       await importInstance(clusterName, payload);
-      // message.info('网络策略已创建')
-      // } else {
-      // await updateNetworkPolicy(cluster, name, payload)
-      // message.info('网络策略已更新')
-      // }
       this.setState({ dialogVisible: false });
       this.getList(clusterName);
-      // this.loadData();
     } catch (err) {
       // message.error(err)
     }
@@ -157,7 +189,6 @@ export class InstanceList extends React.Component<PropTypes> {
   handleNewItem = () => {
     this.setState({
       dialogVisible: true,
-      isEdit: false,
       currentItem: {
         key: `NEW_ITEMID_${this.index++}`,
         clusterName: '',
@@ -249,7 +280,7 @@ export class InstanceList extends React.Component<PropTypes> {
 
     let renderOperationColumn = () => {
       return currentItem => {
-        let { disabled, clbID } = currentItem;
+        let { disabled, clbId } = currentItem;
 
         return (
           <>
@@ -258,7 +289,7 @@ export class InstanceList extends React.Component<PropTypes> {
             </Button>
             <Button
               type="link"
-              onClick={() => (disabled ? this.handleEnableInstance(clbID) : this.handleDisableInstance(clbID))}
+              onClick={() => (disabled ? this.handleEnableInstance(clbId) : this.handleDisableInstance(clbId))}
             >
               <strong>{disabled ? '启用' : '禁用'}</strong>
             </Button>
@@ -354,7 +385,7 @@ export class InstanceList extends React.Component<PropTypes> {
                 ),
               },
               {
-                key: 'clbID',
+                key: 'clbId',
                 header: 'CLB ID',
               },
               {
@@ -369,6 +400,10 @@ export class InstanceList extends React.Component<PropTypes> {
                 key: 'type',
                 header: '网络类型',
                 render: instance => <p>{instance.type === 'OPEN' ? '公网' : '内网'}</p>,
+              },
+              {
+                key: 'vipIsp',
+                header: '运营商',
               },
               {
                 key: 'scope',
@@ -430,7 +465,7 @@ export class InstanceList extends React.Component<PropTypes> {
             size="l"
             footer={<Button onClick={this.handleCloseDetail}>关闭</Button>}
           >
-            <InstanceDetail clusterName={clusterName} name={selectedItem.clbID} />
+            <InstanceDetail clusterName={clusterName} name={selectedItem.clbId} />
           </Drawer>
         </Card.Body>
       </Card>
