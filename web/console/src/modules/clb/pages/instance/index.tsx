@@ -1,8 +1,6 @@
 import React from 'react';
 import { Layout } from '@tea/component/layout';
-import { Card } from '@tea/component/card';
 import { Text } from '@tea/component/text';
-import { ExternalLink } from '@tea/component/link';
 import { Tabs, TabPanel } from '@tea/component/tabs';
 
 import { InstanceList } from './instanceList';
@@ -10,12 +8,12 @@ import { RuleList } from './ruleList';
 
 const { Body, Content } = Layout;
 
-export function CLBInstance(props) {
-  const tabs = [
-    { id: 'instance', label: '已导入实例' },
-    { id: 'rule', label: '实例使用情况' },
-  ];
+const tabs = [
+  { id: 'instance', label: '已导入实例' },
+  { id: 'rule', label: '实例使用情况' },
+];
 
+export function CLBInstance(props) {
   return (
     <Layout>
       <Body>
@@ -27,7 +25,6 @@ export function CLBInstance(props) {
                 <Text theme="label">CLB 实例管理/实例使用情况</Text>
               </>
             }
-            // operation={<ExternalLink weak>内容帮助</ExternalLink>}
           />
           <Content.Body>
             <Tabs ceiling animated={false} tabs={tabs}>

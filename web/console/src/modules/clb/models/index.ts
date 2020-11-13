@@ -23,3 +23,9 @@ export interface Namespace {
 
   projectId?: string; // 所在的业务名称
 }
+
+export interface PagingQuery {
+  pageSize: number; // 分页大小
+
+  pageIndex: number; // 分页页码，从1开始
+}
