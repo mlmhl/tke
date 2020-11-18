@@ -108,6 +108,18 @@ export type BusinessLevelTwoType = {
   BusinesslevelTwoName: string;
 }
 
+export type CMDBBusinessLevelThreeType = {
+  bs3NameId: number;
+
+  bs3Name: string;
+}
+
+export type BusinessLevelThreeType = {
+  BusinessLevelThreeId: number;
+
+  BusinesslevelThreeName: string;
+}
+
 export interface ProjectEdition extends Identifiable {
   id: string;
 

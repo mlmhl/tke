@@ -9,6 +9,9 @@ export interface Cluster extends Identifiable {
 
   /** 可用区[共享集群] */
   zones?: Array<string>;
+
+  /** 地区 */
+  region?: string;
 }
 
 export interface ClusterFilter {

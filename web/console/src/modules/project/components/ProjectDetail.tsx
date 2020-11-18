@@ -24,6 +24,8 @@ interface ProjectDetailState {
   tabId?: string;
 }
 
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
+
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
 
@@ -60,6 +62,10 @@ export class ProjectDetail extends React.Component<RootProps, ProjectDetailState
         label: t('Namespace列表')
       }
     ];
+    if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+      // 共享集群不显示子业务
+      tabs.splice(2, 1);
+    }
 
     /** 默认选中第一个tab */
     let selected = tabs[0];

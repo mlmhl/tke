@@ -14,10 +14,10 @@ import { t } from '@tencent/tea-app/lib/i18n';
 import * as ActionType from '../constants/ActionType';
 import { initNamespaceEdition, initProjectResourceLimit, resourceTypeToUnit } from '../constants/Config';
 import { Namespace, NamespaceEdition, NamespaceFilter, NamespaceOperator, RootState } from '../models';
-import { ProjectResourceLimit } from '../models/Project';
+import { CMDBInfoType, ProjectResourceLimit } from '../models/Project';
 import { router } from '../router';
 import * as WebAPI from '../WebAPI';
-import { NamespaceCert } from '../models/Namespace';
+import { CMDBInfoWithDefaultModuleType, NamespaceCert } from '../models/Namespace';
 
 type GetState = () => RootState;
 const FFObjectNamespaceCertInfoActions = createFFObjectActions<NamespaceCert, NamespaceFilter>({
@@ -35,6 +35,7 @@ const FFModelNamespaceActions = createFFListActions<Namespace, NamespaceFilter>(
   actionName: 'namespace',
   fetcher: async (query, getState: GetState) => {
     let response = await WebAPI.fetchNamespaceList(query);
+    console.log('response@fetchNamespaceList = ', response);
     return response;
   },
   getRecord: (getState: GetState) => {
@@ -144,6 +145,16 @@ const restActions = {
     };
   },
 
+  // 更新集群/可用区[共享集群]
+  selectClusterZone: (region: string, clusterId: string, zone: string) => {
+    return async (dispatch: Redux.Dispatch, getState: GetState) => {
+      dispatch({
+        type: ActionType.UpdateNamespaceEdition,
+        payload: Object.assign({}, getState().namespaceEdition, { clusterName: clusterId, zone, region })
+      });
+    };
+  },
+
   initNamespaceEdition: (namespace: Namespace) => {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
       let hardInfo = namespace.spec.hard
@@ -179,6 +190,16 @@ const restActions = {
       dispatch({
         type: ActionType.UpdateNamespaceEdition,
         payload: Object.assign({}, getState().namespaceEdition, { namespaceName: value })
+      });
+    };
+  },
+
+  // 编辑 cmdb 默认模块
+  inputCMDBInfo: (value: CMDBInfoWithDefaultModuleType) => {
+    return async (dispatch: Redux.Dispatch, getState: GetState) => {
+      dispatch({
+        type: ActionType.UpdateNamespaceEdition,
+        payload: Object.assign({}, getState().namespaceEdition, { cmdbInfo: value })
       });
     };
   },

@@ -1,10 +1,13 @@
+/**
+ * 新建 Namespace
+ */
 import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { FormPanel } from '@tencent/ff-component';
 import { bindActionCreators, deepClone, isSuccessWorkflow, OperationState } from '@tencent/ff-redux';
 import { t } from '@tencent/tea-app/lib/i18n';
-import { Alert, Button, Modal } from '@tencent/tea-component';
+import { Alert, Button, Modal, Select, Form } from '@tencent/tea-component';
 
 import { getWorkflowError } from '../../common';
 import { allActions } from '../actions';
@@ -14,22 +17,102 @@ import { ProjectResourceLimit } from '../models/Project';
 import { router } from '../router';
 import { CreateProjectResourceLimitPanel } from '../../common/components';
 import { RootProps } from './ProjectApp';
+import { fetchCMDBBusinessLevelThreeList } from '@src/modules/project/WebAPI';
+import { CMDBInfoWithDefaultModuleType } from '@src/modules/project/models/Namespace';
+const { useState, useEffect } = React;
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
+
+function CMDBModule(props) {
+  const { value: prevInfo, onChange } = props;
+  const { departmentName, businessLevelOneName, businessLevelTwoName, businessLevelTwoId } = prevInfo;
+  const [currentBusinessLevelThree, setCurrentBusinessLevelThree] = useState('');
+  const [businessLevelThreeList, setBusinessLevelThreeList] = useState([]);
+
+  useEffect(() => {
+    const getModuleList = async () => {
+      const data = await fetchCMDBBusinessLevelThreeList(businessLevelTwoId);
+      setBusinessLevelThreeList(data);
+      return data;
+    };
+    getModuleList();
+  }, [businessLevelTwoId]);
+
+  return (
+    <Form>
+      <Form.Item label="部门">
+        <Form.Text>{departmentName}</Form.Text>
+      </Form.Item>
+      <Form.Item label="一级业务">
+        <Form.Text>{businessLevelOneName}</Form.Text>
+      </Form.Item>
+      <Form.Item label="二级业务">
+        <Form.Text>{businessLevelTwoName}</Form.Text>
+      </Form.Item>
+      <Form.Item label="默认模块">
+        <Select
+          value={currentBusinessLevelThree}
+          onChange={value => {
+            setCurrentBusinessLevelThree(value);
+            const businessLevelThreeName = businessLevelThreeList.find(item => item.id === value) && businessLevelThreeList.find(item => item.id === value).name || '';
+            if (onChange) {
+              const cmdbModuleInfo = {
+                ...prevInfo,
+                businessLevelThreeName,
+                businessLevelThreeId: value
+              };
+              onChange(cmdbModuleInfo);
+            }
+          }}
+          options={businessLevelThreeList.map(item => ({ text: item.name, value: item.id }))}
+          searchable
+          type="simulate"
+          appearence="button"
+          size="m"
+          boxSizeSync
+        />
+      </Form.Item>
+    </Form>
+  );
+}
 
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), {
-    dispatch
+    dispatch,
   });
+
+const CMDBMapping = {
+  'teg.tkex.oa.com/department': 'departmentName',
+  'teg.tkex.oa.com/department-id': 'departmentId',
+  'teg.tkex.oa.com/business1': 'businessLevelOneName',
+  'teg.tkex.oa.com/business1-id': 'businessLevelOneId',
+  'teg.tkex.oa.com/business2': 'businessLevelTwoName',
+  'teg.tkex.oa.com/business2-id': 'businessLevelTwoId',
+  'teg.tkex.oa.com/business3': 'businessLevelThreeName',
+  'teg.tkex.oa.com/business3-id': 'businessLevelThreeId',
+};
 
 @connect(state => state, mapDispatchToProps)
 export class CreateNamespacePanel extends React.Component<RootProps, {}> {
   state = {
-    isShowDialog: false
+    isShowDialog: false,
   };
   componentDidMount() {
-    let { actions, project, manager } = this.props;
+    let { actions, project, projectDetail, namespaceEdition, manager } = this.props;
     actions.cluster.applyFilter({});
     if (project.list.data.recordCount === 0) {
       actions.project.applyFilter({});
+    }
+    let cmdbInfo = {};
+    if (projectDetail && projectDetail.metadata) {
+      const { labels, annotations } = projectDetail.metadata;
+      cmdbInfo = Object.assign({}, labels ? labels : {}, annotations ? annotations : {});
+      const cmdbValue: CMDBInfoWithDefaultModuleType = Object.keys(CMDBMapping).reduce((accu, item, arr) => {
+        if (cmdbInfo[item]) {
+          accu[CMDBMapping[item]] = new RegExp(/-id$/).test(item) ? Number(cmdbInfo[item]) : cmdbInfo[item];
+        }
+        return accu;
+      }, {}) as CMDBInfoWithDefaultModuleType;
+      actions.namespace.inputCMDBInfo(cmdbValue);
     }
   }
 
@@ -41,7 +124,7 @@ export class CreateNamespacePanel extends React.Component<RootProps, {}> {
     actions.namespace.validateNamespaceEdition();
     if (namespaceActions._validateNamespaceEdition(namespaceEdition)) {
       actions.namespace.createNamespace.start([namespaceEdition], {
-        projectId: project.selections[0] ? project.selections[0].metadata.name : route.queries['projectId']
+        projectId: project.selections[0] ? project.selections[0].metadata.name : route.queries['projectId'],
       });
       actions.namespace.createNamespace.perform();
     }
@@ -70,6 +153,74 @@ export class CreateNamespacePanel extends React.Component<RootProps, {}> {
 
     let failed = createNamespace.operationState === OperationState.Done && !isSuccessWorkflow(createNamespace);
 
+    // 只有业务中设置了quota的cluster和zone才可以供选择
+    const renderCluster = () => {
+      if (projectDetail && projectDetail.spec.zones) {
+        const projectClusterZones = projectDetail.spec.zones;
+        const allClusterZones = cluster.list.data.records;
+        // 下面要显示的集群/可用区必须是业务里面已经设置了的，因此需要从projectDetail中进行映射，但是因为projectDetail.spec.zones中缺少用于作为text显示的clusterDisplayName，因此要从clusters接口里面拿集群名称用于显示用
+        const clusterZones = projectClusterZones.map(item => {
+          const { clusterName: clusterId, zone } = item;
+          const data = { clusterId, clusterDisplayName: clusterId, zone };
+          return data;
+        });
+        const clusterZoneList = clusterZones.map(({ zone, clusterId }) => ({
+          // value: zone,
+          value: `${clusterId}/${zone}`,
+          groupKey: clusterId,
+          text: zone,
+        }));
+        const groups = clusterZones.reduce((accu, item, index, arr) => {
+          let { clusterId, clusterDisplayName, zone } = item;
+          if (!accu[clusterId]) {
+            accu[clusterId] = `${clusterId}(${clusterDisplayName})`;
+          }
+          return accu;
+        }, {});
+
+        return (
+          <Form.Item label="集群/可用区">
+            <Select
+              value={`${namespaceEdition.clusterName}/${namespaceEdition.zone}`}
+              onChange={value => {
+                const { clusterId, zone } = clusterZones.find(({ clusterId, zone }) => `${clusterId}/${zone}` === value);
+                const region = allClusterZones.find(item => item.clusterId === clusterId).region;
+                actions.namespace.selectClusterZone(region, clusterId, zone);
+                actions.namespace.validateClusterName();
+              }}
+              searchable
+              type="simulate"
+              appearence="button"
+              size="m"
+              boxSizeSync
+              placeholder="选择可用区"
+              options={clusterZoneList}
+              groups={groups}
+            />
+          </Form.Item>
+        );
+      }
+
+      return (
+        <FormPanel.Item
+          label={t('集群')}
+          validator={namespaceEdition.v_clusterName}
+          errorTipsStyle="Icon"
+          select={{
+            model: finalClusterList,
+            action: actions.cluster,
+            value: namespaceEdition.clusterName,
+            valueField: x => x.clusterId,
+            displayField: x => `${x.clusterId}(${x.clusterName})`,
+            onChange: value => {
+              actions.namespace.selectCluster(value);
+              actions.namespace.validateClusterName();
+            },
+          }}
+        />
+      );
+    };
+
     return (
       <FormPanel>
         <FormPanel.Item
@@ -85,7 +236,7 @@ export class CreateNamespacePanel extends React.Component<RootProps, {}> {
             onChange: actions.namespace.inputNamespaceName,
             onBlur: () => {
               actions.namespace.validateNamespaceName();
-            }
+            },
           }}
         />
         <FormPanel.Item text label={t('业务')}>
@@ -99,22 +250,17 @@ export class CreateNamespacePanel extends React.Component<RootProps, {}> {
             <noscript />
           )}
         </FormPanel.Item>
-        <FormPanel.Item
-          label={t('集群')}
-          validator={namespaceEdition.v_clusterName}
-          errorTipsStyle="Icon"
-          select={{
-            model: finalClusterList,
-            action: actions.cluster,
-            value: namespaceEdition.clusterName,
-            valueField: x => x.clusterId,
-            displayField: x => `${x.clusterId}(${x.clusterName})`,
-            onChange: value => {
-              actions.namespace.selectCluster(value);
-              actions.namespace.validateClusterName();
-            }
-          }}
-        />
+        {WEBPACK_CONFIG_SHARED_CLUSTER && (
+          <Form.Item label={t('CMDB业务')}>
+            <CMDBModule
+              value={namespaceEdition.cmdbInfo}
+              onChange={value => {
+                actions.namespace.inputCMDBInfo(value);
+              }}
+            />
+          </Form.Item>
+        )}
+        {renderCluster()}
         <FormPanel.Item label={'资源限制'}>
           {this.formatResourceLimit(namespaceEdition.resourceLimits)}
           <Button
@@ -122,7 +268,7 @@ export class CreateNamespacePanel extends React.Component<RootProps, {}> {
             icon={'pencil'}
             onClick={() => {
               this.setState({
-                isShowDialog: true
+                isShowDialog: true,
               });
             }}
           ></Button>
@@ -165,13 +311,26 @@ export class CreateNamespacePanel extends React.Component<RootProps, {}> {
     const { actions, project, namespaceEdition, projectDetail } = this.props;
     let { isShowDialog } = this.state;
 
-    let clusterName = namespaceEdition.clusterName;
+    const { clusterName, zone } = namespaceEdition;
 
-    let resourceLimits = projectDetail && clusterName ? projectDetail.spec.clusters[clusterName].hard : {};
+    // let resourceLimits = projectDetail && clusterName ? projectDetail.spec.clusters || projectDetail.spec.zones : {};
+    const getResourceLimits = () => {
+      if (projectDetail && clusterName) {
+        if (projectDetail.spec.clusters) {
+          return projectDetail.spec.clusters[clusterName].hard;
+        } else if (projectDetail.spec.zones) {
+          return projectDetail.spec.zones.find(
+            item => item.clusterName === clusterName && item.zone === zone
+          ).hard;
+        }
+      }
+      return {};
+    };
+
     return (
       <Modal visible={isShowDialog} caption={t('编辑资源限制')} onClose={() => this.setState({ isShowDialog: false })}>
         <CreateProjectResourceLimitPanel
-          parentResourceLimits={resourceLimits}
+          parentResourceLimits={getResourceLimits()}
           onCancel={() => {
             this.setState({ isShowDialog: false });
           }}
