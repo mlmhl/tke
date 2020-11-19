@@ -14,7 +14,7 @@ import { t } from '@tencent/tea-app/lib/i18n';
 import * as ActionType from '../constants/ActionType';
 import { initNamespaceEdition, initProjectResourceLimit, resourceTypeToUnit } from '../constants/Config';
 import { Namespace, NamespaceEdition, NamespaceFilter, NamespaceOperator, RootState } from '../models';
-import { CMDBInfoType, ProjectResourceLimit } from '../models/Project';
+import { ProjectResourceLimit } from '../models/Project';
 import { router } from '../router';
 import * as WebAPI from '../WebAPI';
 import { CMDBInfoWithDefaultModuleType, NamespaceCert } from '../models/Namespace';
@@ -35,7 +35,6 @@ const FFModelNamespaceActions = createFFListActions<Namespace, NamespaceFilter>(
   actionName: 'namespace',
   fetcher: async (query, getState: GetState) => {
     let response = await WebAPI.fetchNamespaceList(query);
-    console.log('response@fetchNamespaceList = ', response);
     return response;
   },
   getRecord: (getState: GetState) => {

@@ -28,9 +28,6 @@ import {
   CMDBBusinessLevelTwoType,
   CMDBBusinessLevelThreeType,
   DepartmentType,
-  BusinessLevelOneType,
-  BusinessLevelTwoType,
-  BusinessLevelThreeType,
 } from './models/Project';
 declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 
@@ -505,7 +502,7 @@ export async function fetchCMDBDepartmentList(): Promise<DepartmentType[]> {
  * 查询条件是部门名称
  * @param departmentName
  */
-export async function fetchCMDBBusinessLevelOneList(departmentName: string): Promise<BusinessLevelOneType[]> {
+export async function fetchCMDBBusinessLevelOneList(departmentName: string) {
   let url = cmdbURL;
   let method = 'POST';
   let params: RequestParams = {
@@ -538,7 +535,7 @@ export async function fetchCMDBBusinessLevelOneList(departmentName: string): Pro
  * 查询条件是一级业务的id
  * @param businessLevelOneId
  */
-export async function fetchCMDBBusinessLevelTwoList(businessLevelOneId: number): Promise<BusinessLevelTwoType[]> {
+export async function fetchCMDBBusinessLevelTwoList(businessLevelOneId: number) {
   let url = cmdbURL;
   let method = 'POST';
   let params: RequestParams = {
@@ -571,7 +568,7 @@ export async function fetchCMDBBusinessLevelTwoList(businessLevelOneId: number):
  * 查询条件是二级业务的编号
  * @param businessLevelTwoId
  */
-export async function fetchCMDBBusinessLevelThreeList(businessLevelTwoId: number): Promise<BusinessLevelThreeType[]> {
+export async function fetchCMDBBusinessLevelThreeList(businessLevelTwoId: number) {
   let url = cmdbURL;
   let method = 'POST';
   let params: RequestParams = {
