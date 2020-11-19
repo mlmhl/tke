@@ -93,19 +93,15 @@ export type CMDBBusinessLevelOneType = {
   bs1Name: string;
 }
 
-export type BusinessLevelOneType = {
-  BusinessLevelOneId: number;
-  BusinesslevelOneName: string;
-}
-
 export type CMDBBusinessLevelTwoType = {
   bs2NameId: number;
   bs2Name: string;
 }
 
-export type BusinessLevelTwoType = {
-  BusinessLevelTwoId: number;
-  BusinesslevelTwoName: string;
+export type CMDBBusinessLevelThreeType = {
+  bs3NameId: number;
+
+  bs3Name: string;
 }
 
 export interface ProjectEdition extends Identifiable {

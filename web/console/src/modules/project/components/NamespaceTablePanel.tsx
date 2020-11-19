@@ -1,3 +1,6 @@
+/**
+ * Namespace 列表
+ */
 import * as React from 'react';
 import { connect } from 'react-redux';
 
@@ -20,6 +23,8 @@ import { Namespace, NamespaceOperator, Project } from '../models';
 import { router } from '../router';
 import { RootProps } from './ProjectApp';
 import { reduceNs } from '@helper/urlUtil';
+import { isEmpty } from 'lodash';
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
@@ -28,7 +33,7 @@ const mapDispatchToProps = dispatch =>
 export class NamespaceTablePanel extends React.Component<RootProps, {}> {
   state = {
     isShowDialog: false,
-    isShowKuctlDialog: false
+    isShowKuctlDialog: false,
   };
   render() {
     return (
@@ -70,7 +75,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
           url = `/tkestack-project/cluster/sub/list/resource/deployment?rid=1&clusterId=${x.spec.clusterName}&np=${x.spec.namespace}`;
           /// #endif
           return <Text overflow>{!disabledOp ? <a href={url}>{showName}</a> : showName}</Text>;
-        }
+        },
       },
       {
         key: 'clusterName',
@@ -79,7 +84,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
           <div>
             <span className="text-overflow">{x.spec.clusterName}</span>
           </div>
-        )
+        ),
       },
       {
         key: 'status',
@@ -96,7 +101,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
               </Bubble>
             )}
           </React.Fragment>
-        )
+        ),
       },
       {
         key: 'resourceLimit',
@@ -119,7 +124,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
               )}
             </React.Fragment>
           );
-        }
+        },
       },
       {
         key: 'createdTime',
@@ -128,9 +133,71 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
           <Text parent="div" overflow>
             <span className="text">{dateFormatter(new Date(x.metadata.creationTimestamp), 'YYYY-MM-DD HH:mm:ss')}</span>
           </Text>
-        )
-      }
+        ),
+      },
     ];
+    if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+      const getZoneFromLabels = (labels) => {
+        let zone = '';
+        if (isEmpty(labels)) {
+          return zone;
+        }
+        const zoneLabel = Object.keys(labels).find(item => new RegExp(/^zone.teg.tkex.oa.com\//).test(item));
+        if (zoneLabel) {
+          zone = zoneLabel.replace('zone.teg.tkex.oa.com/', '');
+        }
+        return zone;
+      };
+      const zoneCol = {
+        key: 'zone',
+        header: '可用区',
+        render: x => (
+          <div>
+            <span className="text-overflow">{getZoneFromLabels(x.metadata.labels)}</span>
+          </div>
+        ),
+      };
+      const getZoneLimit = (item) => {
+        let limit = {};
+        const zone = getZoneFromLabels(item.metadata.labels);
+        const clusterId = item.spec.clusterName;
+        const { projectDetail } = this.props;
+        const clusterZones = projectDetail && projectDetail.spec && projectDetail.spec.zones;
+        if (clusterZones) {
+          const clusterZone = clusterZones.find(item => item.clusterName === clusterId && item.zone === zone);
+          if (clusterZone) {
+            limit = clusterZone.hard;
+          }
+        }
+        return limit;
+      };
+      const zoneLimitsCol = {
+        key: 'zoneLimit',
+        header: t('资源配额[可用区]'),
+        render: x => {
+          let disabledOp = x.status.phase === 'Terminating';
+          return (
+            <React.Fragment>
+              {!isEmpty(getZoneLimit(x)) ? this.formatResourceLimit(getZoneLimit(x)) : '无限制'}
+            </React.Fragment>
+          );
+        },
+      };
+      const getCreatorFromLabels = (labels) => {
+        return isEmpty(labels) ? '' : labels['teg.tkex.oa.com/creator'] || '';
+      };
+      const creatorCol = {
+        key: 'creator',
+        header: '创建者',
+        render: x => (
+          <div>
+            <span className="text-overflow">{getCreatorFromLabels(x.metadata.labels)}</span>
+          </div>
+        ),
+      };
+
+      columns.splice(2, 0, zoneCol, zoneLimitsCol, creatorCol);
+    }
 
     return (
       <TablePanel
@@ -153,7 +220,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
       namespaceEdition,
       platformType,
       projectDetail,
-      userManagedProjects
+      userManagedProjects,
     } = this.props;
     const urlParams = router.resolve(route);
     let enableOp =
@@ -203,7 +270,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
             actions.namespace.select(namespace);
             actions.namespace.namespaceKubectlConfig.applyFilter({
               projectId: projectDetail ? projectDetail.metadata.name : route.queries['projectId'],
-              np: namespace.metadata.name
+              np: namespace.metadata.name,
             });
           }}
         >
@@ -244,10 +311,20 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
     const { actions, project, editNamespaceResourceLimit, namespaceEdition, projectDetail } = this.props;
     let isShowDialog = this.state.isShowDialog;
 
-    let parentResourceLimits =
-      projectDetail && namespaceEdition.clusterName
-        ? projectDetail.spec.clusters[namespaceEdition.clusterName].hard
-        : {};
+    const getResourceLimits = () => {
+      if (projectDetail && namespaceEdition.clusterName) {
+        if (projectDetail.spec.clusters) {
+          return projectDetail.spec.clusters[namespaceEdition.clusterName].hard;
+        } else if (projectDetail.spec.zones) {
+          return projectDetail.spec.zones.find(
+            item => item.clusterName === namespaceEdition.clusterName && item.zone === namespaceEdition.zone
+          ).hard;
+        }
+      }
+      return {};
+    };
+
+    let parentResourceLimits = getResourceLimits();
 
     let failed =
       editNamespaceResourceLimit.operationState === OperationState.Done &&
@@ -277,7 +354,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
           onSubmit={resourceLimits => {
             namespaceEdition.resourceLimits = resourceLimits;
             actions.namespace.editNamespaceResourceLimit.start([namespaceEdition], {
-              projectId: projectDetail.metadata.name
+              projectId: projectDetail.metadata.name,
             });
             actions.namespace.editNamespaceResourceLimit.perform();
             cancel();
@@ -304,7 +381,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
           <p className="til">
             <strong className="tip-top">
               {t('确定要删除Namespace {{name}}么？', {
-                name: deleteNamespace.targets ? deleteNamespace.targets[0].metadata.name : ''
+                name: deleteNamespace.targets ? deleteNamespace.targets[0].metadata.name : '',
               })}
             </strong>
           </p>
@@ -317,7 +394,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
     let {
       namespaceKubectlConfig,
       namespace: { selection },
-      userInfo
+      userInfo,
     } = this.props;
     const cancel = () => {
       this.setState({ isShowKuctlDialog: false });
@@ -352,7 +429,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
                       style={{
                         whiteSpace: 'pre-wrap',
                         overflow: 'auto',
-                        height: '300px'
+                        height: '300px',
                       }}
                     >
                       {kubectlConfig}
@@ -368,7 +445,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
               borderTop: '1px solid #D1D2D3',
               paddingTop: '10px',
               marginTop: '10px',
-              color: '#444'
+              color: '#444',
             }}
           >
             <h3 style={{ marginBottom: '1em' }}>通过Kubectl连接Kubernetes集群操作说明:</h3>
@@ -447,7 +524,7 @@ function MigarteamespaceDialog(props: RootProps) {
                 setProjectSelection(value);
               },
               displayField: (r: Project) => `${r.metadata.name}(${r.spec.displayName})`,
-              valueField: (r: Project) => r.metadata.name
+              valueField: (r: Project) => r.metadata.name,
             }}
           ></FormPanel.Item>
         </FormPanel>
@@ -460,21 +537,21 @@ function MigarteamespaceDialog(props: RootProps) {
             if (projectSelection === '') {
               setVProjectSelection({
                 status: 2,
-                message: t('目标业务不能为空')
+                message: t('目标业务不能为空'),
               });
             } else if (projectDetail && projectSelection === projectDetail.metadata.name) {
               setVProjectSelection({
                 status: 2,
-                message: t('目标业务不能和当前业务一致')
+                message: t('目标业务不能和当前业务一致'),
               });
             } else {
               setVProjectSelection({
                 status: 1,
-                message: t('')
+                message: t(''),
               });
               actions.namespace.migrateNamesapce.start(namespace.selections, {
                 projectId: projectDetail ? projectDetail.metadata.name : route.queries['rid'],
-                desProjectId: projectSelection
+                desProjectId: projectSelection,
               });
               actions.namespace.migrateNamesapce.perform();
             }

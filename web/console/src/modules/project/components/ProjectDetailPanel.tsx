@@ -5,6 +5,7 @@ import * as React from 'react';
 
 import { FormPanel } from '@tencent/ff-component';
 import { t } from '@tencent/tea-app/lib/i18n';
+import { Form } from '@tea/component';
 
 import { dateFormatter } from '../../../../helpers';
 import { WorkflowDialog } from '../../common/components';
@@ -13,6 +14,13 @@ import { EditProjectManagerPanel } from './EditProjectManagerPanel';
 import { EditProjectNamePanel } from './EditProjectNamePanel';
 import { RootProps } from './ProjectApp';
 import { ProjectDetailResourcePanel } from './ProjectDetailResourcePanel';
+
+const CMDBLabels = {
+  'teg.tkex.oa.com/department': '部门',
+  'teg.tkex.oa.com/business1': '一级业务',
+  'teg.tkex.oa.com/business2': '二级业务',
+  'teg.tkex.oa.com/creator': '创建人',
+};
 
 export class ProjectDetailPanel extends React.Component<RootProps, {}> {
   componentDidMount() {
@@ -24,6 +32,11 @@ export class ProjectDetailPanel extends React.Component<RootProps, {}> {
 
   render() {
     let { actions, projectDetail } = this.props;
+    let cmdbInfo = {};
+    if (projectDetail && projectDetail.metadata) {
+      const { labels, annotations } = projectDetail.metadata;
+      cmdbInfo = Object.assign({}, labels ? labels : {}, annotations ? annotations : {});
+    }
 
     return projectDetail ? (
       <FormPanel title={t('基本信息')}>
@@ -34,11 +47,19 @@ export class ProjectDetailPanel extends React.Component<RootProps, {}> {
             onEdit: () => {
               actions.project.initEdition(projectDetail);
               actions.project.editProjectName.start([]);
-            }
+            },
           }}
         >
           {projectDetail.spec.displayName}
         </FormPanel.Item>
+        {Object.keys(CMDBLabels).map(
+          item =>
+            cmdbInfo[item] && (
+              <Form.Item label={CMDBLabels[item]}>
+                <Form.Text>{cmdbInfo[item]}</Form.Text>
+              </Form.Item>
+            )
+        )}
         <ProjectDetailResourcePanel {...this.props} />
         <FormPanel.Item text label={t('创建时间')}>
           {dateFormatter(new Date(projectDetail.metadata.creationTimestamp), 'YYYY-MM-DD HH:mm:ss')}
