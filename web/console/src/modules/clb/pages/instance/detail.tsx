@@ -7,6 +7,8 @@ import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
 
 import { getInstanceInfo, getNamespacesByCluster, modifyInstanceNamespace } from '../../services/api';
 
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
+
 const { isEqual, isEmpty, pick } = require('lodash');
 const { sortable, filterable, scrollable, radioable, injectable } = Table.addons;
 
@@ -36,6 +38,22 @@ type InstanceInfo = {
   scope: string[]; // 共享的命名空间
 
   disabled: boolean;
+
+  projectName?: string;
+
+  department?: string;
+
+  departmentID?: number;
+
+  business1?: string;
+
+  business1ID?: number;
+
+  business2?: string;
+
+  business2ID?: number;
+
+  user?: string;
 };
 
 interface PropTypes {
@@ -168,6 +186,16 @@ class InstanceDetail extends React.Component<PropTypes, StateTypes> {
           <Form.Item label="运营商">
             <Form.Text>{vipIsp}</Form.Text>
           </Form.Item>
+          {WEBPACK_CONFIG_SHARED_CLUSTER && (
+            <>
+              <Form.Item label="用户所在业务">
+                <Form.Text>{`${instanceInfo.projectName}(${instanceInfo.department}-${instanceInfo.business1}-${instanceInfo.business2})`}</Form.Text>
+              </Form.Item>
+              <Form.Item label="用户申请人">
+                <Form.Text>{instanceInfo.user}</Form.Text>
+              </Form.Item>
+            </>
+          )}
         </Form>
         <Form layout="vertical">
           <Form.Item label="允许使用本实例的命名空间">

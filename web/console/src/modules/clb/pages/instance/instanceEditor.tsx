@@ -27,6 +27,10 @@ import {
   getImportedInstancesByCluster,
   getNamespacesByCluster,
 } from '../../services/api';
+import { fetchProjectList } from '@src/modules/project/WebAPI';
+const { useState, useEffect } = React;
+
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 
 const isEqual = require('lodash.isequal');
 const { radioable, filterable } = Table.addons;
@@ -134,6 +138,95 @@ const Cluster = ({ name, label, options, onChange }) => (
     )}
   </Field>
 );
+
+const CMDBMapping = {
+  'teg.tkex.oa.com/department': 'department',
+  'teg.tkex.oa.com/department-id': 'departmentID',
+  'teg.tkex.oa.com/business1': 'business1',
+  'teg.tkex.oa.com/business1-id': 'business1ID',
+  'teg.tkex.oa.com/business2': 'business2',
+  'teg.tkex.oa.com/business2-id': 'business2ID',
+};
+
+// 共享集群的业务信息
+export type ProjectInfoType = {
+  projectName: string;
+
+  projectDisplayName?: string;
+
+  department: string;
+
+  departmentID: number;
+
+  business1: string;
+
+  business1ID: number;
+
+  business2: string;
+
+  business2ID: number;
+};
+
+function ProjectSelector(props) {
+  const { value: prevProject, onChange } = props;
+  const [currentProject, setCurrentProject] = useState(prevProject.projectName);
+  const [projectList, setProjectList] = useState([]);
+
+  useEffect(() => {
+    const getProjectList = async () => {
+      const data = await fetchProjectList({
+        filter: {},
+        searchFilter: {},
+      });
+      const { recordCount, records } = data;
+      const formatProject = projectDetail => {
+        let cmdbInfo = {};
+        const { labels, annotations } = projectDetail.metadata;
+        cmdbInfo = Object.assign({}, labels ? labels : {}, annotations ? annotations : {});
+        const cmdbValue = Object.keys(CMDBMapping).reduce((accu, item, arr) => {
+          if (cmdbInfo[item]) {
+            accu[CMDBMapping[item]] = new RegExp(/-id$/).test(item) ? Number(cmdbInfo[item]) : cmdbInfo[item];
+          }
+          return accu;
+        }, {});
+        return {
+          projectName: projectDetail.metadata.name,
+          projectDisplayName: projectDetail.spec.displayName,
+          ...cmdbValue,
+        };
+      };
+      const projectList = records.map(item => formatProject(item));
+
+      setProjectList(projectList);
+      return data;
+    };
+    getProjectList();
+  }, []);
+
+  return (
+    <Form.Item required label="用户所在业务">
+      <Select
+        value={currentProject}
+        onChange={value => {
+          setCurrentProject(value);
+          const project = projectList.find(item => item.projectName === value);
+          if (onChange) {
+            onChange(project);
+          }
+        }}
+        options={projectList.map((item: ProjectInfoType) => ({
+          text: `${item.projectDisplayName}(${item.department}-${item.business1}-${item.business2})`,
+          value: item.projectName,
+        }))}
+        searchable
+        type="simulate"
+        appearence="button"
+        size="l"
+        boxSizeSync
+      />
+    </Form.Item>
+  );
+}
 
 class InstanceEditor extends React.Component<PropTypes, StateTypes> {
   defaultPageSize = 10; // 前端默认的分页大小
@@ -322,6 +415,16 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
           clusterName,
           clbId: '',
           scope: [],
+          project: {
+            // projectName: 'prj-wnlmnh7r',
+            // department: 'AI平台部',
+            // departmentID: 56,
+            // business1: '[SNG][qq相册搜索]',
+            // business1ID: 460857,
+            // business2: '[搜索业务中心][qzone旅游相册]',
+            // business2ID: 419663,
+          },
+          user: '',
         }}
         mutators={{ setFieldData }}
         subscription={{}}
@@ -434,7 +537,6 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                             pageIndex={pageIndex}
                             pageSize={pageSize}
                             onPagingChange={query => {
-                              console.log('query = ', query);
                               // 获取新的可用clb列表数据
                               this.handleCLBTableChange(query);
                             }}
@@ -449,6 +551,32 @@ class InstanceEditor extends React.Component<PropTypes, StateTypes> {
                     </Form.Item>
                   )}
                 </Field>
+                {WEBPACK_CONFIG_SHARED_CLUSTER && (
+                  <>
+                    <Field
+                      name="project"
+                      required
+                      validate={value => {
+                        return !value ? '请选择业务' : undefined;
+                      }}
+                    >
+                      {({ input, meta, ...rest }) => <ProjectSelector {...input} />}
+                    </Field>
+                    <Field
+                      name="user"
+                      required
+                      validate={value => {
+                        return !value ? '请输入用户' : undefined;
+                      }}
+                    >
+                      {({ input, meta, ...rest }) => (
+                        <Form.Item required label="用户申请人">
+                          <Input {...input} />
+                        </Form.Item>
+                      )}
+                    </Field>
+                  </>
+                )}
                 <Field
                   name="scope"
                   required

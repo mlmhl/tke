@@ -16,7 +16,7 @@ import {
   Button,
 } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
-import { InstanceEditor } from './instanceEditor';
+import { InstanceEditor, ProjectInfoType } from './instanceEditor';
 import { InstanceDetail } from './detail';
 import {
   getAllClusters,
@@ -28,6 +28,8 @@ import {
 } from '../../services/api';
 import { Cluster as ClusterType } from '../../models';
 import { Instance, ImportedInstance } from '../../models/instance';
+
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 
 const { at, findKey, get, has, pick, mapKeys, max, stubString } = require('lodash');
 const { Body, Header } = ContentView;
@@ -55,6 +57,10 @@ type ItemType = {
   clbId: string;
 
   scope: Array<string>;
+
+  user?: string; // 用户申请人[共享集群]
+
+  project?: ProjectInfoType; // 用户所在的业务相关信息[共享集群]
 };
 
 type SelectedItemType = {
@@ -96,6 +102,17 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
       clusterName: '',
       clbId: '',
       scope: [],
+      user: '',
+      project: {
+        projectName: '',
+        projectDisplayName: '',
+        department: '',
+        departmentID: 0,
+        business1: '',
+        business1ID: 0,
+        business2: '',
+        business2ID: 0,
+      },
     },
     valid: false,
     detailVisible: false,
@@ -178,6 +195,20 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
         lbID: clbId,
         scope,
       };
+      if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+        Object.assign(payload, {
+          user: currentItem.user,
+          ...pick(currentItem.project, [
+            'projectName',
+            'department',
+            'departmentID',
+            'business1',
+            'business1ID',
+            'business2',
+            'business2ID',
+          ]),
+        });
+      }
       await importInstance(clusterName, payload);
       this.setState({ dialogVisible: false });
       this.getList(clusterName);
