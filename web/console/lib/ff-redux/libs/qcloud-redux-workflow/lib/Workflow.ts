@@ -4,9 +4,10 @@
  * A workflow abstructor utility for redux operation, with async supported
  *
  */
-import { Dispatch } from 'redux';
+// import { Dispatch } from 'redux';
 import { Identifiable, ReduxAction } from '../../../';
 
+interface Dispatch extends Redux.Dispatch {}
 export type OperationResult<TTarget> = {
   target: TTarget;
   success: boolean;

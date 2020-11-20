@@ -1,4 +1,4 @@
-import { Dispatch } from 'redux';
+// import { Dispatch } from 'redux';
 
 import { ReduxAction } from '../../../';
 import { FetcherState, FetcherTrigger, FetchState, FetcherAction, FetcherPayload } from '../../../src/base';
@@ -206,7 +206,7 @@ export function generateFetcherActionCreator<TData>({
   let lastLoadingTimeout = 0;
 
   function start(options?: FetchOptions) {
-    return (dispatch: Dispatch, getState: () => any) => {
+    return (dispatch: Redux.Dispatch, getState: () => any) => {
       const fetchAction: ActionType = {
         type: actionType + (FetcherTrigger.Start as any),
         payload: {

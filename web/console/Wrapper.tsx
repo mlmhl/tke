@@ -237,7 +237,13 @@ const commonRouterConfig: RouterConfig[] = [
     url: '/tkestack/polaris',
     title: '北极星',
     watchModule: ConsoleModuleEnum.PLATFORM,
-  }
+  },
+  // {
+  //   url: '/tkestack/demo',
+  //   title: 'demo',
+  //   // watchModule: [ConsoleModuleEnum.Polaris],
+  //   watchModule: ConsoleModuleEnum.PLATFORM,
+  // }
 ];
 
 /** 业务侧 侧边栏导航栏配置 */

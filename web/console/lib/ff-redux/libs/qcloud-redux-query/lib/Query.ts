@@ -1,4 +1,4 @@
-import { Dispatch } from 'redux';
+// import { Dispatch } from 'redux';
 import { extend, merge } from '../../qcloud-lib';
 import { QueryState, PagingQuery, ReduxAction, ActionTypesEnum } from '../../../src/base';
 import { FetcherActionCreator } from '../../qcloud-redux-fetcher';
@@ -231,7 +231,7 @@ export function generateQueryActionCreator<TFilter>({
 
   if (bindFetcher || bindFetchers) {
     const wrap = (creator: Function, noFetch = false) => (...args: any[]) => (
-      dispatch: Dispatch,
+      dispatch: Redux.Dispatch,
       getState: () => any
     ) => {
       const queryAction: ReduxAction<any> = creator.apply(null, args);

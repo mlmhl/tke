@@ -1,5 +1,5 @@
 /* eslint-disable */
-declare module Redux {
+declare namespace Redux {
   interface ActionCreator extends Function {
     (...args: any[]): any;
   }
@@ -41,6 +41,6 @@ declare module Redux {
   function compose<T extends Function>(...functions: Function[]): T;
 }
 
-declare module 'redux' {
-  export = Redux;
-}
+// declare module 'redux' {
+//   export = Redux;
+// }

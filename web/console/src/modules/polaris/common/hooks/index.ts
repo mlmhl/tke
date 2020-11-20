@@ -1,5 +1,2 @@
-import { useNamespaces } from './useNamespaces';
-import { useClusters } from './useClusters';
-import { useWorkloads } from './useWorkloads';
-
-export { useNamespaces, useClusters, useWorkloads };
+export { useNamespaces } from './useNamespaces';
+export { useWorkloads } from './useWorkloads';

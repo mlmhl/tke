@@ -1,68 +1,130 @@
 /**
- * 北极星模块入口
+ * 北极星模块
  */
-import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import { ScopeProvider, DispatchContext, StateContext } from './context';
-import { isEmpty, useRefresh } from '@src/modules/common/utils';
-import List from './list';
-import { useNamespaces, useClusters } from '../../common/hooks';
-import { fetchPolarisData, polarisInstallCheckByCluster } from '../../services/api';
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Layout, Table, Card } from '@tencent/tea-component';
+import { useModal, useRefresh } from '@src/modules/common';
+import { RootState } from '@src/modules/polaris/modules/rootReducer';
+import UninstalledPolarisModal from '@src/modules/polaris/common/components/UninstalledPolarisModal';
+import PolarisHeader from '@src/modules/polaris/features/polarisHeader/PolarisHeader';
+import PolarisListPage from '@src/modules/polaris/features/polarisList/PolarisListPage';
+import PolarisEditorModal from '@src/modules/polaris/features/polarisEditor/PolarisEditorPage';
+import {
+  setPolarisFilters,
+  setIsPolarisInstalled,
+  setCurrentDisplayType
+} from '@src/modules/polaris/features/polarisDisplay/polarisDisplaySlice';
+import { router } from '../../router';
 
-export const PolarisModule = React.memo((props: {
-  context: string;
-  projects?: string;
-  [propName: string]: any;
-}) => {
-  // context为同步数据，可以初始化到scopeContext中。projects为异步数据，没有特别深，这里手动通过props传下去的
-  const { context, projects } = props;
+const { Body, Content } = Layout;
 
-  // 设置业务侧 & 平台侧boolean标识
-  const isPlatform = context && context === 'platform';
-  return (
-    <ScopeProvider value={{ context, isPlatform }}>
-      <Polaris projectList={projects} />
-    </ScopeProvider>
-  );
-});
+interface PolarisProps {
+  isPlatform: boolean;
+}
 
-/**
- * Polaris组件
- */
-export const Polaris = React.memo((props: any) => {
-  const scopeState = useContext(StateContext);
-  // const scopeDispatch = useContext(DispatchContext);
-  const { namespaceId, clusterId, projectId, isPlatform } = scopeState;
-  const { projectList = [] } = props;
-  const newProjectList = projectList.map(item => ({ ...item, value: item.id, text: item.name }));
-
-  // 集群列表数据获取
-  const clusterList = useClusters();
-
-  // 获取命名空间数据
-  const namespaceList = useNamespaces({ projectId, clusterId });
+const Polaris = React.memo((props: PolarisProps) => {
+  const { isPlatform } = props;
+  const dispatch = useDispatch();
+  const {
+    clusterSelectOptions,
+    projectSelectOptions
+  } = useSelector((state: RootState) => state.clustersAndProjects);
+  const {
+    clusterId,
+    projectId,
+    namespaceId,
+    isPolarisInstalled
+  } = useSelector((state: RootState) => state.polarisDisplay);
+  const route = useSelector((state: RootState) => state.router);
+  const { mode } = router.resolve(route);
 
   /**
-   * 北极星规则列表获取
+   * 在父中封装其他slice的action的dispatch的好处是：组件内部可以直接调用方法，不需要关心这还是个action，还需要dispatch
    */
-  // const [polarisData, setPolarisData] = useState();
-  // useEffect(() => {
-  //   async function getPolarisData({ namespaceId, clusterId }: { namespaceId: string; clusterId: string}) {
-  //     const result = await fetchPolarisData({ namespaceId, clusterId });
-  //     setPolarisData(result);
-  //   }
-  //   if (namespaceId && clusterId) {
-  //     getPolarisData({ namespaceId, clusterId });
-  //   }
-  // }, [namespaceId, clusterId, refreshFlag]);
+  const setSlicePolarisFilters = ({
+    clusterId,
+    projectId,
+    namespaceId
+  }: {
+    clusterId: string;
+    projectId: string | null;
+    namespaceId: string;
+  }) => {
+    dispatch(setPolarisFilters({ clusterId, projectId, namespaceId }));
+  };
 
-  /**
-   * 下边返回的不是路由适配的内容的话，上边的部分数据获取可以直接放在List组件中
-   */
-  return (
-    <List
-      clusterList={clusterList}
-      namespaceList={namespaceList}
-      projectList={newProjectList}
-    />
-  );
+  const setPolarisInstalledFlag = (isPolarisInstalled: boolean) => {
+    dispatch(setIsPolarisInstalled(isPolarisInstalled));
+  };
+
+  const { isShowing: createVisible, toggle: createToggle } = useModal();
+  const { refreshFlag, triggerRefresh } = useRefresh();
+  if (mode === 'create') {
+    return (
+      <Layout>
+        <Body>
+          <Content>
+            <Content.Header
+              showBackButton
+              title="新建北极星规则"
+              onBackButtonClick={() => { router.navigate({ mode: '' }) }}
+            />
+            <Content.Body>
+              <Card>
+                <Card.Body>
+                  <PolarisEditorModal
+                    isPlatform={isPlatform}
+                    toggle={createToggle}
+                    clusterId={clusterId}
+                    projectId={projectId}
+                    namespaceId={namespaceId}
+                    clusterSelectOptions={clusterSelectOptions}
+                    projectSelectOptions={projectSelectOptions}
+                    triggerRefresh={triggerRefresh}
+                  />
+                </Card.Body>
+              </Card>
+            </Content.Body>
+          </Content>
+        </Body>
+      </Layout>
+    );
+  } else {
+    return (
+      <Layout>
+        <Body>
+          <Content>
+            <Content.Header
+              title="北极星"
+            />
+            <Content.Body>
+              <Table.ActionPanel>
+                <PolarisHeader
+                  isPlatform={isPlatform}
+                  setPolarisFilters={setSlicePolarisFilters}
+                  setPolarisInstalledFlag={setPolarisInstalledFlag}
+                  createToggle={createToggle}
+                  triggerRefresh={triggerRefresh}
+                />
+              </Table.ActionPanel>
+              <Card>
+                <PolarisListPage
+                  isPolarisInstalled={isPolarisInstalled}
+                  clusterId={clusterId}
+                  namespaceId={namespaceId}
+                  refresh={refreshFlag}
+                  triggerRefresh={triggerRefresh}
+                />
+              </Card>
+              <UninstalledPolarisModal
+                isPolarisInstalled={isPolarisInstalled}
+              />
+            </Content.Body>
+          </Content>
+        </Body>
+      </Layout>
+    );
+  }
 });
+export default Polaris;

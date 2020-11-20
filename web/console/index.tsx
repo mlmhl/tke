@@ -21,10 +21,12 @@ import { Helm } from './src/modules/helm';
 import { CLBInstance } from './src/modules/clb/pages/instance';
 import { CLBServer } from './src/modules/clb/pages/server';
 import { CLBRule } from './src/modules/clb/pages/rule';
-import { PolarisModule } from './src/modules/polaris/modules/polaris';
+// import { PolarisModule } from './src/modules/polaris/modules/polaris-bak';
+import PolarisModule from './src/modules/polaris';
 import { TipDialog } from './src/modules/common';
 import { Button, Alert, Text } from '@tencent/tea-component';
 import { Init_Forbiddent_Config } from './helpers/reduceNetwork';
+import { Demo } from './src/modules/demo';
 
 // 公有云的图表组件为异步加载，这里为了减少路径配置，还是保留为同步加载，预先import即可变成不split
 import '@tencent/tchart/build/ChartsComponents';
@@ -436,6 +438,26 @@ Entry.register({
           )}
         </Wrapper>
       ),
+    },
+
+    /**
+     * @url https://{{domain}}/tkestack/polaris
+     * context="platform" 表示是平台侧；类似的，context="business" 表示业务侧
+     */
+    demo: {
+      title: t('demo - TKEStack'),
+      container: (
+        <Wrapper platformType={PlatformTypeEnum.Manager}>
+          {
+              props => (
+                <>
+                  <ForbiddentDialog />
+                  <Demo {...props} context="platform" />
+                </>
+              )
+            }
+        </Wrapper>
+      )
     },
   },
 });

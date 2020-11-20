@@ -1,4 +1,4 @@
-import { Dispatch } from 'redux';
+// import { Dispatch } from 'redux';
 
 import {
   ActionTypesEnum,
@@ -60,7 +60,7 @@ export function createBaseAction<TData, TFilter, TSFilter = any>({
   let lastLoadingTimeout = 0;
 
   function fetch(options?: FetchOptions) {
-    return (dispatch: Dispatch, getState: () => any) => {
+    return (dispatch: Redux.Dispatch, getState: () => any) => {
       const fetchAction: ActionType = {
         type: actionType + (FetcherTrigger.Start as any),
         payload: {
@@ -269,7 +269,7 @@ export function createBaseAction<TData, TFilter, TSFilter = any>({
     };
   }
 
-  const wrap = (action: Function) => (...args: any[]) => (dispatch: Dispatch, getState: () => any) => {
+  const wrap = (action: Function) => (...args: any[]) => (dispatch: Redux.Dispatch, getState: () => any) => {
     const queryAction: ReduxAction<any> = action.apply(null, args);
     dispatch(queryAction);
     dispatch(fetch());

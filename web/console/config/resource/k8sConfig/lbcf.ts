@@ -78,7 +78,11 @@ const displayField: DisplayField = {
 };
 
 /** resrouce action当中的配置 */
-const actionField = Object.assign({}, commonActionField);
+const actionField = Object.assign({}, commonActionField, {
+  create: {
+    isAvailable: false
+  },
+});
 
 /** 自定义配置详情的展示 */
 const detailBasicInfo: DetailInfo = {
