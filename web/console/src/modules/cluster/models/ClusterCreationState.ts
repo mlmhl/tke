@@ -11,9 +11,16 @@ export interface ClusterCreationState extends Identifiable {
   apiServer?: string;
   v_apiServer?: Validation;
 
+  clusterType?: string; // 集群类型[共享集群]
+
+  rootPassword?: string; // 机器Root密码[共享集群]
+
   /**证书 */
   certFile?: string;
   v_certFile?: Validation;
+
+  caKey?: string; // CA Key[共享集群]
+  authzWebhook?: boolean; // 是否开启webhook鉴权[共享集群]
 
   token?: string;
   v_token?: Validation;
