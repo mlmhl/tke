@@ -7,13 +7,15 @@ import {
   reduceK8sRestfulPath,
   reduceNetworkRequest,
   reduceNetworkWorkflow,
-  requestMethodForAction
+  requestMethodForAction,
 } from '../../../../helpers';
 import { Cluster, ClusterFilter, RequestParams, ResourceInfo } from '../../common/models';
 import { CreateResource } from '../../common/models/CreateResource';
 import { authTypeMapping, CreateICVipType } from '../constants/Config';
 import { CreateIC } from '../models';
 import { deleteResourceIns } from './K8sResourceAPI';
+
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 
 /**
  * 集群列表的查询
@@ -32,7 +34,7 @@ export async function fetchClusterList(query: QueryState<ClusterFilter>, regionI
 
   let params: RequestParams = {
     method: Method.get,
-    url
+    url,
   };
   try {
     let response = await reduceNetworkRequest(params);
@@ -48,7 +50,7 @@ export async function fetchClusterList(query: QueryState<ClusterFilter>, regionI
           id: uuid(),
           metadata: response.data.metadata,
           spec: response.data.spec,
-          status: response.data.status
+          status: response.data.status,
         });
       }
     }
@@ -61,7 +63,7 @@ export async function fetchClusterList(query: QueryState<ClusterFilter>, regionI
 
   const result: RecordSet<Cluster> = {
     recordCount: clusters.length,
-    records: clusters
+    records: clusters,
   };
 
   return result;
@@ -70,11 +72,11 @@ export async function fetchClusterList(query: QueryState<ClusterFilter>, regionI
 export async function fetchPrometheuses() {
   let resourceInfo: ResourceInfo = resourceConfig().prometheus;
   let url = reduceK8sRestfulPath({
-    resourceInfo
+    resourceInfo,
   });
   let params: RequestParams = {
     method: Method.get,
-    url
+    url,
   };
   let records = [];
   try {
@@ -92,7 +94,7 @@ export async function fetchPrometheuses() {
   }
   return {
     records,
-    recordCount: records.length
+    recordCount: records.length,
   };
 }
 
@@ -115,7 +117,7 @@ export async function createIC(clusters: CreateIC[]) {
       vipPort,
       vipType,
       gpu,
-      gpuType
+      gpuType,
     } = clusters[0];
 
     let resourceInfo = resourceConfig()['cluster'];
@@ -151,7 +153,7 @@ export async function createIC(clusters: CreateIC[]) {
             computer.authType === authTypeMapping.cert && computer.passPhrase
               ? window.btoa(computer.passPhrase)
               : undefined,
-          labels: labels
+          labels: labels,
         });
       });
     });
@@ -160,7 +162,7 @@ export async function createIC(clusters: CreateIC[]) {
       apiVersion: `${resourceInfo.group}/${resourceInfo.version}`,
       kind: resourceInfo.headTitle,
       metadata: {
-        generateName: 'cls'
+        generateName: 'cls',
       },
       spec: {
         displayName: name,
@@ -174,27 +176,27 @@ export async function createIC(clusters: CreateIC[]) {
                   tke:
                     vipType === CreateICVipType.tke
                       ? {
-                          vip: vipAddress
+                          vip: vipAddress,
                         }
                       : undefined,
                   thirdParty:
                     vipType === CreateICVipType.existed
                       ? {
                           vip: vipAddress,
-                          vport: +vipPort
+                          vport: +vipPort,
                         }
-                      : undefined
+                      : undefined,
                 }
-              : undefined
+              : undefined,
         },
         properties: {
           maxClusterServiceNum: maxClusterServiceNum,
-          maxNodePodNum: maxNodePodNum
+          maxNodePodNum: maxNodePodNum,
         },
         type: 'Baremetal',
         version: k8sVersion,
-        machines: machines
-      }
+        machines: machines,
+      },
     };
 
     jsonData = JSON.parse(JSON.stringify(jsonData));
@@ -202,7 +204,7 @@ export async function createIC(clusters: CreateIC[]) {
     let params: RequestParams = {
       method,
       url,
-      data: JSON.stringify(jsonData)
+      data: JSON.stringify(jsonData),
     };
     let response = await reduceNetworkRequest(params);
     if (response.code === 0) {
@@ -230,9 +232,9 @@ export async function modifyClusterName(clusters: CreateResource[]) {
       method: Method.patch,
       url,
       userDefinedHeader: {
-        'Content-Type': 'application/strategic-merge-patch+json'
+        'Content-Type': 'application/strategic-merge-patch+json',
       },
-      data: jsonData
+      data: jsonData,
     };
 
     let response = await reduceNetworkRequest(params);
@@ -254,7 +256,7 @@ export async function modifyClusterName(clusters: CreateResource[]) {
 export async function fetchCreateICK8sVersion() {
   return [
     { text: '1.14.10', value: '1.14.10' },
-    { text: '1.16.6', value: '1.16.6' }
+    { text: '1.16.6', value: '1.16.6' },
   ];
 }
 
@@ -276,16 +278,19 @@ export async function createImportClsutter(resource: CreateResource[], regionId:
 
     let clustercredentialData = {
       metadata: {
-        generateName: 'clustercredential'
+        generateName: 'clustercredential',
       },
       caCert: clusterData.status.credential.caCert,
-      token: clusterData.status.credential.token ? clusterData.status.credential.token : undefined
+      token: clusterData.status.credential.token ? clusterData.status.credential.token : undefined,
     };
+    if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+      clustercredentialData['caKey'] = clusterData.status.credential.caKey;
+    }
     // 构建参数
     let clustercredentialParams: RequestParams = {
       method,
       url: clustercredentialUrl,
-      data: clustercredentialData
+      data: clustercredentialData,
     };
 
     let clustercredentialResponce = await reduceNetworkRequest(clustercredentialParams, clusterId);
@@ -293,7 +298,7 @@ export async function createImportClsutter(resource: CreateResource[], regionId:
       let clusterParams: RequestParams = {
         method,
         url: clusterUrl,
-        data: clusterData
+        data: clusterData,
       };
       clusterData.spec.clusterCredentialRef = { name: clustercredentialResponce.data.metadata.name };
       clusterData.status.credential = undefined;
@@ -311,8 +316,8 @@ export async function createImportClsutter(resource: CreateResource[], regionId:
             {
               id: uuid(),
               resourceIns: clustercredentialResponce.data.metadata.name,
-              resourceInfo: clustercredentialResourceInfo
-            }
+              resourceInfo: clustercredentialResourceInfo,
+            },
           ],
           1
         );

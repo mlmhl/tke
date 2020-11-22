@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { FormPanel } from '@tencent/ff-component';
 import { bindActionCreators, isSuccessWorkflow, OperationState, uuid } from '@tencent/ff-redux';
 import { t } from '@tencent/tea-app/lib/i18n';
-import { Button, ContentView } from '@tencent/tea-component';
+import { Button, ContentView, Form, Select, Input, Switch } from '@tencent/tea-component';
 
 import { resourceConfig } from '../../../../../config';
 import { getWorkflowError, InputField, ResourceInfo, TipInfo } from '../../../../modules/common';
@@ -14,6 +14,8 @@ import { CreateResource } from '../../models';
 import { router } from '../../router';
 import { RootProps } from '../ClusterApp';
 import { ClusterSubpageHeaderPanel } from './ClusterSubpageHeaderPanel';
+
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
@@ -29,7 +31,20 @@ export class CreateClusterPanel extends React.Component<RootProps, {}> {
 
   render() {
     let { actions, clusterCreationState, createClusterFlow, route } = this.props,
-      { v_apiServer, v_certFile, v_name, v_token, apiServer, certFile, name, token } = clusterCreationState;
+      {
+        v_apiServer,
+        v_certFile,
+        v_name,
+        v_token,
+        apiServer,
+        clusterType,
+        rootPassword,
+        caKey,
+        authzWebhook,
+        certFile,
+        name,
+        token,
+      } = clusterCreationState;
     const workflow = createClusterFlow;
     const action = actions.workflow.createCluster;
     let clusterInfo: ResourceInfo = resourceConfig()['cluster'];
@@ -75,11 +90,11 @@ export class CreateClusterPanel extends React.Component<RootProps, {}> {
           kind: 'Cluster',
           apiVersion: `${clusterInfo.group}/${clusterInfo.version}`,
           metadata: {
-            generateName: 'cls'
+            generateName: 'cls',
           },
           spec: {
             displayName: clusterCreationState.name,
-            type: 'Imported'
+            type: 'Imported',
           },
           status: {
             addresses: [
@@ -87,16 +102,37 @@ export class CreateClusterPanel extends React.Component<RootProps, {}> {
                 host: host,
                 type: 'Advertise',
                 port: +port,
-                path: path
-              }
+                path: path,
+              },
             ],
             credential: {
-              caCert: certIsBase64 ? clusterCreationState.certFile : window.btoa(clusterCreationState.certFile)
-            }
-          }
+              caCert: certIsBase64 ? clusterCreationState.certFile : window.btoa(clusterCreationState.certFile),
+            },
+          },
         };
         if (clusterCreationState.token) {
           data.status.credential['token'] = clusterCreationState.token;
+        }
+        if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+          // 集群类型
+          data.spec.type = clusterCreationState.clusterType;
+          // root密码
+          data.metadata['annotations'] = {
+            'nodepw.teg.tkex.oa.com': clusterCreationState.rootPassword,
+          };
+          // caKey
+          data.status.credential['caKey'] =
+            window.btoa(window.atob(clusterCreationState.caKey)) === clusterCreationState.caKey
+              ? clusterCreationState.caKey
+              : window.btoa(clusterCreationState.caKey);
+          // 开启webhook鉴权
+          if (clusterCreationState.authzWebhook) {
+            data.spec['features'] = {
+              authzWebhookAddr: {
+                builtin: {},
+              },
+            };
+          }
         }
 
         let createClusterData: CreateResource[] = [
@@ -104,8 +140,8 @@ export class CreateClusterPanel extends React.Component<RootProps, {}> {
             id: uuid(),
             resourceInfo: clusterInfo,
             mode: 'create',
-            jsonData: JSON.stringify(data)
-          }
+            jsonData: JSON.stringify(data),
+          },
         ];
         action.start(createClusterData);
         action.perform();
@@ -143,6 +179,36 @@ export class CreateClusterPanel extends React.Component<RootProps, {}> {
                 onBlur={actions.validate.clusterCreation.validateApiServer}
               />
             </FormPanel.Item>
+            {WEBPACK_CONFIG_SHARED_CLUSTER && (
+              <>
+                <Form.Item required label="集群类型">
+                  <Select
+                    value={clusterType}
+                    onChange={value => actions.clusterCreation.updateClusterCreationState({ clusterType: value })}
+                    options={[
+                      {
+                        value: 'TKEx-TEG-shared',
+                        text: 'TKEx-TEG-shared',
+                      },
+                      {
+                        value: 'Imported',
+                        text: 'Imported',
+                      },
+                    ]}
+                    type="simulate"
+                    appearence="button"
+                    size="m"
+                    boxSizeSync
+                  />
+                </Form.Item>
+                <Form.Item required label="机器Root密码">
+                  <Input
+                    value={rootPassword}
+                    onChange={value => actions.clusterCreation.updateClusterCreationState({ rootPassword: value })}
+                  />
+                </Form.Item>
+              </>
+            )}
             <FormPanel.Item label="CertFile">
               <InputField
                 type="textarea"
@@ -154,6 +220,16 @@ export class CreateClusterPanel extends React.Component<RootProps, {}> {
                 onBlur={actions.validate.clusterCreation.validateCertfile}
               />
             </FormPanel.Item>
+            {WEBPACK_CONFIG_SHARED_CLUSTER && (
+              <Form.Item required label="CA Key">
+                <Input
+                  multiline
+                  size="l"
+                  value={caKey}
+                  onChange={value => actions.clusterCreation.updateClusterCreationState({ caKey: value })}
+                />
+              </Form.Item>
+            )}
             <FormPanel.Item label="Token">
               <InputField
                 type="textarea"
@@ -165,7 +241,14 @@ export class CreateClusterPanel extends React.Component<RootProps, {}> {
                 onBlur={actions.validate.clusterCreation.validateToken}
               />
             </FormPanel.Item>
-
+            {WEBPACK_CONFIG_SHARED_CLUSTER && (
+              <Form.Item label="开启webhook鉴权">
+                <Switch
+                  value={authzWebhook}
+                  onChange={value => actions.clusterCreation.updateClusterCreationState({ authzWebhook: value })}
+                />
+              </Form.Item>
+            )}
             <FormPanel.Footer>
               <React.Fragment>
                 <Button

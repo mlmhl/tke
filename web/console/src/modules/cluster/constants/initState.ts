@@ -313,6 +313,11 @@ export const initClusterCreationState = {
   apiServer: '',
   v_apiServer: initValidator,
 
+  clusterType: 'TKEx-TEG-shared', // 默认
+  rootPassword: '',
+  caKey: '',
+  authzWebhook: true, // 默认开启
+
   /** port */
   port: '',
   v_port: initValidator,
