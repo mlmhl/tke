@@ -17,6 +17,8 @@ import * as emonitor from '@tencent/emonitor';
 import * as BeaconAction from '@tencent/beacon-web-sdk';
 import { insertCSS } from '@/lib/ff-redux';
 
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
+
 Sentry.init({ dsn: 'https://f5911fc91ca24d35a41ed8389446e525@report.url.cn/sentry/2795' });
 
 emonitor.create({
@@ -233,7 +235,6 @@ const commonRouterConfig: RouterConfig[] = [
   {
     url: '/tkestack/polaris',
     title: '北极星',
-    // watchModule: [ConsoleModuleEnum.Polaris],
     watchModule: ConsoleModuleEnum.PLATFORM,
   }
 ];
@@ -286,11 +287,6 @@ const businessCommonRouterConfig: RouterConfig[] = [
     title: 'CLB管理',
     watchModule: [ConsoleModuleEnum.Business],
     subRouterConfig: [
-      // {
-      //   url: '/tkestack-project/clb-instance',
-      //   title: 'CLB管理',
-      //   watchModule: ConsoleModuleEnum.Business,
-      // },
       {
         url: '/tkestack-project/clb-rule',
         title: '规则',
@@ -309,6 +305,10 @@ const businessCommonRouterConfig: RouterConfig[] = [
     watchModule: ConsoleModuleEnum.Business,
   }
 ];
+
+if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+  businessCommonRouterConfig.splice(1, 1);
+}
 
 interface ConsoleWrapperProps {
   /** 平台侧业务侧 */

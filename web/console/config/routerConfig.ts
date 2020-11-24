@@ -81,10 +81,6 @@ const clusterSubRouterConfig = [
         name: 'Ingress',
         path: 'ingress'
       }
-      // {
-      //   name: t('负载均衡'),
-      //   path: 'lbcf'
-      // }
     ]
   },
   {

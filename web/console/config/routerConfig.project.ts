@@ -1,14 +1,16 @@
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
+declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
+
 export const firstRouterNameMap = {
   overview: t('概览'),
-  cluster: t('集群')
+  cluster: t('集群'),
 };
 
 /** 一些操作，create、update的一些header的名称映射 */
 export const typeMapName = {
   create: t('新建'),
-  modify: t('更新')
+  modify: t('更新'),
 };
 
 /** 二级导航栏的配置文件
@@ -19,7 +21,7 @@ export const subRouterConfig = () => {
     {
       name: t('命名空间'),
       path: 'namespace',
-      basicUrl: 'np'
+      basicUrl: 'np',
     },
     {
       name: t('工作负载'),
@@ -27,25 +29,25 @@ export const subRouterConfig = () => {
       sub: [
         {
           name: 'Deployment',
-          path: 'deployment'
+          path: 'deployment',
         },
         {
           name: 'StatefulSet',
-          path: 'statefulset'
+          path: 'statefulset',
         },
         {
           name: 'DaemonSet',
-          path: 'daemonset'
+          path: 'daemonset',
         },
         {
           name: 'Job',
-          path: 'job'
+          path: 'job',
         },
         {
           name: 'CronJob',
-          path: 'cronjob'
-        }
-      ]
+          path: 'cronjob',
+        },
+      ],
     },
     {
       name: t('服务'),
@@ -53,13 +55,13 @@ export const subRouterConfig = () => {
       sub: [
         {
           name: 'Service',
-          path: 'svc'
+          path: 'svc',
         },
         {
           name: 'Ingress',
-          path: 'ingress'
-        }
-      ]
+          path: 'ingress',
+        },
+      ],
     },
     {
       name: t('配置管理'),
@@ -67,13 +69,13 @@ export const subRouterConfig = () => {
       sub: [
         {
           name: 'ConfigMap',
-          path: 'configmap'
+          path: 'configmap',
         },
         {
           name: 'Secret',
-          path: 'secret'
-        }
-      ]
+          path: 'secret',
+        },
+      ],
     },
     {
       name: t('存储'),
@@ -81,25 +83,29 @@ export const subRouterConfig = () => {
       sub: [
         {
           name: 'PersistentVolumeClaim',
-          path: 'pvc'
+          path: 'pvc',
         },
         {
           name: 'StorageClass',
-          path: 'sc'
-        }
-      ]
+          path: 'sc',
+        },
+      ],
     },
     {
       name: t('日志'),
       path: 'k8sLog',
-      basicUrl: 'log'
+      basicUrl: 'log',
     },
     {
       name: t('事件'),
       basicUrl: 'event',
-      path: 'k8sEvent'
-    }
+      path: 'k8sEvent',
+    },
   ];
+
+  if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+    routerConfig.find(item => item.path === 'resource').sub.splice(2, 1);
+  }
 
   return routerConfig;
 };
@@ -107,21 +113,21 @@ export const notifySubRouter = [
   {
     name: t('通知渠道'),
     id: 'channel',
-    basicUrl: 'channel'
+    basicUrl: 'channel',
   },
   {
     name: t('通知模版'),
     id: 'template',
-    basicUrl: 'template'
+    basicUrl: 'template',
   },
   {
     name: t('接收人'),
     id: 'receiver',
-    basicUrl: 'receiver'
+    basicUrl: 'receiver',
   },
   {
     name: t('接收组'),
     id: 'receiverGroup',
-    basicUrl: 'receiverGroup'
-  }
+    basicUrl: 'receiverGroup',
+  },
 ];
