@@ -30,6 +30,7 @@ export interface ApiVersion {
   pv?: ResourceApiInfo;
   pvc?: ResourceApiInfo;
   sc?: ResourceApiInfo;
+  csi?: ResourceApiInfo;
   hpa?: ResourceApiInfo;
   cronhpa?: ResourceApiInfo;
   event?: ResourceApiInfo;
@@ -318,6 +319,12 @@ const k8sApiVersionFor18: ApiVersion = {
     version: 'v1',
     basicEntry: 'apis',
     headTitle: 'StorageClass'
+  },
+  csi: {
+    group: 'platform.tkestack.io',
+    version: 'v1',
+    basicEntry: 'apis',
+    headTitle: 'CSI'
   },
   hpa: {
     group: 'autoscaling',

@@ -21,5 +21,12 @@ export const peEditActions = {
       type: ActionType.IndexName,
       payload: indexName
     };
+  },
+
+  inputKubeletUri: (kubeletUri: string): ReduxAction<string> => {
+    return {
+      type: ActionType.KubeletUri,
+      payload: kubeletUri
+    };
   }
 };

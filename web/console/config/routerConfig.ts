@@ -112,6 +112,10 @@ const clusterSubRouterConfig = [
       {
         name: 'StorageClass',
         path: 'sc'
+      },
+      {
+        name: 'CSI',
+        path: 'csi'
       }
     ]
   },

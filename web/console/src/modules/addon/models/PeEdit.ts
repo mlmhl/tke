@@ -8,4 +8,8 @@ export interface PeEdit {
   /** 索引名称 */
   indexName?: string;
   v_indexName?: Validation;
+
+  /** kubelet根路径 */
+  kubeletUri?: string;
+  v_kubeletUri?: Validation;
 }

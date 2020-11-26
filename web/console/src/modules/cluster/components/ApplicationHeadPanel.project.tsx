@@ -8,7 +8,6 @@ import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import { allActions } from '../actions';
 import { RootProps } from './ApplicationApp.project';
 
-declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
 

@@ -72,7 +72,7 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
     resource ? actions.resource.initResourceName(resource) : actions.resource.initResourceName('np');
     // 判断当前是否需要去更新np的路由
     let isNeedFetchNamespace =
-      resourceType === 'resource' || resourceType === 'service' || resourceType === 'config' || resource === 'pvc';
+      resourceType === 'resource' || resourceType === 'service' || resourceType === 'config' || resource === 'pvc' || resource === 'csi';
     actions.resource.toggleIsNeedFetchNamespace(isNeedFetchNamespace ? true : false);
     actions.projectNamespace.initProjectList();
 

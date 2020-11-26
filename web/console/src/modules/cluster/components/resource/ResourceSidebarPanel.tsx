@@ -213,8 +213,13 @@ export class ResourceSidebarPanel extends React.Component<ResourceListPanelProps
    * 生成二级导航栏
    */
   private _renderSecondBarList(subMenu: BasicRouter[], sidebarPath: string) {
-    let subMenuList = subMenu.map((subSidebar, index) => {
-      return (
+    let subMenuList = [];
+    console.log('resource sidebar panel props:', this.props);
+    subMenu.forEach((subSidebar, index) => {
+      if (subSidebar.path === 'csi' && WEBPACK_CONFIG_SHARED_CLUSTER === false) {
+        return;
+      }
+      subMenuList.push(
         <li key={index}>
           <a
             href="javascript:;"

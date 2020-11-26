@@ -93,7 +93,8 @@ const listResourceActions = createFFListActions<Resource, ResourceFilter>({
       response = await WebAPI.fetchResourceList(ffResourceList.query, {
         resourceInfo,
         isClearData,
-        isContinue: true
+        isContinue: true,
+        resourceName
       });
     }
 

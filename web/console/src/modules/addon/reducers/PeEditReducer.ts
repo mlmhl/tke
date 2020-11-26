@@ -12,5 +12,7 @@ export const PeEditReducer = combineReducers({
 
   indexName: reduceToPayload(ActionType.IndexName, ''),
 
-  v_indexName: reduceToPayload(ActionType.V_IndexName, initValidator)
+  v_indexName: reduceToPayload(ActionType.V_IndexName, initValidator),
+
+  kubeletUri: reduceToPayload(ActionType.KubeletUri, ''),
 });

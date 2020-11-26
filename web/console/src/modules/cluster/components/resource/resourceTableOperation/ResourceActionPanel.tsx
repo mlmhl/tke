@@ -20,7 +20,6 @@ import { RootProps } from '../../ClusterApp';
 import { TellIsNeedFetchNS } from '../ResourceSidebarPanel';
 import { PlatformContext, IPlatformContext, PlatformTypeEnum } from '@/Wrapper';
 
-declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 interface ResouceActionPanelState {
   /** 是否开启自动刷新 */
   isOpenAutoRenew?: boolean;

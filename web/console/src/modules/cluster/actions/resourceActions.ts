@@ -26,7 +26,6 @@ const listResourceActions = createFFListActions<Resource, ResourceFilter>({
     let { subRoot, route, clusterVersion } = getState(),
       { resourceInfo, resourceOption, resourceName } = subRoot,
       { ffResourceList } = resourceOption;
-
     let isClearData = fetchOptions && fetchOptions.noCache ? true : false;
 
     let response: any;

@@ -15,6 +15,7 @@ export { secret } from './secret';
 export { pv } from './persistentvolumes';
 export { pvc } from './persistentvolumeclaims';
 export { sc } from './storageclass';
+export { csi } from './csi';
 export * from './otherResource';
 export { node } from './node';
 export * from './addonResource';

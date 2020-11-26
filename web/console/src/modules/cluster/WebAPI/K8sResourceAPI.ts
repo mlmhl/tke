@@ -153,6 +153,7 @@ export async function fetchResourceList(
     isNeedDes?: boolean;
     isNeedSpecific?: boolean;
     isContinue?: boolean;
+    resourceName?: string;
   }
 ) {
   let { filter, search, paging, continueToken } = query,

@@ -51,6 +51,7 @@ export const SharedClusterCmdbInfo = (
     if (business2Id) {
       fetchBsiPath3List({ bs2_name_id: business2Id ? Number(business2Id) : undefined }).then(result => {
         setBsiPath3List(result);
+
       });
     }
   }, [business2Id]);
@@ -90,7 +91,12 @@ export const SharedClusterCmdbInfo = (
         <Form.Item label={t('二级业务')}>
           <Form.Text style={style}>{business2}</Form.Text>
         </Form.Item>
-        <Form.Item label={t('业务模块')}>
+        <Form.Item
+          required
+          label={t('业务模块')}
+          showStatusIcon={false}
+          status={errors.bsiPath3 ? 'error' : 'success'}
+        >
           <Controller
             as={
               <Select
@@ -102,6 +108,7 @@ export const SharedClusterCmdbInfo = (
                 options={bsiPath3List}
               />
             }
+            rules={{ required: t('无选中命名空间') }}
             name="bsiPath3"
             control={control}
           />

@@ -196,6 +196,8 @@ export interface DisplayFiledProps {
 
   /** 共享集群业务的数据项 */
   shareClusterHeadTitle?: string;
+
+  isShareClusterColumn?: boolean;
 }
 
 /** resourceList当中操作列表 */

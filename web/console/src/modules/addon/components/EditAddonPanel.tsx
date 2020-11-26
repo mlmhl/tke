@@ -20,10 +20,11 @@ import { validatorActions } from '../actions/validatorActions';
 import {
     AddonNameEnum, AddonNameMap, AddonNameMapToGenerateName, ResourceNameMap
 } from '../constants/Config';
-import { Addon, AddonEditPeJsonYaml, AddonEditUniversalJsonYaml, EsInfo, PeEdit } from '../models';
+import { Addon, AddonEditPeJsonYaml, AddonCSIOperatorYaml, AddonEditUniversalJsonYaml, EsInfo, PeEdit } from '../models';
 import { router } from '../router';
 import { RootProps } from './AddonApp';
 import { EditPersistentEventPanel } from './EditPersistentEventPanel';
+import { EditCSIOperatorPanel } from './EditCSIOperatorPanel';
 
 // import { addonRules } from '../constants/ValidateConfig';
 
@@ -59,6 +60,31 @@ const ReducePersistentEventJsonData = (options: { resourceInfo: ResourceInfo; cl
         es: esInfo
       }
     }
+  };
+  return JSON.stringify(jsonData);
+};
+
+/**
+ * 创建CSIOperator的yaml
+ * @param options
+ */
+const ReduceCSIOperatorJsonData = (options: { resourceInfo: ResourceInfo; clusterId: string; peEdit: PeEdit }) => {
+  let { resourceInfo, clusterId, peEdit } = options,
+      { kubeletUri } = peEdit;
+
+  const spec = {
+    clusterName: clusterId,
+  };
+  if (kubeletUri) {
+    spec['kubeletRootDir'] = kubeletUri;
+  }
+  let jsonData: AddonCSIOperatorYaml = {
+    kind: resourceInfo.headTitle,
+    apiVersion: (resourceInfo.group ? resourceInfo.group + '/' : '') + resourceInfo.version,
+    metadata: {
+      generateName: 'pe'
+    },
+    spec
   };
   return JSON.stringify(jsonData);
 };
@@ -190,7 +216,7 @@ export class EditAddonPanel extends React.Component<RootProps, EdtiAddonPanelSta
         </FormPanel.Item>
 
         {addonName === AddonNameEnum.PersistentEvent && <EditPersistentEventPanel />}
-
+        {addonName === AddonNameEnum.CSIOperator && WEBPACK_CONFIG_SHARED_CLUSTER && <EditCSIOperatorPanel />}
         <FormPanel.Footer>
           <React.Fragment>
             <Button
@@ -354,6 +380,8 @@ export class EditAddonPanel extends React.Component<RootProps, EdtiAddonPanelSta
 
       if (addonName === AddonNameEnum.PersistentEvent) {
         finalJSON = ReducePersistentEventJsonData({ resourceInfo, clusterId, peEdit });
+      } else if (addonName === AddonNameEnum.CSIOperator) {
+        finalJSON = ReduceCSIOperatorJsonData({ resourceInfo, clusterId, peEdit });
       } else {
         finalJSON = ReduceUniversalJsonData({ resourceInfo, clusterId });
       }

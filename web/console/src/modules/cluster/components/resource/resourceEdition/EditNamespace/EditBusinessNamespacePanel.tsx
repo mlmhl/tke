@@ -292,12 +292,16 @@ export const EditBusinessNamespacePanel = () => {
       projectName: projectSelection,
       hard,
     };
-    setDisabled(true);
     let namespaceChangeResult = null;
     if (WEBPACK_CONFIG_SHARED_CLUSTER) {
       const { current } = mySharedClusterCMDBRef;
       // @ts-ignore
       const { moduleName, moduleId } = current.getSharedClusterCmdbData();
+      // @ts-ignore
+      const isCmdbValid = await current.triggerValidation();
+      if (!isCmdbValid) {
+        return;
+      }
       if (mode !== MODIFY) { // 创建
         const { metadata = {}} = selectedProject;
         const { annotations = {}, labels = {}} = metadata;
@@ -330,6 +334,7 @@ export const EditBusinessNamespacePanel = () => {
         neweastNamespaceClone.spec.projectName = projectSelection;
         neweastNamespaceClone.metadata.annotations['teg.tkex.oa.com/default-module'] = moduleName;
         neweastNamespaceClone.metadata.labels['teg.tkex.oa.com/default-module-id'] = String(moduleId);
+        setDisabled(true);
         namespaceChangeResult = await editNamespace({
           projectId: projectSelection,
           newNamespace: neweastNamespaceClone,
@@ -373,7 +378,6 @@ export const EditBusinessNamespacePanel = () => {
         spec,
         metadata,
       };
-
       if (mode === MODIFY) {
         const neweastSelectedNamespace = await fetchNamespaceByMetaName({
           projectId: projectSelection,
@@ -407,11 +411,13 @@ export const EditBusinessNamespacePanel = () => {
           }
           delete neweastNamespaceClone.metadata.annotations;
         }
+        setDisabled(true);
         namespaceChangeResult = await editNamespace({
           projectId: projectSelection,
           newNamespace: neweastNamespaceClone,
         });
       } else {
+        setDisabled(true);
         namespaceChangeResult = await createNamespace({
           projectId: projectSelection,
           namespaceInfo
@@ -486,7 +492,8 @@ export const EditBusinessNamespacePanel = () => {
                 status={errors.clusterName ? 'error' : 'success'}
                 message={errors.clusterName && errors.clusterName.message}
                 >
-                {mode === MODIFY ? (
+                {
+                  mode === MODIFY ? (
                       `${selectResource.spec.clusterName}(${selectResource.spec.clusterDisplayName})`
                   ) : (
                     <Controller
@@ -504,7 +511,8 @@ export const EditBusinessNamespacePanel = () => {
                       control={control}
                       rules={{ required: t('集群不能为空') }}
                     />
-                  )}
+                  )
+                }
               </Form.Item>
               {
                 WEBPACK_CONFIG_SHARED_CLUSTER && (
@@ -556,7 +564,10 @@ export const EditBusinessNamespacePanel = () => {
                   <Form.Item label={t('CMDB默认业务模块')}>
                     <NewSharedClusterCmdbInfo
                       ref={mySharedClusterCMDBRef}
-                      initialData={{ ...showProjectData.defaultData, selectedModuleId: mode === MODIFY ? Number(showResourceData.selectedModuleId) : undefined }}
+                      initialData={{
+                        ...showProjectData.defaultData,
+                        selectedModuleId: mode === MODIFY ? Number(showResourceData.selectedModuleId) : undefined
+                      }}
                     />
                   </Form.Item>
                 ) : (

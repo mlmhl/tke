@@ -21,7 +21,6 @@ import { router } from '../../../router';
 import { RootProps } from '../../ClusterApp';
 import AccessCredentialsDialog from './AccessCredentialsDialog';
 
-declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 /** 判断resource是否需要展示loading状态
  * @param resourceName: string  资源的名称，如deployment
  * @param item: Resource 当前实例
@@ -67,7 +66,7 @@ export const IsResourceShowLoadingIcon = (resourceName: string, item: Resource) 
         ? false
         : true
       : false;
-  } else if (resourceName === 'pvc') {
+  } else if (resourceName === 'pvc' || resourceName === 'csi') {
     return item.status === undefined ? true : item.status.phase === 'Pending' ? true : false;
   } else if (resourceName === 'statefulset') {
     return item.status.replicas === undefined ? true : +item.status.replicas < +item.spec.replicas ? true : false;
@@ -126,8 +125,9 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
 
   /** 展示普通的text */
   private _reduceText(showData: any, fieldInfo: DisplayFiledProps, resource: Resource, clipId: string) {
+    console.log('showData, fieldInfo, resource, clipId:', showData, fieldInfo, resource, clipId);
     let showContent;
-    if (fieldInfo.isLink && !WEBPACK_CONFIG_SHARED_CLUSTER) {
+    if (fieldInfo.isLink) {
       if (fieldInfo.isClip) {
         showContent = (
           <Bubble
@@ -205,7 +205,7 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
                 </Text>
               ))
             ) : (
-              <Text overflow>{showData}</Text>
+              <Text overflow>{showData + ''}</Text>
             )}
           </Bubble>
         );
@@ -304,21 +304,22 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
     const renderDeleteButton = (operator: OperatorProps) => {
       let disabled = false;
       let errorTip = '';
-
-      //当资源为命名空间的时候，删除按钮的一些操作
-      if (clusterId === 'cls-wbwpj79f') {
-        disabled = true;
-        errorTip = t('global集群资源不可删除');
-      } else if (resourceName === 'np') {
-        disabled = resource['metadata']['name'].indexOf('kube-') >= 0 || resource['metadata']['name'] === 'default';
-        errorTip = t('命名空间不可删除');
-      } else if (resourceName === 'svc' && namespaceSelection !== 'kube-system') {
-        //当资源为 servcie的时候，删除按钮的一些操作是不允许的
-        disabled = resource['metadata']['name'] === 'kubernetes';
-        errorTip = t('系统默认的Service不可删除');
-      } else {
-        disabled = namespaceSelection === 'kube-system';
-        errorTip = t('当前Namespace下的资源不可删除');
+      if (resourceName !== 'csi') {
+        //当资源为命名空间的时候，删除按钮的一些操作
+        if (clusterId === 'cls-wbwpj79f') {
+          disabled = true;
+          errorTip = t('global集群资源不可删除');
+        } else if (resourceName === 'np') {
+          disabled = resource['metadata']['name'].indexOf('kube-') >= 0 || resource['metadata']['name'] === 'default';
+          errorTip = t('命名空间不可删除');
+        } else if (resourceName === 'svc' && namespaceSelection !== 'kube-system') {
+          //当资源为 servcie的时候，删除按钮的一些操作是不允许的
+          disabled = resource['metadata']['name'] === 'kubernetes';
+          errorTip = t('系统默认的Service不可删除');
+        } else {
+          disabled = namespaceSelection === 'kube-system';
+          errorTip = t('当前Namespace下的资源不可删除');
+        }
       }
 
       return (
@@ -749,7 +750,7 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
   /** 根据 fieldInfo的 dataFormat来决定显示的bodyCell的具体内容 */
   private _renderBodyCell(resource: Resource, fieldInfo: DisplayFiledProps, clipId: string) {
     let { subRoot } = this.props,
-      { resourceOption } = subRoot,
+      { resourceOption, resourceName } = subRoot,
       { ffResourceList } = resourceOption;
 
     let content;
@@ -786,6 +787,11 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
         ? 'top'
         : 'bottom';
     if (fieldInfo.dataFormat === 'text') {
+
+      // 共享集群的namespace列表的名称不能点进详情
+      if (resourceName === 'np' && WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.dataField[0] === 'metadata.name') {
+        fieldInfo.isLink = false;
+      }
       content = this._reduceText(showData, fieldInfo, resource, clipId);
     } else if (fieldInfo.dataFormat === 'labels') {
       content = this._reduceLabelsForData(showData, direction);
@@ -840,7 +846,7 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
       if (fieldInfo.dataFormat === 'operator') return;
 
       // 如果业务不是共享集群不展示相应的列
-      if (true !== WEBPACK_CONFIG_SHARED_CLUSTER && (fieldInfo.dataFormat === 'zone' || fieldInfo.dataFormat === 'zoneHard')) {
+      if (!WEBPACK_CONFIG_SHARED_CLUSTER && (fieldInfo.dataFormat === 'zone' || fieldInfo.dataFormat === 'zoneHard' || fieldInfo.isShareClusterColumn)) {
         return;
       }
       // 如果是共享集群不展示相应的列

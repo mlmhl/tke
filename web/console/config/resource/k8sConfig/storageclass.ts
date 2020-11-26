@@ -15,8 +15,24 @@ const displayField: DisplayField = {
   provisioner: {
     dataField: ['provisioner'],
     dataFormat: dataFormatConfig['text'],
-    width: '18%',
+    width: '15%',
     headTitle: t('来源')
+  },
+  diskZone: {
+    dataField: ['parameters.diskZone'],
+    dataFormat: dataFormatConfig['text'],
+    width: '12%',
+    headTitle: t('可用区'),
+    noExsitedValue: defaulNotExistedValue,
+    isShareClusterColumn: true
+  },
+  diskType: {
+    dataField: ['parameters.diskType'],
+    dataFormat: dataFormatConfig['text'],
+    width: '10%',
+    headTitle: t('磁盘类型'),
+    noExsitedValue: defaulNotExistedValue,
+    isShareClusterColumn: true
   },
   // type: {
   //   dataField: ['parameters.type'],
@@ -48,6 +64,22 @@ const displayField: DisplayField = {
     width: '10%',
     headTitle: t('回收策略'),
     noExsitedValue: 'Delete'
+  },
+  volumeBindingMode: {
+    dataField: ['volumeBindingMode'],
+    dataFormat: dataFormatConfig['text'],
+    width: '10%',
+    headTitle: t('绑定策略'),
+    noExsitedValue: defaulNotExistedValue,
+    isShareClusterColumn: true
+  },
+  allowVolumeExpansion: {
+    dataField: ['allowVolumeExpansion'],
+    dataFormat: dataFormatConfig['text'],
+    width: '8%',
+    headTitle: t('允许扩容'),
+    noExsitedValue: defaulNotExistedValue,
+    isShareClusterColumn: true
   },
   creationTimestamp: {
     dataField: ['metadata.creationTimestamp'],

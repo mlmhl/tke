@@ -29,7 +29,7 @@ const loadingElement: JSX.Element = (
     &nbsp; <span className="text">{t('加载中...')}</span>
   </div>
 );
-declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
+
 export interface ResourceListPanelProps extends RootProps {
   /** subRouterList */
   subRouterList: SubRouter[];

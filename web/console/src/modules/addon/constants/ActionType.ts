@@ -13,4 +13,6 @@ export const EsAddress = 'EsAddress';
 export const V_EsAddress = 'V_EsAddress';
 export const IndexName = 'IndexName';
 export const V_IndexName = 'V_IndexName';
+export const KubeletUri = 'KubeletUri';
+export const V_KubeletUri = 'V_KubeletUri';
 /** ======================== end 事件持久化相关的 ======================= */

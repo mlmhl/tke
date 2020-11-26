@@ -46,6 +46,17 @@ export interface AddonEditPeJsonYaml extends AddonEditBasicJsonYaml {
   };
 }
 
+export interface AddonCSIOperatorYaml extends AddonEditBasicJsonYaml {
+  metadata: {
+    generateName: string;
+  };
+
+  spec: {
+    clusterName: string;
+    kubeletRootDir?: string;
+  };
+}
+
 export interface PersistentBackEnd {
   /** es的配置 */
   es: EsInfo;
