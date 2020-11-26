@@ -262,7 +262,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
       return (
         <LinkButton
           key={'kubectl'}
-          disabled={isDeleting || disabledOp || namespace.spec.clusterName === 'global'}
+          disabled={isDeleting || disabledOp || (!WEBPACK_CONFIG_SHARED_CLUSTER && disabledCert) || namespace.spec.clusterName === 'global'}
           errorTip={namespace.spec.clusterName === 'global' ? 'global集群暂不支持' : null}
           tipDirection="right"
           onClick={() => {
