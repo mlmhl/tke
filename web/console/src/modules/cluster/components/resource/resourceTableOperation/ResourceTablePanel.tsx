@@ -935,7 +935,7 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
           }
         />
         {
-          type === 'namespace' && WEBPACK_CONFIG_SHARED_CLUSTER && <AccessCredentialsDialog isShowing={isShowKuctlDialog} close={close} selectedResource={selectedResource} />
+          WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && type === 'namespace' && <AccessCredentialsDialog isShowing={isShowKuctlDialog} close={close} selectedResource={selectedResource} />
         }
       </>
     );

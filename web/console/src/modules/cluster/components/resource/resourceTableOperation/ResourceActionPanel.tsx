@@ -99,8 +99,8 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
           }
           right={
             <React.Fragment>
-              {WEBPACK_CONFIG_SHARED_CLUSTER && resourceName === 'np' && this._renderAreaSelect()}
-              {WEBPACK_CONFIG_SHARED_CLUSTER && resourceName === 'np' && this._renderZoneSelect()}
+              {WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && resourceName === 'np' && this._renderAreaSelect()}
+              {WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && resourceName === 'np' && this._renderZoneSelect()}
               {TellIsNeedFetchNS(resourceName) && this._renderNamespaceSelect()}
               {this._renderTagSearchBox()}
               {this._renderAutoRenew()}

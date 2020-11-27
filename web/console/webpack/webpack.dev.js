@@ -17,8 +17,11 @@ const lng = process.argv[3] || 'zh';
  */
 const { version_keyword = '' } = process.env;
 const BusinessVersionObj = {
-  shared_cluster: 'shared_cluster'
+  shared_cluster: 'shared_cluster',
+  tke: 'tke',
+  project: 'project'
 };
+console.log('version & lng & version_keyword is:', version, lng, version_keyword);
 // console.log('process.env & process.argv: ', version_keyword, process.argv);
 module.exports = {
   devtool: 'eval-source-map',
@@ -109,7 +112,9 @@ module.exports = {
     new webpack.HotModuleReplacementPlugin(),
 
     new webpack.DefinePlugin({
-      WEBPACK_CONFIG_SHARED_CLUSTER: JSON.stringify(version_keyword === BusinessVersionObj.shared_cluster ? true : false)
+      WEBPACK_CONFIG_SHARED_CLUSTER: JSON.stringify(version_keyword === BusinessVersionObj.shared_cluster ? true : false),
+      WEBPACK_CONFIG_IS_PLATFORM: JSON.stringify(version === BusinessVersionObj.tke ? true : false),
+      WEBPACK_CONFIG_IS_BUSINESS: JSON.stringify(version === BusinessVersionObj.project ? true : false)
     })
   ],
 

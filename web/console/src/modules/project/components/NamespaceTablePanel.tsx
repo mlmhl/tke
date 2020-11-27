@@ -193,7 +193,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
           <div>
             <span className="text-overflow">{getCreatorFromLabels(x.metadata.labels)}</span>
           </div>
-        ),
+        )
       };
 
       columns.splice(2, 0, zoneCol, zoneLimitsCol, creatorCol);

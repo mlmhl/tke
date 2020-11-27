@@ -37,10 +37,10 @@ const AccessCredentialsDialog = React.memo((props: AccessCredentialsProps) => {
   //   return config;
   // }, []);
 
-  const certInfo = namespaceKubectlConfig.object && namespaceKubectlConfig.object.data;
+  const certInfo = namespaceKubectlConfig ? namespaceKubectlConfig.object && namespaceKubectlConfig.object.data : {};
   const { spec = {}} = (selectedResource && selectedResource.originalDataBak) || {};
   const { clusterName: clusterId = '', namespace: np } = spec;
-  const userName = userInfo.object.data ? userInfo.object.data.name : '';
+  const userName = userInfo && userInfo.object.data ? userInfo.object.data.name : '';
   // const kubectlConfig = certInfo ? getKubectlConfig(certInfo, clusterId, np, userName) : '';
   // const kubectlConfig = certInfo ? actions.projectNamespace.getKubectlConfig(certInfo, clusterId, np, userName) : '';
   // const kubectlConfig = 'fsdfaaa';
