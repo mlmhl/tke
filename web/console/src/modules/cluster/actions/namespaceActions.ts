@@ -46,7 +46,7 @@ const restActions = {
     return async (dispatch, getState: GetState) => {
       let { subRoot, route } = getState(),
         urlParams = router.resolve(route),
-        { isNeedFetchNamespace, mode } = subRoot;
+        { isNeedFetchNamespace, mode, resourceName } = subRoot;
 
       dispatch({
         type: ActionType.SelectNamespace,
@@ -62,7 +62,7 @@ const restActions = {
       }
 
       // 初始化或者变更Resource的信息，在创建页面当中，变更ns，不需要拉取resource
-      mode !== 'create' && dispatch(resourceActions.poll());
+      mode !== 'create' && resourceName !== 'event' && dispatch(resourceActions.poll());
     };
   }
 };

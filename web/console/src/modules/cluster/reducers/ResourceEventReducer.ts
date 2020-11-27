@@ -7,13 +7,7 @@ import { generateQueryReducer } from '@tencent/qcloud-redux-query';
 import * as ActionType from '../constants/ActionType';
 import { Event, Resource } from '../models';
 
-let defaultNamespace = reduceToPayload(ActionType.E_NamespaceSelection, 'default');
-/// #if tke
-defaultNamespace = reduceToPayload(ActionType.E_NamespaceSelection, 'default');
-/// #endif
-/// #if project
-defaultNamespace = reduceToPayload(ActionType.E_NamespaceSelection, '');
-/// #endif
+let defaultNamespace = reduceToPayload(ActionType.E_NamespaceSelection, {});
 
 const TempReducer = combineReducers({
   workloadType: reduceToPayload(ActionType.E_WorkloadType, ''),

@@ -3,12 +3,18 @@ import { FetcherState, QueryState, RecordSet } from '@tencent/ff-redux';
 import { Event, EventFilter } from './Event';
 import { Resource, ResourceFilter } from './ResourceOption';
 
+export type NamespaceItemType = {
+  namespace: string;
+  namespaceValue: string;
+  clusterId: string;
+};
+
 export interface ResourceEventOption {
   /** workloadType */
   workloadType?: string;
 
   /** namespaceSelection */
-  namespaceSelection?: string;
+  namespaceSelection?: NamespaceItemType;
 
   /** workloadquery */
   workloadQuery?: QueryState<ResourceFilter>;

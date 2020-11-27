@@ -7,6 +7,7 @@ import * as ActionType from '../constants/ActionType';
 import { PollEventName } from '../constants/Config';
 import { EventFilter, PodLogFilter, ResourceFilter, RootState } from '../models';
 import * as WebAPI from '../WebAPI';
+import { NamespaceItemType } from '@src/modules/cluster/models/ResourceEventOption';
 
 type GetState = () => RootState;
 const fetchOptions: FetchOptions = {
@@ -52,6 +53,7 @@ const workloadRestActions = {
     return async (dispatch, getState: GetState) => {
       let { route, subRoot } = getState(),
         { namespaceSelection } = subRoot.resourceEventOption;
+      const { namespace, namespaceValue, clusterId } = namespaceSelection;
 
       dispatch({
         type: ActionType.E_WorkloadType,
@@ -60,11 +62,11 @@ const workloadRestActions = {
 
       // 切换类型的时候，需要重新进行列表的拉取
       type !== '' &&
-        namespaceSelection !== '' &&
+      namespace !== '' &&
         dispatch(
           workloadActions.applyFilter({
-            namespace: namespaceSelection,
-            clusterId: route.queries['clusterId'],
+            namespace,
+            clusterId,
             regionId: route.queries['rid']
           })
         );
@@ -113,21 +115,21 @@ const restActons = {
   /** workload的相关操作 */
   workload: workloadActions,
 
-  /** 选择命名空间 */
-  selectNamespace: (namespace: string) => {
+  selectNamespace: (namespaceItem: NamespaceItemType) => {
     return async (dispatch, getState: GetState) => {
+      const { namespace, namespaceValue, clusterId } = namespaceItem;
       let { route, subRoot } = getState(),
         { workloadType } = subRoot.resourceEventOption;
 
       dispatch({
         type: ActionType.E_NamespaceSelection,
-        payload: namespace
+        payload: namespaceItem
       });
 
       // 切换命名空间时候，需要进行workload列表的拉取
       namespace !== '' &&
         workloadType !== '' &&
-        dispatch(workloadActions.applyFilter({ namespace, clusterId: route.queries['clusterId'] }));
+        dispatch(workloadActions.applyFilter({ namespace, clusterId }));
     };
   },
 
@@ -164,18 +166,20 @@ const restActons = {
   },
 
   /** 获取事件的数据 */
-  fetchEventData: (kind: string, namespace: string, name: string, isFromAutoSwicth: boolean = false) => {
+  // fetchEventData: (kind: string, namespace: string, name: string, isFromAutoSwicth: boolean = false) => {
+  fetchEventData: (kind: string, name: string, isFromAutoSwicth: boolean = false) => {
     return async (dispatch, getState: GetState) => {
-      let { route, subRoot, clusterVersion } = getState(),
-        { isAutoRenew } = subRoot.resourceEventOption;
+      let { route, subRoot, clusterVersion, namespaceList } = getState(),
+        { isAutoRenew, namespaceSelection } = subRoot.resourceEventOption;
 
       let resourceInfo: ResourceInfo = resourceConfig(clusterVersion)[kind];
+      const { namespace, namespaceValue, clusterId } = namespaceSelection;
 
       // 进行log的拉取
       let filterObj: EventFilter = {
         regionId: +route.queries['rid'],
         namespace,
-        clusterId: route.queries['clusterId'],
+        clusterId,
         kind: resourceInfo ? resourceInfo.headTitle : undefined,
         name
       };

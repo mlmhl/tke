@@ -5,7 +5,7 @@ import {
   RecordSet,
   ReduxAction,
   uuid,
-  createFFListActions
+  createFFListActions,
 } from '@tencent/ff-redux';
 import { generateQueryActionCreator } from '@tencent/qcloud-redux-query';
 
@@ -26,7 +26,7 @@ import { workloadEditActions } from './workloadEditActions';
 
 type GetState = () => RootState;
 const fetchOptions: FetchOptions = {
-  noCache: false
+  noCache: false,
 };
 
 const listResourceActions = createFFListActions<Resource, ResourceFilter>({
@@ -86,7 +86,7 @@ const listResourceActions = createFFListActions<Resource, ResourceFilter>({
       });
       const result: RecordSet<Resource> = {
         recordCount: list.length,
-        records: list
+        records: list,
       };
       return result;
     } else {
@@ -145,7 +145,7 @@ const listResourceActions = createFFListActions<Resource, ResourceFilter>({
     } else {
       dispatch(resourceActions.clearPollEvent());
     }
-  }
+  },
 });
 
 async function _reduceGameGateResource(clusterVersion, resourceQuery, resourceInfo, isClearData) {
@@ -153,16 +153,16 @@ async function _reduceGameGateResource(clusterVersion, resourceQuery, resourceIn
   let gameBRresourceInfo = resourceConfig(clusterVersion).lbcf_br;
   let gameBGList = await WebAPI.fetchResourceList(resourceQuery, {
       resourceInfo: gameBGresourceInfo,
-      isClearData
+      isClearData,
     }),
     gameLBList = await WebAPI.fetchResourceList(resourceQuery, {
       resourceInfo,
       isClearData,
-      isContinue: true
+      isContinue: true,
     }),
     gameBRList = await WebAPI.fetchResourceList(resourceQuery, {
       resourceInfo: gameBRresourceInfo,
-      isClearData
+      isClearData,
     });
   gameLBList.records.forEach((item, index) => {
     let backGroups = [];
@@ -179,21 +179,21 @@ async function _reduceGameGateResource(clusterVersion, resourceQuery, resourceIn
               return {
                 name: record.metadata.name,
                 backendAddr: record.status && record.status.backendAddr ? record.status.backendAddr : '-',
-                conditions: record.status && record.status.conditions ? record.status.conditions : []
+                conditions: record.status && record.status.conditions ? record.status.conditions : [],
               };
-            })
+            }),
           };
           if (backgroup.spec.pods) {
             backGroup['pods'] = {
               labels: backgroup.spec.pods.byLabel.selector,
               port: backgroup.spec.pods.port,
-              byName: backgroup.spec.pods.byName
+              byName: backgroup.spec.pods.byName,
             };
           } else if (backgroup.spec.service) {
             backGroup['service'] = {
               name: backgroup.spec.service.name,
               port: backgroup.spec.service.port,
-              nodeSelector: backgroup.spec.service.nodeSelector
+              nodeSelector: backgroup.spec.service.nodeSelector,
             };
           } else {
             backGroup['static'] = backgroup.spec.static;
@@ -213,7 +213,7 @@ const restActions = {
     return async (dispatch, getState: GetState) => {
       dispatch({
         type: ActionType.SelectMultipleResource,
-        payload: resource
+        payload: resource,
       });
     };
   },
@@ -223,7 +223,7 @@ const restActions = {
     return async (dispatch, getState: GetState) => {
       dispatch({
         type: ActionType.SelectDeleteResource,
-        payload: resource
+        payload: resource,
       });
     };
   },
@@ -233,7 +233,7 @@ const restActions = {
     return async dispatch => {
       dispatch({
         type: ActionType.InitResourceName,
-        payload: resourceName
+        payload: resourceName,
       });
 
       // 初始化 resourceInfo的信息
@@ -258,7 +258,7 @@ const restActions = {
 
       dispatch({
         type: ActionType.InitResourceInfo,
-        payload: resourceInfo
+        payload: resourceInfo,
       });
     };
   },
@@ -269,7 +269,7 @@ const restActions = {
       let { subRoot, clusterVersion, route } = getState(),
         {
           detailResourceOption: { detailResourceName, detailResourceList },
-          resourceInfo
+          resourceInfo,
         } = subRoot;
       let list = resourceInfo.requestType.detailInfoList[tab];
       if (list) {
@@ -285,11 +285,11 @@ const restActions = {
   initDetailResourceName: (resourceName: string) => {
     return async (dispatch, getState: GetState) => {
       let {
-        subRoot: { mode }
+        subRoot: { mode },
       } = getState();
       dispatch({
         type: ActionType.InitDetailResourceName,
-        payload: resourceName
+        payload: resourceName,
       });
       // 初始化 detailresourceInfo的信息
       dispatch(resourceActions.initDetailResourceInfo(resourceName));
@@ -307,7 +307,7 @@ const restActions = {
 
       dispatch({
         type: ActionType.InitDetailResourceInfo,
-        payload: resourceInfo
+        payload: resourceInfo,
       });
     };
   },
@@ -318,8 +318,8 @@ const restActions = {
         route,
         subRoot: {
           resourceName,
-          resourceOption: { ffResourceList }
-        }
+          resourceOption: { ffResourceList },
+        },
       } = getState();
       let list = [];
       if (rsName === resourceName) {
@@ -343,7 +343,7 @@ const restActions = {
       }
       dispatch({
         type: ActionType.InitDetailResourceList,
-        payload: list
+        payload: list,
       });
       dispatch(resourceActions.selectDetailResouceIns(list.length ? list[0].value : ''));
     };
@@ -357,7 +357,7 @@ const restActions = {
       let { tab } = router.resolve(route);
       dispatch({
         type: ActionType.SelectDetailResourceSelection,
-        payload: rsIns
+        payload: rsIns,
       });
       //如果存在这类资源则重新拉取数据
       if (rsIns) {
@@ -374,7 +374,7 @@ const restActions = {
     return async (dispatch, getState: GetState) => {
       dispatch({
         type: ActionType.SelectDetailDeleteResourceSelection,
-        payload: rsIns
+        payload: rsIns,
       });
     };
   },
@@ -384,7 +384,7 @@ const restActions = {
     return async dispatch => {
       dispatch({
         type: ActionType.SelectMode,
-        payload: mode
+        payload: mode,
       });
     };
   },
@@ -393,7 +393,7 @@ const restActions = {
   toggleIsNeedFetchNamespace: (isNeedFetch: boolean): ReduxAction<boolean> => {
     return {
       type: ActionType.IsNeedFetchNamespace,
-      payload: isNeedFetch
+      payload: isNeedFetch,
     };
   },
 
@@ -426,14 +426,14 @@ const restActions = {
         namespace: np,
         clusterId,
         regionId: +rid,
-        meshId
+        meshId,
       };
 
       dispatch(
-          resourceActions.polling({
-            filter: filterObj,
-            delayTime: 8000
-          })
+        resourceActions.polling({
+          filter: filterObj,
+          delayTime: 8000,
+        })
       );
     };
   },
@@ -448,9 +448,9 @@ const restActions = {
   /** 清除subRoot的信息 */
   clearSubRoot: (): ReduxAction<any> => {
     return {
-      type: ActionType.ClearSubRoot
+      type: ActionType.ClearSubRoot,
     };
-  }
+  },
 };
 
 export const resourceActions = extend(listResourceActions, restActions);

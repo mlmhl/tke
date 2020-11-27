@@ -25,60 +25,60 @@ insertCSS(
 const workloadTypeList = [
   {
     value: '',
-    label: t('全部类型')
+    label: t('全部类型'),
   },
   {
     value: 'cronjob',
-    label: 'CronJob'
+    label: 'CronJob',
   },
   {
     value: 'daemonset',
-    label: 'DaemonSet'
+    label: 'DaemonSet',
   },
   {
     value: 'deployment',
-    label: 'Deployment'
+    label: 'Deployment',
   },
   {
     value: 'ingress',
-    label: 'Ingress'
+    label: 'Ingress',
   },
   {
     value: 'job',
-    label: 'Job'
+    label: 'Job',
   },
   {
     value: 'node',
-    label: 'Node'
+    label: 'Node',
   },
   {
     value: 'pods',
-    label: 'Pod'
+    label: 'Pod',
   },
   {
     value: 'pv',
-    label: 'PersistentVolume'
+    label: 'PersistentVolume',
   },
   {
     value: 'pvc',
-    label: 'PersistentVolumeClaim'
+    label: 'PersistentVolumeClaim',
   },
   {
     value: 'sc',
-    label: 'StorageClass'
+    label: 'StorageClass',
   },
   {
     value: 'statefulset',
-    label: 'StatefulSet'
+    label: 'StatefulSet',
   },
   {
     value: 'svc',
-    label: 'Service'
+    label: 'Service',
   },
   {
     value: 'tapp',
-    label: 'TApp'
-  }
+    label: 'TApp',
+  },
 ];
 interface ResourceEventPanelState {
   /** 是否需要继续判断是否选择第一个命名空间 */
@@ -95,7 +95,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
   constructor(props) {
     super(props);
     this.state = {
-      isNeedReceive: true
+      isNeedReceive: true,
     };
   }
 
@@ -131,6 +131,19 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
     );
   }
 
+  // 业务侧下面通过带clusterid的完整namespace(属性name)找到纯namespace(属性namespace)
+  private trimNamespace(pNamespace: string) {
+    const { namespaceList } = this.props;
+    let namespace = pNamespace;
+    let clusterId = '';
+    const namespaceItem = namespaceList.data.records.find(item => item.name === pNamespace);
+    if (namespaceItem) {
+      namespace = namespaceItem.namespace;
+      clusterId = namespaceItem.clusterName;
+    }
+    return [namespace, clusterId];
+  }
+
   /** 展示条件筛选的部分 */
   private _renderEventFilterBar() {
     let { subRoot, namespaceList } = this.props,
@@ -151,7 +164,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
           value: item.name,
           text: <Tooltip title={text}>{text}</Tooltip>,
           groupKey: item.clusterName,
-          realText: text
+          realText: text,
         };
       });
 
@@ -159,32 +172,32 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
         groups: namespaceGroups,
         options: namespaceOptions,
 
-        filter: (inputValue, { realText }: any) => (realText ? realText.includes(inputValue) : true)
+        filter: (inputValue, { realText }: any) => (realText ? realText.includes(inputValue) : true),
       };
     } else {
       let namespaceOptions = namespaceList.data.records.map(n => {
         return {
           value: n.name,
-          text: n.displayName
+          text: n.name,
         };
       });
 
       namesapceSelectProps = {
-        options: namespaceOptions
+        options: namespaceOptions,
       };
     }
 
     // 展示workloadType的选择列表
     let workloadTypeOptions = workloadTypeList.map(w => ({
       value: w.value,
-      text: w.label
+      text: w.label,
     }));
 
     // 展示workloadList的选择列表
     let workloadListOptions = workloadList.data.records.map(w => {
       return {
         value: w.metadata.name,
-        text: w.metadata.name
+        text: w.metadata.name,
       };
     });
 
@@ -212,7 +225,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
                       searchable
                       appearence="button"
                       size="m"
-                      value={namespaceSelection}
+                      value={namespaceSelection.namespaceValue}
                       onChange={value => {
                         this._handleSelectForNamespace(value);
                       }}
@@ -263,13 +276,19 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
   }
 
   /** 处理namespace的选择 */
-  private _handleSelectForNamespace(namespace: string) {
-    let { actions, subRoot } = this.props,
+  private _handleSelectForNamespace(namespaceValue: string) {
+    let { actions, subRoot, namespaceList, route } = this.props,
       { workloadType, workloadSelection } = subRoot.resourceEventOption;
-    actions.resourceEvent.selectNamespace(namespace);
-
+    // 平台侧
+    let namespace = namespaceValue;
+    let clusterId = route.queries['clusterId'];
+    if (this.context.type === PlatformTypeEnum.Business) {
+      // 业务侧
+      [namespace, clusterId] = this.trimNamespace(namespaceValue);
+    }
+    actions.resourceEvent.selectNamespace({ namespace, namespaceValue, clusterId });
     // 这里需要去拉取数据
-    actions.resourceEvent.fetchEventData(workloadType, namespace, workloadSelection);
+    actions.resourceEvent.fetchEventData(workloadType, workloadSelection);
   }
 
   /** 处理workloadType的选择 */
@@ -282,7 +301,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
     actions.resourceEvent.workload.selectWorkload('');
 
     // 拉取相对应的事件的数据
-    actions.resourceEvent.fetchEventData(type, namespaceSelection, '');
+    actions.resourceEvent.fetchEventData(type, '');
   }
 
   /** 处理workload的选择 */
@@ -292,7 +311,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
     actions.resourceEvent.workload.selectWorkload(workload);
 
     // 拉取相对应的事件的数据
-    actions.resourceEvent.fetchEventData(workloadType, namespaceSelection, workload);
+    actions.resourceEvent.fetchEventData(workloadType, workload);
   }
 
   /** 处理自动刷新按钮 */
@@ -305,7 +324,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
       actions.resourceEvent.clearPollEvent();
     } else {
       // 进行日志的拉取
-      actions.resourceEvent.fetchEventData(workloadType, namespaceSelection, workloadSelection, true);
+      actions.resourceEvent.fetchEventData(workloadType, workloadSelection, true);
     }
   }
 
@@ -326,13 +345,13 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
         key: 'firstTime',
         header: t('首次出现时间'),
         width: '10%',
-        render: x => reduceTime(x.firstTimestamp)
+        render: x => reduceTime(x.firstTimestamp),
       },
       {
         key: 'lastTime',
         header: t('最后出现时间'),
         width: '10%',
-        render: x => reduceTime(x.lastTimestamp)
+        render: x => reduceTime(x.lastTimestamp),
       },
       {
         key: 'type',
@@ -342,7 +361,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
           <div>
             <p className={classnames('text-overflow', { 'text-danger': x.type === 'Warning' })}>{x.type}</p>
           </div>
-        )
+        ),
       },
       {
         key: 'resourceType',
@@ -354,7 +373,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
               {x.involvedObject.kind}
             </p>
           </div>
-        )
+        ),
       },
       {
         key: 'name',
@@ -367,7 +386,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
             </span>
             <Clip target={'#eventName' + x.id} className="hover-icon" />
           </div>
-        )
+        ),
       },
       {
         key: 'content',
@@ -379,7 +398,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
               {x.reason}
             </Text>
           </Bubble>
-        )
+        ),
       },
       {
         key: 'desp',
@@ -391,7 +410,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
               {x.message}
             </Text>
           </Bubble>
-        )
+        ),
       },
       {
         key: 'count',
@@ -401,8 +420,8 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
           <Text parent="div" overflow>
             {x.count}
           </Text>
-        )
-      }
+        ),
+      },
     ];
 
     let emptyTips: JSX.Element = <div>{t('事件列表为空')}</div>;
@@ -413,7 +432,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
         emptyTips={emptyTips}
         listModel={{
           list: eventList,
-          query: eventQuery
+          query: eventQuery,
         }}
         actionOptions={actions.resourceEvent}
       />

@@ -74,7 +74,7 @@ const restActions = {
     return async (dispatch, getState: GetState) => {
       let { subRoot, route, cluster, projectNamespaceList } = getState(),
         urlParams = router.resolve(route),
-        { isNeedFetchNamespace, mode } = subRoot;
+        { isNeedFetchNamespace, mode, resourceName } = subRoot;
 
       let finder = projectNamespaceList.data.records.find(item => item.metadata.name === namespace);
       if (!finder) {
@@ -102,7 +102,7 @@ const restActions = {
       }
 
       // 初始化或者变更Resource的信息，在创建页面当中，变更ns，不需要拉取resource
-      mode !== 'create' && finder ? dispatch(resourceActions.poll()) : dispatch(resourceActions.clearFetch());
+      mode !== 'create' && resourceName !== 'event' && finder ? dispatch(resourceActions.poll()) : dispatch(resourceActions.clearFetch());
     };
   }
 };
