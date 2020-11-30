@@ -26,12 +26,12 @@ import * as WebAPI from '../WebAPI';
 type GetState = () => RootState;
 
 const CMDBMapping = {
-  'teg.tkex.oa.com/department': 'department',
-  'teg.tkex.oa.com/department-id': 'departmentID',
-  'teg.tkex.oa.com/business1': 'business1',
-  'teg.tkex.oa.com/business1-id': 'business1ID',
-  'teg.tkex.oa.com/business2': 'business2',
-  'teg.tkex.oa.com/business2-id': 'business2ID',
+  'teg.tkex.oa.com/department': 'departmentName',
+  'teg.tkex.oa.com/department-id': 'departmentId',
+  'teg.tkex.oa.com/business1': 'businessLevelOneName',
+  'teg.tkex.oa.com/business1-id': 'businessLevelOneId',
+  'teg.tkex.oa.com/business2': 'businessLevelTwoName',
+  'teg.tkex.oa.com/business2-id': 'businessLevelTwoId',
 };
 
 const FFModelProjectActions = createFFListActions<Project, ProjectFilter>({

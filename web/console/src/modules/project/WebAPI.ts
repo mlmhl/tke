@@ -243,6 +243,29 @@ export async function editProject(projects: ProjectEdition[]) {
       },
       method = 'POST';
 
+    if (currentProject.id) {
+      //修改
+      method = 'PUT';
+      url += '/' + currentProject.id;
+      requestParams = JSON.parse(
+        JSON.stringify({
+          kind: projectResourceInfo.headTitle,
+          apiVersion: `${projectResourceInfo.group}/${projectResourceInfo.version}`,
+          metadata: {
+            name: currentProject.id,
+            resourceVersion: currentProject.resourceVersion,
+          },
+          spec: {
+            displayName: currentProject.displayName ? currentProject.displayName : null,
+            members: currentProject.members.length ? currentProject.members.map(m => m.name) : null,
+            parentProjectName: currentProject.parentProject ? currentProject.parentProject : null,
+          },
+          status: currentProject.status,
+        })
+      );
+    }
+
+    // 附加annotations, labels, spec.zones 或者 spec.clusters
     if (currentProject.isSharingCluster) {
       const { cmdbInfo } = currentProject;
       // labels 不支持中文，各种名称放到注解中
@@ -252,6 +275,7 @@ export async function editProject(projects: ProjectEdition[]) {
         { spec: { ...requestParams.spec, zones: clusterZones }},
         {
           metadata: {
+            ...requestParams['metadata'] || {},
             annotations: {
               'teg.tkex.oa.com/department': cmdbInfo.departmentName,
               'teg.tkex.oa.com/business1': cmdbInfo.businessLevelOneName,
@@ -270,29 +294,6 @@ export async function editProject(projects: ProjectEdition[]) {
       requestParams = Object.assign(requestParams, { spec: { ...requestParams.spec, clusters: clusterObject }});
     }
 
-    if (currentProject.id) {
-      //修改
-      method = 'PUT';
-      url += '/' + currentProject.id;
-      requestParams = JSON.parse(
-        JSON.stringify({
-          kind: projectResourceInfo.headTitle,
-          apiVersion: `${projectResourceInfo.group}/${projectResourceInfo.version}`,
-          metadata: {
-            name: currentProject.id,
-            resourceVersion: currentProject.resourceVersion,
-          },
-          spec: {
-            displayName: currentProject.displayName ? currentProject.displayName : null,
-            members: currentProject.members.length ? currentProject.members.map(m => m.name) : null,
-            // clusters: clusterObject,
-            zones: clusterZones,
-            parentProjectName: currentProject.parentProject ? currentProject.parentProject : null,
-          },
-          status: currentProject.status,
-        })
-      );
-    }
     let params: RequestParams = {
       method,
       url,
