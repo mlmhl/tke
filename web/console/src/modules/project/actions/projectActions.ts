@@ -25,6 +25,15 @@ import * as WebAPI from '../WebAPI';
 
 type GetState = () => RootState;
 
+const CMDBMapping = {
+  'teg.tkex.oa.com/department': 'department',
+  'teg.tkex.oa.com/department-id': 'departmentID',
+  'teg.tkex.oa.com/business1': 'business1',
+  'teg.tkex.oa.com/business1-id': 'business1ID',
+  'teg.tkex.oa.com/business2': 'business2',
+  'teg.tkex.oa.com/business2-id': 'business2ID',
+};
+
 const FFModelProjectActions = createFFListActions<Project, ProjectFilter>({
   actionName: 'project',
   fetcher: async (query, getState: GetState) => {
@@ -323,6 +332,7 @@ const restActions = {
       let {
         spec: { clusters: specClusters, zones: specZones }
       } = project;
+      // 反序列化集群/可用区/资源限制
       let isSharingCluster = false;
       let limitList = [];
       if (specClusters) {
@@ -362,6 +372,20 @@ const restActions = {
         }
         return result;
       });
+      // 反序列化 CMDB 信息
+      const formatCMDB = projectDetail => {
+        let cmdbInfo = {};
+        const { labels, annotations } = projectDetail.metadata;
+        cmdbInfo = Object.assign({}, labels ? labels : {}, annotations ? annotations : {});
+        const cmdbValue = Object.keys(CMDBMapping).reduce((accu, item, arr) => {
+          if (cmdbInfo[item]) {
+            accu[CMDBMapping[item]] = new RegExp(/-id$/).test(item) ? Number(cmdbInfo[item]) : cmdbInfo[item];
+          }
+          return accu;
+        }, {});
+        return cmdbValue;
+      };
+
       dispatch({
         type: ActionType.UpdateProjectEdition,
         payload: {
@@ -382,6 +406,7 @@ const restActions = {
           parentProject: project.spec.parentProjectName ? project.spec.parentProjectName : '',
           isSharingCluster,
           clusters: clustersInfo,
+          cmdbInfo: formatCMDB(project),
           status: project.status
         }
       });
