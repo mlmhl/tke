@@ -241,11 +241,11 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
 
   /**
    * 启用实例
-   * @param clbID
+   * @param clbId
    */
-  handleEnableInstance = async clbID => {
+  handleEnableInstance = async clbId => {
     let { clusterName } = this.state;
-    let response = await enableInstance(clusterName, clbID);
+    let response = await enableInstance(clusterName, clbId);
     if (response.code === 0 && response.message === 'OK') {
       this.alertSuccess();
     }
@@ -253,11 +253,11 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
 
   /**
    * 禁用实例
-   * @param clbID
+   * @param clbId
    */
-  handleDisableInstance = async clbID => {
+  handleDisableInstance = async clbId => {
     let { clusterName } = this.state;
-    let response = await disableInstance(clusterName, clbID);
+    let response = await disableInstance(clusterName, clbId);
     if (response.code === 0 && response.message === 'OK') {
       this.alertSuccess();
     }
@@ -265,12 +265,12 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
 
   /**
    * 删除实例
-   * @param item, 主要是取里面的 clbID 使用
+   * @param item, 主要是取里面的 clbId 使用
    */
   handleRemoveInstance = async item => {
     let { clusterName } = this.state;
-    let { clbID } = item;
-    let response = await removeInstance(clusterName, clbID);
+    let { clbId } = item;
+    let response = await removeInstance(clusterName, clbId);
     if (response.code === 0 && response.message === 'OK') {
       this.alertSuccess();
     }
