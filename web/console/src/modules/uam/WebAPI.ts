@@ -271,7 +271,7 @@ export async function fetchStrategyList(query: QueryState<StrategyFilter>) {
 
   const queryObj = {
     fieldSelector: {
-      [key]: isSharedCluster ? type : 'project',
+      [key]: isSharedCluster ? (type === 'business' ? 'project' : type) : 'project',
       keyword: search || ''
     }
   };
