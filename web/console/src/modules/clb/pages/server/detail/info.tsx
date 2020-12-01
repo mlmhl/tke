@@ -149,7 +149,7 @@ class InfoPanel extends React.Component<PropTypes, StateTypes> {
               <Form.Item label="Selector">
                 <Form.Text>
                   {Object.keys(selector).map(item => (
-                    <p key={item}>{item}</p>
+                    <p key={item}>{item}={selector[item]}</p>
                   ))}
                 </Form.Text>
               </Form.Item>
