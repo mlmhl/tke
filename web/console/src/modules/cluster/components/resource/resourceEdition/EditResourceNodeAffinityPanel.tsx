@@ -23,12 +23,16 @@ export class EditResourceNodeAffinityPanel extends React.Component<RootProps, {}
     let { actions, subRoot, route } = this.props;
     let { computer } = subRoot.workloadEdit;
     let { clusterId, rid } = route.queries;
+    /// #if tke
     actions.editWorkload.computer.applyFilter({ clusterId, regionId: +rid });
+    /// #endif
   }
 
   componentWillUnmount() {
     let { actions, subRoot, route } = this.props;
+    /// #if tke
     actions.editWorkload.computer.clearFetch();
+    /// #endif
   }
 
   _renderComputerTransferTable() {
@@ -87,72 +91,6 @@ export class EditResourceNodeAffinityPanel extends React.Component<RootProps, {}
     };
     return <FormPanelTransferTable<Computer> {...selectorProps} />;
   }
-
-  // _renderComputerList() {
-  //   let { route, subRoot } = this.props,
-  //     { computer } = subRoot.computerState,
-  //     { nodeSelection, v_nodeSelection } = subRoot.workloadEdit;
-  //   let content: JSX.Element[] = [];
-
-  //   if (computer.list.fetched !== true || computer.list.fetchState === FetchState.Fetching) {
-  //     // do something
-  //   }
-
-  //   computer.list.data.records.forEach((computer, index) => {
-  //     let item: JSX.Element;
-  //     try {
-  //       let readyCondition = computer.status.conditions.filter(item => item.type === 'Ready')[0];
-  //       let isComputerRunning = readyCondition['status'] === 'True';
-
-  //       item = (
-  //         <label key={index + 'label'} className="form-ctrl-label" style={{ display: 'block', margin: 10 }}>
-  //           <Bubble placement="top" content={!isComputerRunning ? t('节点状态不正常') : null}>
-  //             <input
-  //               disabled={!isComputerRunning}
-  //               type="checkbox"
-  //               className="tc-15-checkbox"
-  //               checked={nodeSelection.findIndex(node => node.metadata.name === computer.metadata.name) !== -1}
-  //               style={{ verticalAlign: 'middle' }}
-  //               onChange={e => this._handleNodeSelection(e.target.value)}
-  //               value={computer.metadata.name}
-  //             />
-  //             <span>{`${computer.metadata.name}(${computer.metadata.role})`}</span>
-  //           </Bubble>
-  //         </label>
-  //       );
-  //     } catch (error) {}
-  //     item && content.push(item);
-  //   });
-  //   if (computer.list.data.recordCount === 0) {
-  //     content.push(
-  //       <div style={{ fontSize: '11px', marginBottom: '-5px', marginTop: '2px' }}>
-  //         <strong>{t('该集群无可用节点')}</strong>
-  //         {/* { <p className='text-danger'></p> */}
-  //       </div>
-  //     );
-  //   }
-  //   v_nodeSelection.status === 2 &&
-  //     content.push(
-  //       <p className="text-danger" style={{ fontSize: '11px' }}>
-  //         {v_nodeSelection.message}
-  //       </p>
-  //     );
-  //   return content;
-  // }
-
-  // _handleNodeSelection(value) {
-  //   let { subRoot, actions } = this.props,
-  //     { computer } = subRoot.computerState,
-  //     nodeSelection = deepClone(subRoot.workloadEdit.nodeSelection);
-  //   let index = nodeSelection.findIndex(node => node.metadata.name === value);
-  //   if (index !== -1) {
-  //     nodeSelection.splice(index, 1);
-  //   } else {
-  //     let item = computer.list.data.records.find(computer => computer.metadata.name === value);
-  //     item && nodeSelection.push(item);
-  //   }
-  //   actions.editWorkload.selectNodeSelector(nodeSelection);
-  // }
 
   _renderAffinityRuleList(type: string) {
     let { actions, subRoot } = this.props,
