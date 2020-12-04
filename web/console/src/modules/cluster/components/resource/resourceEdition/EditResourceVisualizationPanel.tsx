@@ -50,10 +50,12 @@ import { ResourceEditHostPathDialog } from './ResourceEditHostPathDialog';
 import { ResourceSelectConfigDialog } from './ResourceSelectConfigDialog';
 import { CmdbInfo } from './EditNamespace/CmdbInfo';
 import { SharedClusterCmdbInfo, InitialData, SharedClusterCmdbData } from './EditNamespace/SharedClusterCmdbInfo';
+import EditResourceVolumeTemplatePanel from './EditResourceVolumeTemplatePanel';
 import { reduceNs } from '../../../../../../helpers';
 const { forwardRef } = React;
 const NewCmdbInfo = forwardRef(CmdbInfo);
 const NewSharedClusterCmdbInfo = forwardRef(SharedClusterCmdbInfo);
+const NewVolumeTemplatePanel = forwardRef(EditResourceVolumeTemplatePanel);
 /** service YAML当中的type映射 */
 const serviceTypeMap = {
   LoadBalancer: 'LoadBalancer',
@@ -83,6 +85,8 @@ interface EditResourceVisualizationPanelState {
 
   /**service访问设置高级设置 */
   isOpenServiceAdvancedSetting?: boolean;
+
+  isVolumeTemplateSetting?: boolean;
 }
 
 const mapDispatchToProps = dispatch =>
@@ -92,14 +96,17 @@ const mapDispatchToProps = dispatch =>
 export class EditResourceVisualizationPanel extends React.Component<RootProps, EditResourceVisualizationPanelState> {
   private myCMDBComponentRef: any;
   private mySharedClusterCMDBRef: any;
+  private volumeTemplateRef: any;
   constructor(props, context) {
     super(props, context);
     this.state = {
       isOpenAdvancedSetting: false,
-      isOpenServiceAdvancedSetting: false
+      isOpenServiceAdvancedSetting: false,
+      isVolumeTemplateSetting: false
     };
     this.myCMDBComponentRef = React.createRef();
     this.mySharedClusterCMDBRef = React.createRef();
+    this.volumeTemplateRef = React.createRef();
   }
 
   componentDidMount() {
@@ -148,7 +155,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   }
 
   render() {
-    let { actions, subRoot, namespaceList, route, cluster, projectSelection = '', rawProjectList = [] } = this.props,
+    let { actions, subRoot, namespaceList, route, cluster, projectSelection = '', rawProjectList = [], clusterVersion } = this.props,
       urlParams = router.resolve(route),
       { workloadEdit, modifyResourceFlow, applyResourceFlow, serviceEdit, isNeedExistedLb, addons } = subRoot,
       {
@@ -173,10 +180,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         isCanUseTapp
       } = workloadEdit,
       { secretList } = configEdit;
-
+    const { isVolumeTemplateSetting } = this.state;
     // 是否开启高级设置
     let isOpenAdvanced = this.state.isOpenAdvancedSetting;
-
     /** 渲染 重启策略列表 */
     let restartOptions = RestartPolicyTypeList.map((item, index) => (
       <option key={index} value={item.value}>
@@ -244,6 +250,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       business2Id
     };
 
+    const clusterValue = cluster.selection ? cluster.selection.metadata.name : route.queries['clusterId'];
     return (
       <MainBodyLayout>
         <FormLayout>
@@ -289,7 +296,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               <EditResourceLabelPanel />
               <FormItem label={t('集群')}>
                 <FormPanel.InlineText style={{ marginLeft: 0 }}>
-                  {cluster.selection ? cluster.selection.metadata.name : route.queries['clusterId']}
+                  {clusterValue}
                 </FormPanel.InlineText>
               </FormItem>
               <FormItem label={t('命名空间')}>
@@ -319,6 +326,15 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                   </Radio.Group>
                 </div>
               </FormItem>
+              {
+                isVolumeTemplateSetting && (
+                  <NewVolumeTemplatePanel
+                    ref={this.volumeTemplateRef}
+                    clusterId={clusterValue}
+                    namespace={reduceNs(namespace, clusterValue)}
+                  />
+                )
+              }
               <FormItem label={t('节点异常策略')} isShow={workloadType === 'tapp'}>
                 <Select
                   size="m"
@@ -531,6 +547,13 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
   /** 生成 workload类型的radio列表 */
   private _handleResourceTypeSelect(resourceType: string) {
+    let isVolumeTemplateSetting = false;
+    if (['statefulset', 'tapp'].indexOf(resourceType) !== -1 && WEBPACK_CONFIG_SHARED_CLUSTER) {
+      isVolumeTemplateSetting = true;
+    }
+    this.setState({
+      isVolumeTemplateSetting
+    });
     let { actions } = this.props;
     actions.editWorkload.selectResourceType(resourceType);
   }
@@ -540,9 +563,14 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   private async _handleSubmit() {
     let { actions, subRoot, route, region, clusterVersion, userInfo } = this.props,
       { mode, workloadEdit, serviceEdit } = subRoot;
+    const { isVolumeTemplateSetting } = this.state;
     const creator = userInfo.object.data && userInfo.object.data.name || '';
+    const { current: volumeTemplateCurrent } = this.volumeTemplateRef;
 
     actions.validate.workload.validateWorkloadEdit();
+    if(isVolumeTemplateSetting && !volumeTemplateCurrent.triggerValidation()) {
+      return;
+    }
     if (validateWorkloadActions._validateWorkloadEdit(workloadEdit, serviceEdit)) {
       let {
         isCreateService,
@@ -657,6 +685,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         if(moduleName) {
           templateAnnotations['teg.tkex.oa.com/module'] = moduleName;
         }
+
+
       }
       if (cmdb) {
 
@@ -700,7 +730,6 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           hostNetwork: networkType === WorkloadNetworkTypeEnum.Host ? true : undefined
         }
       };
-
       // cronjob的独有的配置
       let jobTemplateContent = {
         spec: {
@@ -732,7 +761,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           forceDeletePod: isTapp ? (nodeAbnormalMigratePolicy === 'true' ? true : false) : undefined
         }
       };
-
+      if(isVolumeTemplateSetting) {
+        jsonData.spec['volumeClaimTemplates'] = volumeTemplateCurrent.getVolumeTemplates();
+      }
       /**
        * ========================== 此处是同时创建Service ==========================
        * pre: deployment || statefulset || tapp
