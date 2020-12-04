@@ -38,6 +38,7 @@ const AccessCredentialsDialog = React.memo((props: AccessCredentialsProps) => {
   // }, []);
 
   const certInfo = namespaceKubectlConfig ? namespaceKubectlConfig.object && namespaceKubectlConfig.object.data : {};
+  const { apiServer = '-', apiServerIP = '-' } = certInfo || {};
   const { spec = {}} = (selectedResource && selectedResource.originalDataBak) || {};
   const { clusterName: clusterId = '', namespace: np } = spec;
   const userName = userInfo && userInfo.object.data ? userInfo.object.data.name : '';
@@ -130,6 +131,13 @@ const AccessCredentialsDialog = React.memo((props: AccessCredentialsProps) => {
             测试是否可正常访问您的命名空间下的资源。如果无法连接请查看是否已经开启公网访问或内网访问入口，并确保访问客户端在指定的网络环境内。
             如果返回 (Forbidden) 错误，请确保用户具有所在业务相应的权限。
           </p>
+          {
+            WEBPACK_CONFIG_SHARED_CLUSTER && (
+              <p style={{ marginBottom: '5px' }}>
+                4. 当 APIServer 地址为 clb 类型地址（形如 cls-xxxxxxxxxxxxx.clb.myqcloud.com）时， 您还需要在访问机上配置域名。请在访问机上执行以下命令：sudo sed -i &#39;$a {apiServerIP} {apiServer}&#39; /etc/hosts
+              </p>
+            )
+          }
         </div>
       </Modal.Body>
       <Modal.Footer>

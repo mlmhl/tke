@@ -176,7 +176,8 @@ export async function fetchNamespaceKubectlConfig(query: QueryState<NamespaceFil
     certPem: '',
     keyPem: '',
     caCertPem: '',
-    apiServer: ''
+    apiServer: '',
+    apiServerIP: ''
   };
   try {
     let response = await reduceNetworkRequest(params);
@@ -185,7 +186,8 @@ export async function fetchNamespaceKubectlConfig(query: QueryState<NamespaceFil
         certPem: response.data.status.certificate.certPem,
         keyPem: response.data.status.certificate.keyPem,
         caCertPem: response.data.status.certificate.caCertPem,
-        apiServer: response.data.status.certificate.apiServer
+        apiServer: response.data.status.certificate.apiServer,
+        apiServerIP: response.data.status.certificate.apiServerIP
       };
     }
   } catch (error) {}
