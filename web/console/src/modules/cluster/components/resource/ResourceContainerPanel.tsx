@@ -65,6 +65,9 @@ export class ResourceContainerPanel extends React.Component<RootProps, ResourceC
     !isNeedFetchRegion &&
       cluster.list.data.recordCount === 0 &&
       actions.cluster.applyFilter({ regionId: region.selection.value });
+
+    // 获取用户信息并存储在redux中
+    actions.user.fetch();
   }
 
   componentWillReceiveProps(nextProps: RootProps) {

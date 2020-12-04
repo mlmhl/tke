@@ -191,7 +191,7 @@ export const CmdbInfo = (
         <div className="CMDB-modify-content">
           <Form>
             {
-              !WEBPACK_CONFIG_SHARED_CLUSTER && (
+              (!WEBPACK_CONFIG_SHARED_CLUSTER || WEBPACK_CONFIG_IS_PLATFORM) && (
                 <>
                   <Form.Item label={t('部门')} showStatusIcon={false}>
                     <Controller
@@ -254,7 +254,7 @@ export const CmdbInfo = (
                 control={control}
               />
             </Form.Item>
-            {hasPod && !WEBPACK_CONFIG_SHARED_CLUSTER && (
+            {hasPod && (!WEBPACK_CONFIG_SHARED_CLUSTER || WEBPACK_CONFIG_IS_PLATFORM) && (
               <Form.Item label="自动同步所有pod">
                 <Controller
                   as={<Switch defaultValue={defaultBusinessInfo && defaultBusinessInfo.all ? true : false} />}

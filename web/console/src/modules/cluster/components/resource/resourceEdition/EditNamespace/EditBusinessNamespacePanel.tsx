@@ -42,9 +42,10 @@ export const EditBusinessNamespacePanel = () => {
   const state = useSelector(state => state);
   const dispatch = useDispatch();
   const { actions } = bindActionCreators({ actions: allActions }, dispatch);
-  const { projectList, projectSelection, subRoot, route } = state;
+  const { projectList, projectSelection, subRoot, route, userInfo } = state;
   const selection = subRoot.resourceOption.ffResourceList.selection;
   const selectResource = selection ? selection.originalDataBak : null;
+  const loginUserName = userInfo.object.data.name;
 
   /**
    * 页面滚动逻辑
@@ -293,7 +294,7 @@ export const EditBusinessNamespacePanel = () => {
       hard,
     };
     let namespaceChangeResult = null;
-    if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+    if (WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS) {
       const { current } = mySharedClusterCMDBRef;
       // @ts-ignore
       const { moduleName, moduleId } = current.getSharedClusterCmdbData();
@@ -311,6 +312,7 @@ export const EditBusinessNamespacePanel = () => {
         const [prefix, area, number] = zone.split('-');
         newLabels['teg.tkex.oa.com/region'] = `${prefix}-${area}`;
         newLabels['zone.teg.tkex.oa.com/' + zone] = '';
+        newLabels['teg.tkex.oa.com/creator'] = loginUserName;
         const newMetadata = {
           labels: newLabels,
           annotations: newAnnotations
@@ -491,7 +493,7 @@ export const EditBusinessNamespacePanel = () => {
                 showStatusIcon={false}
                 status={errors.clusterName ? 'error' : 'success'}
                 message={errors.clusterName && errors.clusterName.message}
-                >
+              >
                 {
                   mode === MODIFY ? (
                       `${selectResource.spec.clusterName}(${selectResource.spec.clusterDisplayName})`

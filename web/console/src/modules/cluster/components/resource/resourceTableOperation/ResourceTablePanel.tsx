@@ -720,11 +720,13 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
   private _reduceResourceLimit(showData) {
     let resourceLimitKeys = showData && showData !== '-' ? Object.keys(showData) : [];
     let content = resourceLimitKeys.map((item, index) => (
-      <Text parent="p" key={index}>{`${resourceLimitTypeToText[item]}:${
-        resourceTypeToUnit[item] === 'MiB'
-          ? valueLabels1024(showData[item], K8SUNIT.Mi)
-          : valueLabels1000(showData[item], K8SUNIT.unit)
-      }${resourceTypeToUnit[item]}`}</Text>
+      <Text parent="p" key={index}>{
+        `${resourceLimitTypeToText[item]}:${
+            resourceTypeToUnit[item] === 'MiB'
+              ? valueLabels1024(showData[item], K8SUNIT.Mi)
+              : valueLabels1000(showData[item], K8SUNIT.unit)
+          }${resourceTypeToUnit[item]}`
+      }</Text>
     ));
     return (
       <Bubble placement="left" content={content}>

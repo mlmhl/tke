@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 
 import {
-    createFFListReducer, generateWorkflowReducer, RecordSet, reduceToPayload
+  createFFListReducer, createFFObjectReducer, generateWorkflowReducer, RecordSet, reduceToPayload
 } from '@tencent/ff-redux';
 import { generateFetcherReducer } from '@tencent/qcloud-redux-fetcher';
 import { generateQueryReducer } from '@tencent/qcloud-redux-query';
@@ -84,5 +84,7 @@ export const RootReducer = combineReducers({
 
   modifyClusterName: generateWorkflowReducer({
     actionType: ActionType.ModifyClusterNameWorkflow
-  })
+  }),
+
+  userInfo: createFFObjectReducer(FFReduxActionName.UserInfo),
 });
