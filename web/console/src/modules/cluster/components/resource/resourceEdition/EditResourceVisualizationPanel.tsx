@@ -223,6 +223,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       return {
         value: name,
         text,
+        tooltip: text
       };
     });
 
@@ -301,7 +302,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               </FormItem>
               <FormItem label={t('命名空间')}>
                 <Select
-                  size="m"
+                  size="l"
                   options={namespaceOptions}
                   value={namespace}
                   onChange={value => {
