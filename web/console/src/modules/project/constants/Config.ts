@@ -105,7 +105,9 @@ export const resourceTypeToUnit = {
   'requests.memory': 'MiB',
   'limits.memory': 'MiB',
   'requests.ephemeral-storage': 'MiB',
-  'limits.ephemeral-storage': 'MiB'
+  'limits.ephemeral-storage': 'MiB',
+  'teg.tkex.oa.com/cbs-premium-storage': 'MiB',
+  'teg.tkex.oa.com/cbs-ssd-storage': 'MiB'
 };
 export const resourceLimitTypeToText = {
   pods: t('Pod数目'),
@@ -121,7 +123,9 @@ export const resourceLimitTypeToText = {
   'requests.memory': t('Mem Request'),
   'limits.memory': t('Mem Limits'),
   'requests.ephemeral-storage': t('Local ephemeral storage Request'),
-  'limits.ephemeral-storage': t('Local ephemeral storage Limits')
+  'limits.ephemeral-storage': t('Local ephemeral storage Limits'),
+  'teg.tkex.oa.com/cbs-premium-storage': t('高性能云盘'),
+  'teg.tkex.oa.com/cbs-ssd-storage': t('SSD云盘')
 };
 
 export const initProjectResourceLimit = {
