@@ -83,13 +83,13 @@ export class EditResourceContainerPanel extends React.Component<RootProps, {}> {
   private _handleAddContainer(container: ContainerItem) {
     let { actions, subRoot } = this.props,
       { workloadEdit } = subRoot,
-      { volumes, containers } = workloadEdit;
+      { volumes, containers, volumeTemplates } = workloadEdit;
 
     actions.validate.workload.validateContainer(container);
 
     // 新增容器
     if (container) {
-      if (validateWorkloadActions._validateContainer(container, volumes, containers)) {
+      if (validateWorkloadActions._validateContainer(container, volumes, containers, volumeTemplates)) {
         actions.editWorkload.updateContainer({ status: 'edited' }, container.id + '');
         actions.editWorkload.addContainer();
       }

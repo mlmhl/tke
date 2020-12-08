@@ -216,13 +216,13 @@ export class EditResourceContainerItem extends React.Component<ContainerItemProp
   private _handleSaveContainer(cKey: string) {
     let { actions, subRoot } = this.props,
       { workloadEdit } = subRoot,
-      { containers, volumes } = workloadEdit;
+      { containers, volumes, volumeTemplates } = workloadEdit;
 
     let container = containers.find(c => c.id === cKey);
     // 校验container的所有选项
     actions.validate.workload.validateContainer(container);
 
-    if (validateWorkloadActions._validateContainer(container, volumes, containers)) {
+    if (validateWorkloadActions._validateContainer(container, volumes, containers, volumeTemplates)) {
       actions.editWorkload.updateContainer({ status: 'edited' }, cKey);
     }
   }

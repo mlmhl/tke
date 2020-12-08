@@ -1,4 +1,4 @@
-import { FetcherState, Identifiable, QueryState, RecordSet, FFListModel } from '@tencent/ff-redux';
+import { FetcherState, Identifiable, QueryState, RecordSet, FFListModel, reduceToPayload } from '@tencent/ff-redux';
 
 import { Validation } from '../../common/models';
 import { ConfigItems, ContainerItem, Resource, ResourceFilter, VolumeItem } from '../models';
@@ -46,6 +46,8 @@ export interface WorkloadEdit extends Identifiable {
 
   /** 数据卷 */
   volumes?: VolumeItem[];
+
+  volumeTemplates: any[];
 
   /** 是否所有的数据卷都已经被挂载 */
   isAllVolumeIsMounted?: boolean;

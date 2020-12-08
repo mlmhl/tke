@@ -821,7 +821,7 @@ export const validateWorkloadActions = {
   },
 
   /** 校验数据卷挂在是否正确 */
-  _validateVolumeMount(volumeName: string, mId: string, mounts: MountItem[], volumes: VolumeItem[]) {
+  _validateVolumeMount(volumeName: string, mId: string, mounts: MountItem[], volumes: VolumeItem[], volumeTeplates: any[]) {
     let mount = mounts.find(m => m.id === mId),
       status = 0,
       message = '';
@@ -829,7 +829,7 @@ export const validateWorkloadActions = {
     if (!volumeName && mount.mountPath) {
       status = 2;
       message = t('请选择数据卷');
-    } else if (!volumes.find(v => v.name === volumeName)) {
+    } else if (!volumes.concat(volumeTeplates).find(v => v.name === volumeName)) {
       status = 2;
       message = t('数据卷不存在');
     } else {
@@ -841,7 +841,7 @@ export const validateWorkloadActions = {
 
   validateVolumeMount(volumeName: string, cId: string, mId: string) {
     return async (dispatch, getState: GetState) => {
-      let { containers, volumes } = getState().subRoot.workloadEdit;
+      let { containers, volumes, volumeTemplates } = getState().subRoot.workloadEdit;
 
       let newContainers: ContainerItem[] = cloneDeep(containers),
         cIndex = newContainers.findIndex(c => c.id === cId),
@@ -850,7 +850,8 @@ export const validateWorkloadActions = {
           volumeName,
           mId,
           newContainers[cIndex]['mounts'],
-          volumes
+          volumes,
+          volumeTemplates
         );
 
       newContainers[cIndex]['mounts'][mIndex]['v_volume'] = result;
@@ -861,12 +862,12 @@ export const validateWorkloadActions = {
     };
   },
 
-  _validateAllVolumeMount(mounts: MountItem[], volumes: VolumeItem[]) {
+  _validateAllVolumeMount(mounts: MountItem[], volumes: VolumeItem[], volumeTemplates) {
     let result = true;
     mounts.forEach(m => {
       if (m.mountPath) {
         result =
-          result && validateWorkloadActions._validateVolumeMount(m.volume, m.id + '', mounts, volumes).status === 1;
+          result && validateWorkloadActions._validateVolumeMount(m.volume, m.id + '', mounts, volumes, volumeTemplates).status === 1;
       }
     });
     return result;
@@ -1667,7 +1668,7 @@ export const validateWorkloadActions = {
   },
 
   /** 校验容器的所有参数是否已经全部ok */
-  _validateContainer(container: ContainerItem, volumes: VolumeItem[], containers: ContainerItem[]) {
+  _validateContainer(container: ContainerItem, volumes: VolumeItem[], containers: ContainerItem[], volumeTemplates: any[]) {
     let result = true;
 
     result =
@@ -1697,7 +1698,7 @@ export const validateWorkloadActions = {
         result =
           result &&
           validateWorkloadActions._validateAllVolumeMountPath(container.mounts) &&
-          validateWorkloadActions._validateAllVolumeMount(container.mounts, volumes);
+          validateWorkloadActions._validateAllVolumeMount(container.mounts, volumes, volumeTemplates);
       }
     }
 
@@ -2078,7 +2079,7 @@ export const validateWorkloadActions = {
     }
 
     workloadEdit.containers.forEach(c => {
-      result = result && validateWorkloadActions._validateContainer(c, workloadEdit.volumes, workloadEdit.containers);
+      result = result && validateWorkloadActions._validateContainer(c, workloadEdit.volumes, workloadEdit.containers, workloadEdit.volumeTemplates);
     });
 
     // 判断当前的workload的类型

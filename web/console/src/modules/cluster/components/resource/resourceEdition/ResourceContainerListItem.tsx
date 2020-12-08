@@ -81,13 +81,13 @@ export class ResourceContainerListItem extends React.Component<ContainerListItem
   private _handleEditButton(cKey: string) {
     let { actions, subRoot } = this.props,
       { workloadEdit } = subRoot,
-      { containers, volumes } = workloadEdit;
+      { containers, volumes, volumeTemplates } = workloadEdit;
 
     let editingContainer = containers.find(c => c.status === 'editing');
 
     if (editingContainer) {
       actions.validate.workload.validateContainer(editingContainer);
-      if (validateWorkloadActions._validateContainer(editingContainer, volumes, containers)) {
+      if (validateWorkloadActions._validateContainer(editingContainer, volumes, containers, volumeTemplates)) {
         actions.editWorkload.updateContainer({ status: 'edited' }, editingContainer.id + '');
         actions.editWorkload.updateContainer({ status: 'editing' }, cKey);
       }

@@ -15,6 +15,8 @@ interface ERVTPanel {
 }
 const EditResourceVolumeTemplatePanel = (props: ERVTPanel, ref) => {
   const clusterVersion = useSelector((state) => state.clusterVersion);
+  const dispatch = useDispatch();
+  const { actions } = bindActionCreators({ actions: allActions }, dispatch);
   const { clusterId, namespace } = props;
   const [templateVolumesMap, setTemplateVolumesMap] = useState({});
   const [editKey, setEditKey] = useState();
@@ -81,6 +83,9 @@ const EditResourceVolumeTemplatePanel = (props: ERVTPanel, ref) => {
       });
       setCanAdd(canAdd);
       setIsNeedAlertError(hasError);
+      if (canAdd && tvLength) {
+        actions.editWorkload.addVolumeTemplates(templateVolumesList);
+      }
     }
   }, [JSON.stringify(templateVolumesMap)]);
 

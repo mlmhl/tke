@@ -218,6 +218,7 @@ export const W_QueryHpaList = 'W_QueryHpaList';
 export const W_FetchHpaList = 'W_FetchHpaList';
 export const W_NodeAbnormalMigratePolicy = 'W_NodeAbnormalMigratePolicy';
 export const W_UpdateOversoldRatio = 'W_UpdateOversoldRatio';
+export const W_AddVolumeTempates = 'W_AddVolumeTempates';
 
 /**亲和性调度相关 */
 export const WV_NodeSelector = 'WV_NodeSelector';

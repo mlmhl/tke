@@ -485,7 +485,14 @@ export const workloadEditActions = {
       });
     };
   },
-
+  addVolumeTemplates: (arrs) => {
+    return async (dispatch, getState: GetState) => {
+      dispatch({
+        type: ActionType.W_AddVolumeTempates,
+        payload: arrs
+      });
+    };
+  },
   /** 新增容器挂载点 */
   addMount: (cId: string) => {
     return async (dispatch, getState: GetState) => {

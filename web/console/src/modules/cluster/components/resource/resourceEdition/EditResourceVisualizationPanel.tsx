@@ -567,9 +567,13 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     const { isVolumeTemplateSetting } = this.state;
     const creator = userInfo.object.data && userInfo.object.data.name || '';
     const { current: volumeTemplateCurrent } = this.volumeTemplateRef;
+    const { current: mySharedClusterCMDBRefCurrent } = this.mySharedClusterCMDBRef;
 
     actions.validate.workload.validateWorkloadEdit();
     if(isVolumeTemplateSetting && !volumeTemplateCurrent.triggerValidation()) {
+      return;
+    }
+    if(WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && !mySharedClusterCMDBRefCurrent.triggerValidation())  {
       return;
     }
     if (validateWorkloadActions._validateWorkloadEdit(workloadEdit, serviceEdit)) {
@@ -586,6 +590,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         completion,
         parallelism,
         volumes,
+        volumeTemplates,
         description,
         containers,
         isNeedContainerNum,
@@ -610,7 +615,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       let volumesInfo = this._reduceVolumes(finalVolumes);
 
       // 进行容器的相关数据拼接
-      let containersInfo = this._reduceContainers(containers, volumes, { oversoldRatio, networkType });
+      let containersInfo = this._reduceContainers(containers, volumes, volumeTemplates, { oversoldRatio, networkType });
 
       // 进行容器的labels的数据拼接，默认有一个 qcloud-app: workload的名称，很懂监控等都用qcloud-app的标签
       let labelsInfo = { 'qcloud-app': workloadName };
@@ -1075,7 +1080,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   }
 
   /** 处理container相关的配置项 */
-  private _reduceContainers(containers: ContainerItem[], volumes: VolumeItem[], extraOption?: any) {
+  private _reduceContainers(containers: ContainerItem[], volumes: VolumeItem[], volumeTemplates: any[], extraOption?: any) {
     let containersInfo = [];
     let { oversoldRatio, networkType } = extraOption;
     containersInfo = containers.map(c => {
@@ -1086,7 +1091,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       };
 
       // 挂载点的相关配置
-      if (c.mounts.length && volumes.length) {
+      if (c.mounts.length && (volumes.length || volumeTemplates.length)) {
         containerItem['volumeMounts'] = c.mounts.map(m => {
           return {
             mountPath: m.mountPath,

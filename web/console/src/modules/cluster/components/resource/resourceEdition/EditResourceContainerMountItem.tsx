@@ -54,9 +54,9 @@ export class EditResourceContainerMountItem extends React.Component<ContainerMou
   private _hasAvailableVolume() {
     let { subRoot } = this.props,
       { workloadEdit } = subRoot,
-      { volumes } = workloadEdit;
+      { volumes, volumeTemplates } = workloadEdit;
 
-    let filters = uniq(filterValidMountVolumes(volumes), 'name');
+    let filters = uniq(filterValidMountVolumes(volumes).concat(volumeTemplates), 'name');
 
     return !isEmpty(filters);
   }
@@ -65,14 +65,14 @@ export class EditResourceContainerMountItem extends React.Component<ContainerMou
   private _renderMountList() {
     let { actions, cKey, subRoot } = this.props,
       { workloadEdit } = subRoot,
-      { containers, volumes } = workloadEdit;
+      { containers, volumes, volumeTemplates } = workloadEdit;
 
     let container = containers.find(c => c.id === cKey),
       canAdd = isEmpty(container.mounts.filter(x => !x.volume || !x.mountPath)),
       self = this;
 
     /** 渲染数据卷列表 */
-    let filters = uniq(filterValidMountVolumes(volumes), 'name');
+    let filters = uniq(filterValidMountVolumes(volumes).concat(volumeTemplates), 'name');
     let volumeOptions = filters.map((f, index) => (
       <option key={index} value={f.name}>
         {f.name}

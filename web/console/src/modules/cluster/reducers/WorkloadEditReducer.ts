@@ -100,6 +100,8 @@ const TempReducer = combineReducers({
 
   volumes: reduceToPayload(ActionType.W_UpdateVolumes, []),
 
+  volumeTemplates: reduceToPayload(ActionType.W_AddVolumeTempates, []),
+
   isAllVolumeIsMounted: reduceToPayload(ActionType.W_IsAllVolumeIsMounted, false),
 
   isShowCbsDialog: reduceToPayload(ActionType.W_IsShowCbsDialog, false),
