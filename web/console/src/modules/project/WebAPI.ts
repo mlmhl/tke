@@ -31,7 +31,8 @@ import {
 } from './models/Project';
 declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 
-const cmdbURL = 'http://c.oa.com/api/?api_key=tencent_suanli_gaia';
+// const cmdbURL = 'http://c.oa.com/api/?api_key=tencent_suanli_gaia';
+const cmdbURL = '/web-api/cmdb?api_key=tencent_suanli_gaia';
 
 // 返回标准操作结果
 function operationResult<T>(target: T[] | T, error?: any): OperationResult<T>[] {

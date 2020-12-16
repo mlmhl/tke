@@ -634,11 +634,12 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
       finalContent = <noscript />;
     } else {
       let { sideBar = true } = this.props;
+      const style = WEBPACK_CONFIT_YUNTI ? { top: 0, left: 0 } : { left: 0 };
       finalContent = (
         <React.Fragment>
-          {this._renderTopBar(query)}
+          {!WEBPACK_CONFIT_YUNTI && this._renderTopBar(query)}
 
-          <div className="qc-animation-empty container container-tke2-cluster" id="tkestack" style={{ left: 0 }}>
+          <div className="qc-animation-empty container container-tke2-cluster" id="tkestack" style={style}>
             {sideBar && this._renderSideBar(query)}
 
             <div id="appArea" className="main" style={sideBar ? {} : { left: 0 }}>

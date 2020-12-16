@@ -7,7 +7,8 @@ import { RequestParams, Resource } from '../../../modules/common';
 import { ResourceInfo } from '../../common/models/ResourceInfo';
 import { Namespace, ResourceFilter } from '../models';
 const tips = seajs.require('tips');
-const url = 'http://c.oa.com/api/';
+// const url = 'http://c.oa.com/api/';
+const url = '/web-api/cmdb';
 const jsonrpc = '2.0';
 
 /**
