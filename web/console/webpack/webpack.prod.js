@@ -26,7 +26,8 @@ const { version_keyword = '' } = process.env;
 const BusinessVersionObj = {
   shared_cluster: 'shared_cluster',
   tke: 'tke',
-  project: 'project'
+  project: 'project',
+  yunti: 'yunti'
 };
 console.log('version & lng & version_keyword is:', version, lng, version_keyword);
 module.exports = {
@@ -114,7 +115,8 @@ module.exports = {
     }),
 
     new webpack.DefinePlugin({
-      WEBPACK_CONFIG_SHARED_CLUSTER: JSON.stringify(version_keyword === BusinessVersionObj.shared_cluster ? true : false),
+      WEBPACK_CONFIG_SHARED_CLUSTER: JSON.stringify([BusinessVersionObj.shared_cluster, BusinessVersionObj.yunti].indexOf(version_keyword) !== -1 ? true : false),
+      WEBPACK_CONFIT_YUNTI: JSON.stringify(version_keyword === BusinessVersionObj.yunti ? true : false),
       WEBPACK_CONFIG_IS_PLATFORM: JSON.stringify(version === BusinessVersionObj.tke ? true : false),
       WEBPACK_CONFIG_IS_BUSINESS: JSON.stringify(version === BusinessVersionObj.project ? true : false)
     })
