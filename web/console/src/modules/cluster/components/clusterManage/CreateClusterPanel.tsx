@@ -121,10 +121,7 @@ export class CreateClusterPanel extends React.Component<RootProps, {}> {
             'nodepw.teg.tkex.oa.com': clusterCreationState.rootPassword,
           };
           // caKey
-          data.status.credential['caKey'] =
-            window.btoa(window.atob(clusterCreationState.caKey)) === clusterCreationState.caKey
-              ? clusterCreationState.caKey
-              : window.btoa(clusterCreationState.caKey);
+          data.status.credential['caKey'] = window.btoa(clusterCreationState.caKey);
           // 开启webhook鉴权
           if (clusterCreationState.authzWebhook) {
             data.spec['features'] = {
