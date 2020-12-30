@@ -33,10 +33,11 @@
 
 <body>
   <!-- <div id="pageWrapper"></div> -->
-  <div id="appArea"></div>
-  <script src="/static/js/polyfill.6.26.min.js"></script>
-  <script src="/static/js/opcsdk.js"></script>
-
+  <div id="appArea">
+    <div style="text-align: center; font-size: 14px;">加载中...</div>
+  </div>
+<!--  <script src="/static/js/polyfill.6.26.min.js"></script>-->
+<!--  <script src="/static/js/opcsdk.js"></script>-->
   <script type="text/javascript">
     window.VERSION = 'zh';
 
@@ -44,6 +45,8 @@
     var jsVersionEn = {};
     var jsVersionKo = {};
     // jsVersion['console.js'] = 'console.js';
+    jsVersion['polyfill.6.26.min.js'] = 'polyfill.6.26.min.js';
+    jsVersion['opcsdk.js'] = 'opcsdk.js';
     jsVersion['platform.js'] = 'platform.js';
     jsVersion['common.js'] = 'common.js';
     jsVersion['vendor.js'] = 'vendor.js';
@@ -812,7 +815,7 @@
         });
       }
 
-      var coreJs = ['vendor.js', 'platform.js', 'common.js'];
+      var coreJs = ['polyfill.6.26.min.js', 'opcsdk.js', 'vendor.js', 'platform.js', 'common.js'];
       var qcbaseSource = {};
 
       function isInCoreJs(name) {

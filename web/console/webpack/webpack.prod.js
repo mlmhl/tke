@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 const HappyPack = require('happypack');
 const os = require('os');
+// const HtmlWebpackPlugin = require('html-webpack-plugin');
 const happyThreadPool = HappyPack.ThreadPool({
   size: os.cpus().length
 });
@@ -39,10 +40,15 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '../build'),
     filename: `static/js/${filename}.js`
+    // filename: `static/js/${filename}.[hash].js`
   },
 
   module: {
     rules: [
+      // {
+      //   test: /\.hbs$/,
+      //   loader: 'handlebars-loader'
+      // },
       {
         test: /\.tsx?$/,
         use: [
@@ -119,7 +125,15 @@ module.exports = {
       WEBPACK_CONFIT_YUNTI: JSON.stringify(version_keyword === BusinessVersionObj.yunti ? true : false),
       WEBPACK_CONFIG_IS_PLATFORM: JSON.stringify(version === BusinessVersionObj.tke ? true : false),
       WEBPACK_CONFIG_IS_BUSINESS: JSON.stringify(version === BusinessVersionObj.project ? true : false)
-    })
+    }),
+
+    // new HtmlWebpackPlugin({
+    //   title: 'Custom template tys',
+    //   filename: 'index.html',
+    //   template: './index.html',
+    //   minify: false,
+    //   inject: false
+    // })
   ],
 
   resolve: {
