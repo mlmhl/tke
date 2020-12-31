@@ -30,6 +30,18 @@ endif
 web.build.console:
 	@echo "===========> Building the console web app"
 	@mkdir -p $(ROOT_DIR)/web/console/build
+	@cd $(ROOT_DIR)/web/console && $(NPM) run build
+
+.PHONY: share.cluster.web.build.console
+share.cluster.web.build.console:
+	@echo "===========> Building the console web app of shared cluster"
+	@mkdir -p $(ROOT_DIR)/web/console/build
+	@cd $(ROOT_DIR)/web/console && $(NPM) run shared_cluster_build
+
+.PHONY: yunti.web.build.console
+yunti.web.build.console:
+	@echo "===========> Building the console web app of yunti"
+	@mkdir -p $(ROOT_DIR)/web/console/build
 	@cd $(ROOT_DIR)/web/console && $(NPM) run yunti_build
 
 .PHONY: web.build.installer
