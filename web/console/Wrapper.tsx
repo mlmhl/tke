@@ -16,6 +16,7 @@ import * as Sentry from '@sentry/browser';
 import * as emonitor from '@tencent/emonitor';
 import * as BeaconAction from '@tencent/beacon-web-sdk';
 import { insertCSS } from '@/lib/ff-redux';
+import { BlankPage } from './blankPage';
 
 declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 
@@ -569,9 +570,10 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
           this.props.platformType === PlatformTypeEnum.Business
         ) {
           location.href = location.origin + '/tkestack';
-        } else if (userType === UserType.other && window.location.pathname.indexOf('tkestack/blank') === -1) {
-          window.location.pathname = 'tkestack/blank';
         }
+        // else if (userType === UserType.other && window.location.pathname.indexOf('tkestack/blank') === -1) {
+        //   window.location.pathname = 'tkestack/blank';
+        // }
       }
     } catch (error) {}
   }
@@ -610,7 +612,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
   render() {
     let query = window.location.search;
     let finalContent: React.ReactNode;
-    let { projects } = this.state;
+    let { projects, userType } = this.state;
     const tenantId = localStorage.getItem('tenantId');
     if (!tenantId) {
       return (
@@ -629,7 +631,11 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
             this.switchTenant();
           }}>切换</Button>
         </section>
-        );
+      );
+    } else if (userType === UserType.init) {
+      return <div style={{ textAlign: 'center', fontSize: '14px' }}>加载中...</div>;
+    } else if (userType === UserType.other) {
+      return <BlankPage />;
     } else if (isEmpty(this.state.consoleApiMap)) {
       finalContent = <noscript />;
     } else {

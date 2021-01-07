@@ -2,7 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 const HappyPack = require('happypack');
 const os = require('os');
-// const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const happyThreadPool = HappyPack.ThreadPool({
   size: os.cpus().length
 });
@@ -39,8 +39,8 @@ module.exports = {
 
   output: {
     path: path.resolve(__dirname, '../build'),
-    filename: `static/js/${filename}.js`
-    // filename: `static/js/${filename}.[hash].js`
+    // filename: `static/js/${filename}.js`
+    filename: `static/js/${filename}.[hash].js`
   },
 
   module: {
@@ -127,13 +127,13 @@ module.exports = {
       WEBPACK_CONFIG_IS_BUSINESS: JSON.stringify(version === BusinessVersionObj.project ? true : false)
     }),
 
-    // new HtmlWebpackPlugin({
-    //   title: 'Custom template tys',
-    //   filename: 'index.html',
-    //   template: './index.html',
-    //   minify: false,
-    //   inject: false
-    // })
+    new HtmlWebpackPlugin({
+      filename: version === BusinessVersionObj.tke ? 'index.html' : 'project.html',
+      template: version === BusinessVersionObj.tke ? './index.ejs' : './project.ejs',
+      minify: false,
+      inject: false,
+      environment: process.env.NODE_ENV,
+    })
   ],
 
   resolve: {
