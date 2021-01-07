@@ -632,9 +632,11 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
           }}>切换</Button>
         </section>
       );
-    } else if (userType === UserType.init) {
-      return <div style={{ textAlign: 'center', fontSize: '14px' }}>加载中...</div>;
-    } else if (userType === UserType.other) {
+    }
+    // else if (userType === UserType.init) {
+    //   return <div style={{ textAlign: 'center', fontSize: '14px' }}>加载中...</div>;
+    // }
+    else if (userType === UserType.other) {
       return <BlankPage />;
     } else if (isEmpty(this.state.consoleApiMap)) {
       finalContent = <noscript />;

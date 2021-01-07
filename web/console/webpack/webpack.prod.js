@@ -40,7 +40,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '../build'),
     // filename: `static/js/${filename}.js`
-    filename: `static/js/${filename}.[hash].js`
+    filename: `static/js/${filename}.[chunkhash].js`
   },
 
   module: {
