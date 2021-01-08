@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as express from 'express';
 import * as webpack from 'webpack';
-
 export function serve(serverPort?: number) {
   let port = serverPort || process.env.PORT;
 
@@ -32,15 +31,18 @@ function setupWebpackDevelopServer(app: express.Express) {
 
   let devMiddleware = require('webpack-dev-middleware')(compiler, {
     publicPath: config.output.publicPath,
+    stats: 'minimal',
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
     noInfo: true,
-    stats: { colors: true },
     poll: true,
     quiet: false,
     reload: true,
     writeToDisk: true
   });
 
-  let hotMiddleware = require('webpack-hot-middleware')(compiler, { reload: true });
+  let hotMiddleware = require('webpack-hot-middleware')(compiler, { reload: true, heartbeat: 10 * 1000 });
 
   app.use(devMiddleware);
   app.use(hotMiddleware);

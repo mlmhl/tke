@@ -1,5 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const HappyPack = require('happypack');
 const os = require('os');
 const happyThreadPool = HappyPack.ThreadPool({
@@ -23,20 +24,24 @@ const BusinessVersionObj = {
   yunti: 'yunti'
 };
 console.log('version & lng & version_keyword is:', version, lng, version_keyword);
+const publicPath = '/';
 // console.log('process.env & process.argv: ', version_keyword, process.argv);
 module.exports = {
   devtool: 'eval-source-map',
   mode: 'development',
 
   entry: {
-    app: ['./index.tsx']
+    app: [`webpack-hot-middleware/client?reload=true`, './index.tsx']
     // vendor: ['react', 'react-dom']
   },
 
   output: {
+    pathinfo: true,
     path: path.resolve(__dirname, 'dist'),
     filename: 'js/[name].js',
-    publicPath: 'http://localhost:8088/'
+    publicPath: publicPath,
+    hotUpdateMainFilename: `tkestack.[hash].hot-update.json`,
+    hotUpdateChunkFilename: `tkestack.[id].[hash].hot-update.js`,
   },
 
   module: {
@@ -95,7 +100,16 @@ module.exports = {
 
     new HappyPack({
       id: 'happyBabel',
-      loaders: ['babel-loader'],
+      loaders: [{
+        loader: 'babel-loader',
+          options: {
+              cacheDirectory: true,
+              retainLines: true,
+              plugins: [
+                require.resolve('react-refresh/babel')
+              ]
+          }
+        }],
       threadPool: happyThreadPool
     }),
 
@@ -111,7 +125,11 @@ module.exports = {
     }),
 
     new webpack.HotModuleReplacementPlugin(),
-
+    new ReactRefreshWebpackPlugin({
+      overlay: {
+        sockIntegration: 'whm',
+      },
+    }),
     new webpack.DefinePlugin({
       WEBPACK_CONFIG_SHARED_CLUSTER: JSON.stringify([BusinessVersionObj.shared_cluster, BusinessVersionObj.yunti].indexOf(version_keyword) !== -1 ? true : false),
       WEBPACK_CONFIT_YUNTI: JSON.stringify(version_keyword === BusinessVersionObj.yunti ? true : false),
