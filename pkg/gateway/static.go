@@ -36,6 +36,10 @@ func registerStaticRoute(m *mux.PathRecorderMux, oauthConfig *oauth2.Config, dis
 
 func withRewrite(handler http.Handler, oauthConfig *oauth2.Config, disableOIDCProxy bool) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
+		if strings.Contains(request.URL.Path, "tkestack-project") {
+			serveProject(writer, request, oauthConfig, disableOIDCProxy)
+			return
+		}
 		requestPath := strings.ToLower(strings.TrimLeft(request.URL.Path, "/"))
 		if requestPath == "" || requestPath == "index.html" {
 			serveIndex(writer, request, oauthConfig, disableOIDCProxy)
@@ -46,6 +50,32 @@ func withRewrite(handler http.Handler, oauthConfig *oauth2.Config, disableOIDCPr
 		if nfRW.status == http.StatusNotFound {
 			serveIndex(writer, request, oauthConfig, disableOIDCProxy)
 		}
+	}
+}
+
+func serveProject(w http.ResponseWriter, r *http.Request, oauthConfig *oauth2.Config, disableOIDCProxy bool) {
+	if oauthConfig != nil {
+		_, err := token.RetrieveToken(r)
+		if err != nil {
+			auth.RedirectLogin(w, r, oauthConfig, disableOIDCProxy)
+			return
+		}
+	}
+
+	rc, err := assets.Open("project.html")
+	if err != nil {
+		log.Error("Failed to get project.html file", log.Err(err))
+		http.NotFound(w, r)
+		return
+	}
+	defer func() {
+		_ = rc.Close()
+	}()
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, errCopy := io.Copy(w, rc)
+	if errCopy != nil {
+		http.Error(w, "failed to rewrite file", http.StatusInternalServerError)
+		return
 	}
 }
 
