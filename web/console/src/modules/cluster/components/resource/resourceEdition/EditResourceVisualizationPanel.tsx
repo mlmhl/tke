@@ -739,7 +739,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               }))
             : undefined,
           affinity: affinityInfo ? affinityInfo : undefined,
-          hostNetwork: networkType === WorkloadNetworkTypeEnum.Host ? true : undefined
+          // hostNetwork: networkType === WorkloadNetworkTypeEnum.Host ? true : undefined
         }
       };
       // cronjob的独有的配置

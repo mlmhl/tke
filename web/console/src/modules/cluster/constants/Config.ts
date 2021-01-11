@@ -522,7 +522,7 @@ export enum WorkloadNetworkTypeEnum {
   Overlay = 'overlay',
   FloatingIP = 'floatingip',
   Nat = 'nat',
-  Host = 'host'
+  // Host = 'host'
 }
 
 export const WorkloadNetworkType = [
@@ -538,10 +538,10 @@ export const WorkloadNetworkType = [
     value: WorkloadNetworkTypeEnum.Nat,
     text: t('Nat（端口映射）')
   },
-  {
-    value: WorkloadNetworkTypeEnum.Host,
-    text: t('Host（主机网络）')
-  }
+  // {
+  //   value: WorkloadNetworkTypeEnum.Host,
+  //   text: t('Host（主机网络）')
+  // }
 ];
 
 export const FloatingIPReleasePolicy = [

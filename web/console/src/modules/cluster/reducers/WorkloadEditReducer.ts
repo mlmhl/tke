@@ -152,7 +152,9 @@ const TempReducer = combineReducers({
 
   cronMetrics: reduceToPayload(ActionType.W_UpdateCronMetrics, [initCronMetrics]),
 
-  isCreateService: reduceToPayload(ActionType.W_IsCreateService, true),
+  // http://tapd.oa.com/TKEx_TEG/prong/stories/view/1020426652861949877?url_cache_key=df1eea7d5be2a1f0af295e1e0c6c76b2&action_entry_type=stories
+  // 创建workload时不再默认创建service
+  isCreateService: reduceToPayload(ActionType.W_IsCreateService, false),
 
   imagePullSecrets: reduceToPayload(ActionType.ImagePullSecrets, []),
 
