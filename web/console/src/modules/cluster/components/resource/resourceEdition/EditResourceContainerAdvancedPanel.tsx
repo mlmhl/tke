@@ -95,7 +95,9 @@ export class EditResourceContainerAdvancedPanel extends React.Component<Containe
 
           <EditResourceContainerHealthCheckPanel cKey={cKey} />
 
-          <FormItem label={t('特权级容器')}>
+          {/* http://tapd.oa.com/TKEx_TEG/prong/stories/view/1020426652861949891?jump_count=1 */}
+          {/* 开关代码暂时禁用 */}
+          {/* <FormItem label={t('特权级容器')}>
             <div className="form-unit is-success">
               <Switch
                 value={container.privileged}
@@ -104,7 +106,7 @@ export class EditResourceContainerAdvancedPanel extends React.Component<Containe
               />
               <p className="form-input-help text-label">{t('容器开启特权级，将拥有宿主机的root权限')}</p>
             </div>
-          </FormItem>
+          </FormItem> */}
 
           {/* 权限集隐藏：http://tapd.oa.com//TKEx_TEG/prong/stories/view/1020426652861953581 */}
           {/* <FormItem label={t('权限集-增加')}>
