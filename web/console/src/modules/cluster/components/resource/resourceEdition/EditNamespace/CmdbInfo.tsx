@@ -181,7 +181,7 @@ export const CmdbInfo = (
     <section className="CMDB-creat-section">
       <Controller
         as={
-          <Switch defaultValue={isModify && defaultBusinessInfo}>
+          <Switch defaultValue={Boolean(isModify && defaultBusinessInfo)}>
             <Trans>CMDB录入</Trans>
           </Switch>
         }
