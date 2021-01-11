@@ -18,8 +18,8 @@ import {
 const { useState, useEffect, useRef, useImperativeHandle } = React;
 
 insertCSS(
-    'CMDBInfoComponentCss',
-    `
+  'CMDBInfoComponentCss',
+  `
     .CMDB-creat-section .tea-form .tea-form__controls--text {
       padding-top: 0;
     }
@@ -46,11 +46,14 @@ export interface DefaultBusinessInfo {
 }
 
 export const CmdbInfo = (
-    props: { defaultBusinessInfo?: any; hasPod?: boolean; isModify?: boolean },
-    ref
+  props: { defaultBusinessInfo?: any; hasPod?: boolean; isModify?: boolean },
+  ref
 ) => {
   const { register, watch, handleSubmit, reset, control, setValue, getValues, triggerValidation, errors } = useForm({
-    mode: 'onBlur'
+    mode: 'onBlur',
+    defaultValues: {
+
+    }
   });
 
   const [departmentList, setDepartmentList] = useState([]);
@@ -178,13 +181,12 @@ export const CmdbInfo = (
     <section className="CMDB-creat-section">
       <Controller
         as={
-          <Switch defaultValue={isModify && !defaultBusinessInfo ? false : true}>
+          <Switch defaultValue={isModify && defaultBusinessInfo}>
             <Trans>CMDB录入</Trans>
           </Switch>
         }
         name="cmdb"
         control={control}
-        defaultValue={isModify && !defaultBusinessInfo ? false : true}
         className="CMDB-modify-control"
       />
       {cmdb && (
@@ -265,7 +267,7 @@ export const CmdbInfo = (
             )}
           </Form>
         </div>
-        )}
+      )}
     </section>
   );
 };
