@@ -2,7 +2,7 @@ import * as classnames from 'classnames';
 import * as React from 'react';
 import { connect } from 'react-redux';
 
-import { Button, Radio, Select, Text } from '@tea/component';
+import { Button, Radio, Select, Text, Form, InputNumber, InputAdornment } from '@tea/component';
 import { FormPanel } from '@tencent/ff-component';
 import { bindActionCreators, insertCSS, isSuccessWorkflow, OperationState, uuid } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
@@ -177,7 +177,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         imagePullSecrets,
         configEdit,
         nodeAbnormalMigratePolicy,
-        isCanUseTapp
+        isCanUseTapp,
+        terminationGracePeriodSeconds
       } = workloadEdit,
       { secretList } = configEdit;
     const { isVolumeTemplateSetting } = this.state;
@@ -414,7 +415,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               <EditResourceContainerPanel />
 
               <EditResourceContainerNumPanel />
-
+              <FormItem label={t('优雅终止等待时间')} >
+                <InputAdornment after="秒"><InputNumber max={65535} min={0} value={terminationGracePeriodSeconds} onChange={actions.editWorkload.changeTerminationGracePeriodSeconds} /></InputAdornment>
+              </FormItem>
               <EditResourceAdvancedPanel isOpenAdvanced={isOpenAdvanced} />
 
               <a
@@ -604,7 +607,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         networkType,
         floatingIPReleasePolicy,
         oversoldRatio,
-        isOpenCronHpa
+        isOpenCronHpa,
+        terminationGracePeriodSeconds
       } = workloadEdit;
 
 
@@ -740,6 +744,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
             : undefined,
           affinity: affinityInfo ? affinityInfo : undefined,
           // hostNetwork: networkType === WorkloadNetworkTypeEnum.Host ? true : undefined
+          terminationGracePeriodSeconds: terminationGracePeriodSeconds
         }
       };
       // cronjob的独有的配置
@@ -849,7 +854,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
             jsonData: cronhpaJsonData
           });
         }
-
+        console.log("数据：", JSON.stringify(jsonData));
+        debugger
         /**创建TAPP资源 */
         resources.push({
           id: uuid(),

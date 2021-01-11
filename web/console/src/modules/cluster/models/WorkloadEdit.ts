@@ -143,6 +143,9 @@ export interface WorkloadEdit extends Identifiable {
   /**超售比 */
   oversoldRatio?: { [props: string]: string };
 
+  /** 优雅停止等待时间，默认30s */
+  terminationGracePeriodSeconds: number;
+
   /** ===================== start 下面是实例更新的相关 ====================== */
 
   hpaQuery?: QueryState<ResourceFilter>;

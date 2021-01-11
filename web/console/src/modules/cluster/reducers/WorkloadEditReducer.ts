@@ -208,7 +208,8 @@ const TempReducer = combineReducers({
 
   oversoldRatio: reduceToPayload(ActionType.W_UpdateOversoldRatio, {}),
 
-  floatingIPReleasePolicy: reduceToPayload(ActionType.W_FloatingIPReleasePolicy, 'always')
+  floatingIPReleasePolicy: reduceToPayload(ActionType.W_FloatingIPReleasePolicy, 'always'),
+  terminationGracePeriodSeconds: reduceToPayload(ActionType.W_ChangeTerminationGracePeriodSeconds, 30),
 });
 
 export const WorkloadEditReducer = (state, action) => {

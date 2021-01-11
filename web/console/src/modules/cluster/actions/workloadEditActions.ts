@@ -1214,7 +1214,13 @@ export const workloadEditActions = {
       }
     };
   },
-
+  /** 变更优雅终止时间 */
+  changeTerminationGracePeriodSeconds: (terminationGracePeriodSeconds: number): ReduxAction<number> => {
+    return {
+      type: ActionType.W_ChangeTerminationGracePeriodSeconds,
+      payload: terminationGracePeriodSeconds
+    };
+  },
   /** ================ end 下面是滚动更新镜像的相关操作 ======================== */
 
   /** 离开创建页面，清除workloadEdit当中的内容 */

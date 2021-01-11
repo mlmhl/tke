@@ -224,6 +224,8 @@ export const W_AddVolumeTempates = 'W_AddVolumeTempates';
 export const WV_NodeSelector = 'WV_NodeSelector';
 export const W_UpdateNodeAffinityRule = 'W_UpdateNodeAffinityRule';
 export const W_SelectNodeAffinityType = 'W_SelectNodeAffinityType';
+/** 优雅终止时间 */
+export const W_ChangeTerminationGracePeriodSeconds = 'W_ChangeTerminationGracePeriodSeconds';
 /** ============================== end 创建Workload相关 =============================== */
 
 /** ============================== start 创建configMap相关 =============================== */
