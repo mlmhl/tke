@@ -61,6 +61,8 @@ const AccessCredentialsDialog = React.memo((props: AccessCredentialsProps) => {
     }
     }, [certInfo, clusterId, np, userName]);
 
+  const apiHost = apiServer.replace('https://', '').replace('http://', '').replace(':443', '');
+
   return (
     <Modal visible={isShowing} caption={t('访问凭证')} onClose={close} size={700}>
       <Modal.Body>
@@ -134,7 +136,7 @@ const AccessCredentialsDialog = React.memo((props: AccessCredentialsProps) => {
           {
             WEBPACK_CONFIG_SHARED_CLUSTER && (
               <p style={{ marginBottom: '5px' }}>
-                4. 当 APIServer 地址为 clb 类型地址（形如 cls-xxxxxxxxxxxxx.clb.myqcloud.com）时， 您还需要在访问机上配置域名。请在访问机上执行以下命令：sudo sed -i &#39;$a {apiServerIP} {apiServer}&#39; /etc/hosts
+                4. 当 APIServer 地址为 clb 类型地址（形如 cls-xxxxxxxxxxxxx.clb.myqcloud.com）时， 您还需要在访问机上配置域名。请在访问机上执行以下命令：sudo sed -i &#39;$a {apiServerIP} {apiHost}&#39; /etc/hosts
               </p>
             )
           }
