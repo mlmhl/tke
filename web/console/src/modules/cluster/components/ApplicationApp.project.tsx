@@ -112,7 +112,7 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
         lbcf: {
           routerIndex: 0,
           routerConfig: {
-            name: t('负载均衡'),
+            name: t('负载均衡3'),
             path: 'lbcf'
           }
         },
@@ -133,7 +133,11 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
         }
       });
 
-      let keys = Object.keys(addons);
+      /**
+       * 隐藏负载均衡.
+       * @see {@link http://tapd.oa.com/TKEx_TEG/prong/stories/view/1020426652861983539}
+       */
+      let keys = Object.keys(addons).filter(key => key !== 'LBCF');
 
       keys.forEach(key => {
         if (key === 'LBCF') {
