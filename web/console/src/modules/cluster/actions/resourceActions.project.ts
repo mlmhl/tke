@@ -432,7 +432,8 @@ const restActions = {
       dispatch(
         resourceActions.polling({
           filter: filterObj,
-          delayTime: 8000,
+          retryTimes: 5,
+          delayTime: [1000, 3000, 10000, 30000, 60000],
         })
       );
     };

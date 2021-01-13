@@ -21,7 +21,7 @@ interface PollingOptions<T, TFilter> {
   retryTimes?: number;
 
   /** timer的延迟时间，默认为3000 */
-  delayTime?: number;
+  delayTime?: number | number[];
 
   /** 是否需要开启可视范围内 不进行数据的拉取 */
   visibleCheck?: boolean;
@@ -176,18 +176,42 @@ export function createFFListActions<T, TFilter, ExtendParamsT = any, TSFilter = 
   };
 
   let doPolling = (filter: TFilter, dispatch, visibleCheck: boolean) => {
-    if (visibleCheck) {
-      if (ifvisible.now()) {
-        dispatch(actions.applyPolling(filter));
-      } else {
-        // do not polling
-      }
-    } else {
-      dispatch(actions.applyPolling(filter));
+    let retryTimes = _polling.retryTimes;
+    let retriedTimes = 0;
+    let _pollDelayTime = _polling.delayTime;
+
+    //保证数组是0开头，这样下边初次执行正好可以跳过数组第一个元素
+    if (Array.isArray(_pollDelayTime) && _pollDelayTime[0] !== 0) {
+      _pollDelayTime.unshift(0);
     }
-    _polling.timer = setTimeout(() => {
-      doPolling(filter, dispatch, visibleCheck);
-    }, _polling.delayTime);
+    const _doPolling = () => {
+      // 默认会立即执行一次
+      if (visibleCheck) {
+        if (ifvisible.now()) {
+          dispatch(actions.applyPolling(filter));
+          ++retriedTimes;
+        } else {
+          // do not polling
+        }
+      } else {
+        dispatch(actions.applyPolling(filter));
+        ++retriedTimes;
+      }
+
+      // 如果_pollDelayTime是数组，retry次数在retryTimes之内是时间间隔取数组内的值，如果retry次数超出数组长度取数组最后一个元素的值
+      let _delayTime = Array.isArray(_pollDelayTime) ? (
+          _pollDelayTime[retriedTimes] ?
+              _pollDelayTime[retriedTimes] :
+              _pollDelayTime[_pollDelayTime.length - 1]
+      ) : _pollDelayTime;
+      console.log('_delayTime is:', _delayTime);
+      _polling.timer = setTimeout(() => {
+        if (retriedTimes < retryTimes) {
+          _doPolling();
+        }
+      }, _delayTime);
+    };
+    _doPolling();
   };
 
   const restActions = {
