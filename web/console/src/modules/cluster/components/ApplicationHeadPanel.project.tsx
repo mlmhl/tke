@@ -21,7 +21,7 @@ export class ApplicationHeadPanel extends React.Component<RootProps, {}> {
       value: p.name
     }));
     if (WEBPACK_CONFIG_SHARED_CLUSTER) {
-      projectListOptions = rawProjectList.map(item => {
+      projectListOptions = (rawProjectList || []).map(item => {
         const { name = '', annotations = {}} = item.metadata;
         const { 'teg.tkex.oa.com/department': department = '', 'teg.tkex.oa.com/business1': business1 = '', 'teg.tkex.oa.com/business2': business2 = '' } = annotations;
         const { displayName = '' } = item.spec;
