@@ -279,6 +279,28 @@ export const affinityRuleOperator = [
   }
 ];
 
+/** 实例(Pod)反亲和性 */
+export const PodAffinityType = {
+  possible: 'possible',
+  force: 'force',
+  unset: 'unset'
+};
+
+export const PodAffinityTypeList = [
+  {
+    value: PodAffinityType.unset,
+    name: t('不使用')
+  },
+  {
+    value: PodAffinityType.possible,
+    name: t('实例间尽量互斥')
+  },
+  {
+    value: PodAffinityType.force,
+    name: t('实例间强制互斥')
+  },
+];
+
 /** 创建 pv的来源设置的列表 */
 export const PvCreateSourceList = [
   {

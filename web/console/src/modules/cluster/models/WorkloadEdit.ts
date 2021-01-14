@@ -123,6 +123,9 @@ export interface WorkloadEdit extends Identifiable {
   /**亲和性调度方式："node" 指定节点调度 "rule" 自定义规则 "unset" 不使用*/
   nodeAffinityType?: string;
 
+  /**实例（Pod）反亲和性*/
+  podAffinityType?: string;
+
   /**亲和性调度自定义规则 */
   nodeAffinityRule?: AffinityRule;
 

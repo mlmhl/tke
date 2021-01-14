@@ -19,7 +19,8 @@ import {
   NodeAbnormalStrategy,
   ResourceTypeList,
   RestartPolicyTypeList,
-  WorkloadNetworkTypeEnum
+  WorkloadNetworkTypeEnum,
+  PodAffinityType
 } from '../../../constants/Config';
 import {
   Computer,
@@ -625,6 +626,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         imagePullSecrets,
         nodeAffinityType,
         nodeAffinityRule,
+        podAffinityType,
         computer,
         workloadAnnotations,
         nodeAbnormalMigratePolicy,
@@ -680,7 +682,12 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       let affinityInfo =
         nodeAffinityType !== affinityType.unset
           ? this._reduceNodeAffinityInfo(nodeAffinityType, nodeAffinityRule, computer.selections)
-          : '';
+          : null;
+
+      // pod亲和性
+      const podAffinity = podAffinityType !== PodAffinityType.unset
+        ? this._reducePodAffinity(podAffinityType, workloadLabels)
+        : null;
 
       // 如果选择了网络模式，需要把网络模式写在annotations当中
       let templateAnnotations = {};
@@ -751,6 +758,11 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         }
       }
 
+      const affinity = {
+        ...affinityInfo as object,
+        ...podAffinity as object,
+      }
+
       // template的内容，因为cronJob是放在 jobTemplate当中
       let templateContent = {
         metadata: {
@@ -766,7 +778,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                 name: item.secretName
               }))
             : undefined,
-          affinity: affinityInfo ? affinityInfo : undefined,
+          affinity: isEmpty(affinity) ? undefined : affinity,
           // hostNetwork: networkType === WorkloadNetworkTypeEnum.Host ? true : undefined
           terminationGracePeriodSeconds: terminationGracePeriodSeconds
         }
@@ -1367,5 +1379,54 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         : undefined;
     }
     return { nodeAffinity: affinityInfo };
+  }
+
+  /**
+   * 处理Pod亲和性，当前仅 k8s-app 生效。
+   * @see {@link http://tapd.oa.com/TKEx_TEG/prong/stories/view/1020426652861936503}
+   */
+  private _reducePodAffinity(podAffinityType: string, workloadLabels: any[]) {
+    let podAffinity;
+    const values = workloadLabels.filter(_ => _.labelKey === 'k8s-app').map(_ => _.labelValue);
+
+    if (podAffinityType === PodAffinityType.possible) {
+      podAffinity = {
+        preferredDuringSchedulingIgnoredDuringExecution: [
+          {
+            weight: 100,
+            podAffinityTerm: {
+              labelSelector: {
+                matchExpressions: [
+                  {
+                    key: 'k8s-app',
+                    operator: 'In',
+                    values,
+                  },
+                ],
+              },
+              topologyKey: 'kubernetes.io/hostname',
+            },
+          },
+        ],
+      };
+    } else if (podAffinityType === PodAffinityType.force) {
+      podAffinity = {
+        requiredDuringSchedulingIgnoredDuringExecution: [
+          {
+            labelSelector: {
+              matchExpressions: [
+                {
+                  key: 'k8s-app',
+                  operator: 'In',
+                  values,
+                },
+              ],
+            },
+            topologyKey: 'kubernetes.io/hostname',
+          },
+        ],
+      };
+    }
+    return { podAffinity: podAffinity };
   }
 }
