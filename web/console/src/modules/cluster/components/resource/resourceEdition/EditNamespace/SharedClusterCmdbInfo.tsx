@@ -51,7 +51,7 @@ export const SharedClusterCmdbInfo = (
     if (business2Id) {
       fetchBsiPath3List({ bs2_name_id: business2Id ? Number(business2Id) : undefined }).then(result => {
         setBsiPath3List(result);
-
+        setValue('bsiPath3', result[0] ? result[0].value : undefined);
       });
     }
   }, [business2Id]);
