@@ -14,7 +14,7 @@ function BlankExample() {
         <Card full bordered={false}>
           <Blank
             theme={'permission'}
-            description="您无所属项目或管理的集群为空，请联系相关管理员进行权限管理。"
+            description="您无所属项目或管理的集群为空，请联系ianlang进行权限管理。"
             // operation={
             //   <>
             //     <Button type="primary">前往访问管理</Button>

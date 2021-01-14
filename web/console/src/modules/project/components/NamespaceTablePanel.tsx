@@ -62,7 +62,8 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
     );
   }
   private _renderTablePanel() {
-    let { actions, namespace, namespaceEdition } = this.props;
+    let { actions, namespace, namespaceEdition, projectDetail } = this.props;
+    const projectId = projectDetail.metadata.name;
     const columns: TableColumn<Namespace>[] = [
       {
         key: 'name',
@@ -71,9 +72,9 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
           const showName = reduceNs(x.spec.namespace, x.spec.clusterName);
           let disabledOp = x.status.phase === 'Terminating';
           let url = `/tkestack/cluster/sub/list/resource/deployment?rid=1&clusterId=${x.spec.clusterName}&np=${x.spec.namespace}`;
-          /// #if project
-          url = `/tkestack-project/cluster/sub/list/resource/deployment?rid=1&clusterId=${x.spec.clusterName}&np=${x.spec.namespace}`;
-          /// #endif
+          if (WEBPACK_CONFIG_IS_BUSINESS) {
+            url = `/tkestack-project/application/list/resource/deployment?rid=1&clusterId=${x.spec.clusterName}&np=${x.spec.clusterName}-${x.spec.namespace}&projectName=${projectId}`;
+          }
           return <Text overflow>{!disabledOp ? <a href={url}>{showName}</a> : showName}</Text>;
         },
       },
