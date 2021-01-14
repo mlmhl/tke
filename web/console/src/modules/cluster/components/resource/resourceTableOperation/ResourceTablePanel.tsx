@@ -393,7 +393,7 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
     };
 
     /**
-     * 查看访问凭证
+     * 查看kubeconfig
      */
     const renderKubctlConfigButton = (operator: OperatorProps) => {
       const { metadata = {}, status = {}, spec = {}} = resource.originalDataBak || {};
@@ -418,7 +418,7 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
             this.setState({ isShowKuctlDialog: true, selectedResource: resource });
           }}
         >
-          {t('查看访问凭证')}
+          {t('查看kubeconfig')}
         </LinkButton>
       );
     };

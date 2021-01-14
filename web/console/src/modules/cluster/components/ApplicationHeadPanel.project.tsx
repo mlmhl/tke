@@ -2,11 +2,13 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { FormPanel } from '@tencent/ff-component';
+import { Layout, ExternalLink } from '@tencent/tea-component';
 import { bindActionCreators, uuid } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
 import { allActions } from '../actions';
 import { RootProps } from './ApplicationApp.project';
+const { Body, Content } = Layout;
 
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
@@ -34,21 +36,29 @@ export class ApplicationHeadPanel extends React.Component<RootProps, {}> {
       });
     }
     return (
-      <div className="manage-area-title secondary-title">
-        <h2 style={{ float: 'left' }}>应用</h2>
-        <FormPanel.InlineText>{t('业务：')}</FormPanel.InlineText>
-        <FormPanel.Select
-          options={projectListOptions}
-          value={projectSelection}
-          size={WEBPACK_CONFIG_SHARED_CLUSTER ? 'l' : 'm'}
-          onChange={value => {
-            if (WEBPACK_CONFIG_SHARED_CLUSTER) {
-              actions.resource.changeFilter({ search: '', selectedArea: '', selectedZone: '' });
-            }
-            actions.projectNamespace.selectProject(value);
-          }}
-        ></FormPanel.Select>
-      </div>
+      <Layout className="demo-layout">
+        <Body>
+          <Content>
+            <Content.Header
+              title="应用"
+              operation={<ExternalLink href="https://iwiki.woa.com/pages/viewpage.action?pageId=510964128">远程调试指南</ExternalLink>}
+            >
+              <FormPanel.InlineText>{t('业务：')}</FormPanel.InlineText>
+              <FormPanel.Select
+                options={projectListOptions}
+                value={projectSelection}
+                size={WEBPACK_CONFIG_SHARED_CLUSTER ? 'l' : 'm'}
+                onChange={value => {
+                    if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+                      actions.resource.changeFilter({ search: '', selectedArea: '', selectedZone: '' });
+                    }
+                    actions.projectNamespace.selectProject(value);
+                  }}
+              ></FormPanel.Select>
+            </Content.Header>
+          </Content>
+        </Body>
+      </Layout>
     );
   }
 }

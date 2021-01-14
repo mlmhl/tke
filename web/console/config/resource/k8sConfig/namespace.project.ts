@@ -86,7 +86,7 @@ const displayField: DisplayField = {
     headTitle: t('操作'),
     operatorList: [
       {
-        name: t('查看访问凭证'),
+        name: t('查看kubeconfig'),
         actionType: 'view-access-credentials',
         isInMoreOp: false
       },

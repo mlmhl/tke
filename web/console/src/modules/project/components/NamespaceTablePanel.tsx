@@ -275,7 +275,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
             });
           }}
         >
-          {t('查看访问凭证')}
+          {t('查看kubeconfig')}
         </LinkButton>
       );
     };
