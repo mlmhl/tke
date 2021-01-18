@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=10.3.0"
   },
+  "config": {
+    "unsafe-perm": true
+  },
   "scripts": {
     "preinstall": "rm -rf ./node_modules",
     "postinstall": "npm run unzip_third_party",
