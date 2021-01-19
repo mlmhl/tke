@@ -30,6 +30,7 @@ const BusinessVersionObj = {
   project: 'project',
   yunti: 'yunti'
 };
+console.log('process.env.cdnUrl is:', process.env.cdnUrl);
 console.log('version & lng & version_keyword is:', version, lng, version_keyword);
 module.exports = {
   mode: 'production',
@@ -133,6 +134,7 @@ module.exports = {
       minify: false,
       inject: false,
       environment: process.env.NODE_ENV,
+      publicPath: process.env.cdnUrl || ''
     })
   ],
 
