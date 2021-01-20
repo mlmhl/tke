@@ -9,6 +9,11 @@ import { Alert, Bubble, Button, Col, Input, InputAdorment, Row, Select } from '@
 import { LinkButton } from '../index';
 import { Validation, initValidator } from '../../models';
 
+export const ResourceLimitType = {
+  AMD_CPU: 'requests.teg.tkex.oa.com/amd-cpu',
+  INTEL_CPU: 'requests.teg.tkex.oa.com/intel-cpu',
+};
+
 export const resourceLimitTypeList = [
   {
     text: t('Pod数目'),
@@ -52,11 +57,11 @@ export const resourceLimitTypeList = [
   },
   {
     text: t('AMD CPU Request'),
-    value: 'requests.teg.tkex.oa.com/amd-cpu'
+    value: ResourceLimitType.AMD_CPU
   },
   {
     text: t('INTEL CPU Request'),
-    value: 'requests.teg.tkex.oa.com/intel-cpu'
+    value: ResourceLimitType.INTEL_CPU
   }
 ];
 
@@ -71,12 +76,12 @@ export const resourceTypeToUnit = {
   'services.loadbalancers': t('个'),
   'requests.memory': 'MiB',
   'requests.ephemeral-storage': 'MiB',
-  'requests.teg.tkex.oa.com/amd-cpu': t('毫核'),
-  'requests.teg.tkex.oa.com/intel-cpu': t('毫核')
+  [ResourceLimitType.AMD_CPU]: t('毫核'),
+  [ResourceLimitType.INTEL_CPU]: t('毫核')
 };
 
 export const initProjectResourceLimit = {
-  type: 'requests.teg.tkex.oa.com/amd-cpu',
+  type: ResourceLimitType.AMD_CPU,
   value: '',
   v_type: initValidator,
   v_value: initValidator
@@ -111,6 +116,7 @@ export class CreateProjectResourceLimitPanel extends React.Component<
   constructor(props, context) {
     super(props, context);
     let { parentResourceLimits, resourceLimits } = this.props;
+    console.log('parentResourceLimits, resourceLimits ', parentResourceLimits, resourceLimits);
     let initResourceLimits =
       parentResourceLimits && Object.keys(parentResourceLimits).length
         ? Object.keys(parentResourceLimits).map(item =>
@@ -126,6 +132,17 @@ export class CreateProjectResourceLimitPanel extends React.Component<
             : valueLabels1000(parentResourceLimits[type], K8SUNIT.unit)
           : null;
         parentResourceMaxLimit[type] = maxLimit;
+      });
+    }
+    /**转换单位为k的数值 */
+    if (resourceLimits) {
+      resourceLimits = resourceLimits.map(item => {
+        if (item.type === ResourceLimitType.AMD_CPU || item.type === ResourceLimitType.INTEL_CPU) {
+          if (item.value.endsWith('k')) {
+            item.value = String(parseFloat(item.value) * 1000);
+          }
+        }
+        return item;
       });
     }
     this.state = {

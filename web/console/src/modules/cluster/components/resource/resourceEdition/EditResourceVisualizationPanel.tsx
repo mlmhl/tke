@@ -1234,6 +1234,14 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         memRequest = (+memLimit * 1.0) / +oversoldRatio.memory + '';
       }
       containerItem['resources'] = {};
+      const cpu = cpuRequest ? cpuRequest : undefined;
+      const machineCPU = cpuRequest ? String(Math.round(Number(cpuRequest) * 1000)) : undefined;
+      const machineRequest = {};
+      if (MachineType.AMD === machineType) {
+        machineRequest['teg.tkex.oa.com/amd-cpu'] = machineCPU;
+      } else {
+        machineRequest['teg.tkex.oa.com/intel-cpu'] = machineCPU;
+      }
       // !!!注意：如果设置了gpu，需要在limits里面设定
       if (this._isSetResource1ConditionTrue(cpuLimit, memLimit, c, networkType)) {
         containerItem['resources'] = this._getResource1({ cpuLimit, memLimit, c, networkType, hasSetNetworkResource });
@@ -1340,9 +1348,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     const machineCPU = cpuRequest ? String(Math.round(Number(cpuRequest) * 1000)) : undefined;
     const machineRequest = {};
     if (MachineType.AMD === machineType) {
-      machineRequest['requests.teg.tkex.oa.com/amd-cpu'] = machineCPU;
+      machineRequest['teg.tkex.oa.com/amd-cpu'] = machineCPU;
     } else {
-      machineRequest['requests.teg.tkex.oa.com/intel-cpu'] = machineCPU;
+      machineRequest['teg.tkex.oa.com/intel-cpu'] = machineCPU;
     }
     return Object.assign({}, containerItem['resources'], {
       requests: {
