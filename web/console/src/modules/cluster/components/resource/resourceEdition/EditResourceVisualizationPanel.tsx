@@ -20,7 +20,9 @@ import {
   ResourceTypeList,
   RestartPolicyTypeList,
   WorkloadNetworkTypeEnum,
-  PodAffinityType
+  PodAffinityType,
+  MachineTypeList,
+  MachineType
 } from '../../../constants/Config';
 
 import {
@@ -376,6 +378,20 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
               <EditResourceVolumePanel />
 
+              <FormItem label={t('机型')}>
+                <Radio.Group defaultValue={MachineType.AMD}
+                  onChange={value => {
+                    actions.editWorkload.selectMachineType(value);
+                  }}
+                >
+                  {
+                    MachineTypeList.map(item => <Radio key={item.value} name={item.value} style={{ lineHeight: '18px' }}>
+                      {item.text}
+                    </Radio>)
+                  }
+                </Radio.Group>
+              </FormItem>
+
               <EditResourceContainerPanel />
 
               <EditResourceContainerNumPanel />
@@ -641,7 +657,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         oversoldRatio,
         isOpenCronHpa,
         terminationGracePeriodSeconds,
-        shmQuantity
+        shmQuantity,
+        machineType
       } = workloadEdit;
 
 
@@ -652,7 +669,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       let volumesInfo = this._reduceVolumes(finalVolumes);
 
       // 进行容器的相关数据拼接
-      let containersInfo = this._reduceContainers(containers, volumes, volumeTemplates, { oversoldRatio, networkType, isNatOn, natPorts });
+      let containersInfo = this._reduceContainers(containers, volumes, volumeTemplates, { oversoldRatio, networkType, isNatOn, natPorts, machineType });
 
       // 进行容器的labels的数据拼接，默认有一个 qcloud-app: workload的名称，很懂监控等都用qcloud-app的标签
       let labelsInfo = { 'qcloud-app': workloadName };
@@ -773,7 +790,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           forceDeletePod: this._getValueThroughFlag(isTapp, (nodeAbnormalMigratePolicy === 'true' ? true : false)),
         }
       };
-      if(isVolumeTemplateSetting) {
+      if (isVolumeTemplateSetting) {
         jsonData.spec['volumeClaimTemplates'] = volumeTemplateCurrent.getVolumeTemplates();
       }
       /**
@@ -1189,7 +1206,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   /** 处理container相关的配置项 */
   private _reduceContainers(containers: ContainerItem[], volumes: VolumeItem[], volumeTemplates: any[], extraOption?: any) {
     let containersInfo = [];
-    let { oversoldRatio, networkType, isNatOn, natPorts } = extraOption;
+    let { oversoldRatio, networkType, isNatOn, natPorts, machineType } = extraOption;
     let hasSetNetworkResource: boolean = false;
     let hasNatPortsSet: boolean = false;
     containersInfo = containers.map(c => {
@@ -1222,7 +1239,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         containerItem['resources'] = this._getResource1({ cpuLimit, memLimit, c, networkType, hasSetNetworkResource });
       }
       if (this._isSetResource2ConditionTrue(cpuRequest, memRequest, c, networkType)) {
-        containerItem['resources'] = this._getResource2({ containerItem, cpuRequest, memRequest, c, networkType, hasSetNetworkResource });
+        containerItem['resources'] = this._getResource2({ containerItem, cpuRequest, memRequest, c, networkType, hasSetNetworkResource, machineType });
       }
 
 
@@ -1319,14 +1336,22 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       }
     };
   }
-  private _getResource2({ containerItem, cpuRequest, memRequest, c, networkType, hasSetNetworkResource }) {
+  private _getResource2({ containerItem, cpuRequest, memRequest, c, networkType, hasSetNetworkResource, machineType }) {
+    const machineCPU = cpuRequest ? String(Math.round(Number(cpuRequest) * 1000)) : undefined;
+    const machineRequest = {};
+    if (MachineType.AMD === machineType) {
+      machineRequest['requests.teg.tkex.oa.com/amd-cpu'] = machineCPU;
+    } else {
+      machineRequest['requests.teg.tkex.oa.com/intel-cpu'] = machineCPU;
+    }
     return Object.assign({}, containerItem['resources'], {
       requests: {
         cpu: cpuRequest ? cpuRequest : undefined,
         memory: memRequest ? memRequest + 'Mi' : undefined,
         'tencent.com/vcuda-core': +c.gpuCore ? +c.gpuCore * 100 : undefined,
         'tencent.com/vcuda-memory': +c.gpuMem ? +c.gpuMem : undefined,
-        'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP && !hasSetNetworkResource ? '1' : undefined
+        'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP && !hasSetNetworkResource ? '1' : undefined,
+        ...machineRequest
       }
     });
   }
@@ -1435,35 +1460,35 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       affinityInfo['preferredDuringSchedulingIgnoredDuringExecution'] = nodeAffinityRule.preferredExecution[0]
         .preference.matchExpressions.length
         ? [
-            {
-              preference: {
-                matchExpressions: nodeAffinityRule.preferredExecution[0].preference.matchExpressions.map(rule => {
-                  return {
-                    key: rule.key,
-                    operator: rule.operator,
-                    values: rule.values ? rule.values.split(';') : undefined
-                  };
-                })
-              },
-              weight: 1
-            }
-          ]
+          {
+            preference: {
+              matchExpressions: nodeAffinityRule.preferredExecution[0].preference.matchExpressions.map(rule => {
+                return {
+                  key: rule.key,
+                  operator: rule.operator,
+                  values: rule.values ? rule.values.split(';') : undefined
+                };
+              })
+            },
+            weight: 1
+          }
+        ]
         : undefined;
       affinityInfo['requiredDuringSchedulingIgnoredDuringExecution'] = nodeAffinityRule.requiredExecution[0]
         .matchExpressions.length
         ? {
-            nodeSelectorTerms: [
-              {
-                matchExpressions: nodeAffinityRule.requiredExecution[0].matchExpressions.map(rule => {
-                  return {
-                    key: rule.key,
-                    operator: rule.operator,
-                    values: rule.values ? rule.values.split(';') : undefined
-                  };
-                })
-              }
-            ]
-          }
+          nodeSelectorTerms: [
+            {
+              matchExpressions: nodeAffinityRule.requiredExecution[0].matchExpressions.map(rule => {
+                return {
+                  key: rule.key,
+                  operator: rule.operator,
+                  values: rule.values ? rule.values.split(';') : undefined
+                };
+              })
+            }
+          ]
+        }
         : undefined;
     }
     return { nodeAffinity: affinityInfo };

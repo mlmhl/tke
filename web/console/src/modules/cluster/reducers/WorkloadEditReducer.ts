@@ -1,5 +1,5 @@
 import { ComputerFilter, Computer } from './../models/Computer';
-import { FFReduxActionName, PodAffinityType } from './../constants/Config';
+import { FFReduxActionName, PodAffinityType, MachineType } from './../constants/Config';
 import { combineReducers } from 'redux';
 
 import { RecordSet, reduceToPayload, createFFListReducer } from '@tencent/ff-redux';
@@ -171,6 +171,8 @@ const TempReducer = combineReducers({
   natPorts: reduceToPayload(ActionType.W_NatPorts, [initNatPort]),
 
   podAffinityType: reduceToPayload(ActionType.W_SelectPodAffinity, PodAffinityType.unset),
+
+  machineType: reduceToPayload(ActionType.W_SelectMachineType, MachineType.AMD),
 
   hpaQuery: generateQueryReducer({
     actionType: ActionType.W_QueryHpaList

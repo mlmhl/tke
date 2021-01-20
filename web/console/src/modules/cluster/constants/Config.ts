@@ -867,3 +867,20 @@ export const AreaMap = {
     text: '天津'
   }
 };
+
+/** 机型 */
+export const MachineType = {
+  AMD: 'AMD',
+  INTEL: 'INTEL'
+};
+
+export const MachineTypeList = [
+  {
+    value: MachineType.AMD,
+    text: t('AMD')
+  },
+  {
+    value: MachineType.INTEL,
+    text: t('INTEL')
+  }
+];

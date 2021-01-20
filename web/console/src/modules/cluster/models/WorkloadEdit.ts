@@ -129,6 +129,9 @@ export interface WorkloadEdit extends Identifiable {
   /**亲和性调度自定义规则 */
   nodeAffinityRule?: AffinityRule;
 
+  /**机型*/
+  machineType?: string;
+
   /** 是否支持 gpu 白名单 和 集群的版本 > 1.8 */
   isCanUseGpu?: boolean;
 
