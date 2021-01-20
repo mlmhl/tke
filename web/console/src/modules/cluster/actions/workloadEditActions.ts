@@ -993,9 +993,18 @@ export const workloadEditActions = {
   },
   /**实例(Pod)反亲和性 */
   selectPodAffinity: (type?: string) => {
-    return async (dispatch, getState: GetState) => {
+    return async (dispatch) => {
       dispatch({
         type: ActionType.W_SelectPodAffinity,
+        payload: type,
+      });
+    };
+  },
+  /**机型 */
+  selectMachineType: (type?: string) => {
+    return async (dispatch) => {
+      dispatch({
+        type: ActionType.W_SelectMachineType,
         payload: type,
       });
     };

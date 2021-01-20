@@ -66,7 +66,7 @@ export const resourceLimitTypeList = [
     value: 'services.loadbalancers'
   },
   {
-    text: t('CPU Request'),
+    text: t('CPU Request2'),
     value: 'requests.cpu'
   },
   {
@@ -108,7 +108,9 @@ export const resourceTypeToUnit = {
   'limits.ephemeral-storage': 'MiB',
   'teg.tkex.oa.com/cbs-premium-storage': 'MiB',
   'teg.tkex.oa.com/cbs-ssd-storage': 'MiB',
-  'requests.tke.cloud.tencent.com/eni-ip': t('个')
+  'requests.tke.cloud.tencent.com/eni-ip': t('个'),
+  'requests.teg.tkex.oa.com/amd-cpu': t('毫核'),
+  'requests.teg.tkex.oa.com/intel-cpu': t('毫核')
 };
 export const resourceLimitTypeToText = {
   pods: t('Pod数目'),
@@ -127,7 +129,9 @@ export const resourceLimitTypeToText = {
   'limits.ephemeral-storage': t('Local ephemeral storage Limits'),
   'teg.tkex.oa.com/cbs-premium-storage': t('高性能云盘'),
   'teg.tkex.oa.com/cbs-ssd-storage': t('SSD云盘'),
-  'requests.tke.cloud.tencent.com/eni-ip': 'ENI IP'
+  'requests.tke.cloud.tencent.com/eni-ip': 'ENI IP',
+  'requests.teg.tkex.oa.com/amd-cpu': t('AMD CPU Request'),
+  'requests.teg.tkex.oa.com/intel-cpu': t('INTEL CPU Request')
 };
 
 export const initProjectResourceLimit = {

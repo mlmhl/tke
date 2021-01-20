@@ -43,10 +43,6 @@ export const resourceLimitTypeList = [
     value: 'services.loadbalancers'
   },
   {
-    text: t('CPU Request'),
-    value: 'requests.cpu'
-  },
-  {
     text: t('Mem Request'),
     value: 'requests.memory'
   },
@@ -55,16 +51,12 @@ export const resourceLimitTypeList = [
     value: 'requests.ephemeral-storage'
   },
   {
-    text: t('CPU Limits'),
-    value: 'limits.cpu'
+    text: t('AMD CPU Request'),
+    value: 'requests.teg.tkex.oa.com/amd-cpu'
   },
   {
-    text: t('Mem Limits'),
-    value: 'limits.memory'
-  },
-  {
-    text: t('Local ephemeral storage Limits'),
-    value: 'limits.ephemeral-storage'
+    text: t('INTEL CPU Request'),
+    value: 'requests.teg.tkex.oa.com/intel-cpu'
   }
 ];
 
@@ -77,16 +69,14 @@ export const resourceTypeToUnit = {
   persistentvolumeclaims: t('个'),
   'services.nodeports': t('个'),
   'services.loadbalancers': t('个'),
-  'requests.cpu': t('核'),
-  'limits.cpu': t('核'),
   'requests.memory': 'MiB',
-  'limits.memory': 'MiB',
   'requests.ephemeral-storage': 'MiB',
-  'limits.ephemeral-storage': 'MiB'
+  'requests.teg.tkex.oa.com/amd-cpu': t('毫核'),
+  'requests.teg.tkex.oa.com/intel-cpu': t('毫核')
 };
 
 export const initProjectResourceLimit = {
-  type: 'requests.cpu',
+  type: 'requests.teg.tkex.oa.com/amd-cpu',
   value: '',
   v_type: initValidator,
   v_value: initValidator
@@ -117,15 +107,15 @@ export interface CreateProjectResourceLimitPanelPorps {
 export class CreateProjectResourceLimitPanel extends React.Component<
   CreateProjectResourceLimitPanelPorps,
   { resourceLimits: ProjectResourceLimit[]; parentResourceMaxLimit: { [props: string]: string } }
-> {
+  > {
   constructor(props, context) {
     super(props, context);
     let { parentResourceLimits, resourceLimits } = this.props;
     let initResourceLimits =
       parentResourceLimits && Object.keys(parentResourceLimits).length
         ? Object.keys(parentResourceLimits).map(item =>
-            Object.assign({}, initProjectResourceLimit, { id: uuid(), type: item })
-          )
+          Object.assign({}, initProjectResourceLimit, { id: uuid(), type: item })
+        )
         : ([Object.assign({}, initProjectResourceLimit, { id: uuid() })] as ProjectResourceLimit[]);
     let parentResourceMaxLimit = {};
     if (parentResourceLimits) {
@@ -216,12 +206,7 @@ export class CreateProjectResourceLimitPanel extends React.Component<
     let { resourceLimits, parentResourceMaxLimit } = this.state;
     let newResourceLimits = deepClone(resourceLimits);
     let finder = newResourceLimits.find(item => item.id === id);
-    //cpu使用_validateCpuLimit，其他判断为正整数即可
-    if (type === 'requests.cpu' || type === 'limits.cpu') {
-      finder.v_value = this._validateCpuLimit(value, +parentResourceMaxLimit[type]);
-    } else {
-      finder.v_value = this._validateMemLimit(value, +parentResourceMaxLimit[type]);
-    }
+    finder.v_value = this._validateMemLimit(value, +parentResourceMaxLimit[type]);
     this.setState({ resourceLimits: newResourceLimits });
   }
 
@@ -285,11 +270,7 @@ export class CreateProjectResourceLimitPanel extends React.Component<
 
     let newResourceLimits = deepClone(resourceLimits);
     newResourceLimits.forEach(item => {
-      if (item.type === 'requests.cpu' || item.type === 'limits.cpu') {
-        item.v_value = this._validateCpuLimit(item.value, +parentResourceMaxLimit[item.type]);
-      } else {
-        item.v_value = this._validateMemLimit(item.value, +parentResourceMaxLimit[item.type]);
-      }
+      item.v_value = this._validateMemLimit(item.value, +parentResourceMaxLimit[item.type]);
       item.v_type = this._validateProjectResourceLimitType(item.type, newResourceLimits);
     });
     this.setState({ resourceLimits: newResourceLimits });
@@ -332,7 +313,7 @@ export class CreateProjectResourceLimitPanel extends React.Component<
                   <Input
                     placeholder={
                       maxLimit
-                        ? `${item.type === 'requests.cpu' || item.type === 'limits.cpu' ? '0.01' : '1'}-${maxLimit}`
+                        ? `1-${maxLimit}`
                         : ''
                     }
                     maxLength={10}
