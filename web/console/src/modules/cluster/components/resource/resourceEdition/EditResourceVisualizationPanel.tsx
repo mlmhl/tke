@@ -377,8 +377,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               </FormItem>
 
               <EditResourceVolumePanel />
-
-              <FormItem label={t('机型')}>
+              {WEBPACK_CONFIG_SHARED_CLUSTER ? <FormItem label={t('机型')}>
                 <Radio.Group defaultValue={MachineType.AMD}
                   onChange={value => {
                     actions.editWorkload.selectMachineType(value);
@@ -390,7 +389,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                     </Radio>)
                   }
                 </Radio.Group>
-              </FormItem>
+              </FormItem> : null}
 
               <EditResourceContainerPanel />
 
@@ -1237,10 +1236,12 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       const cpu = cpuRequest ? cpuRequest : undefined;
       const machineCPU = cpuRequest ? String(Math.round(Number(cpuRequest) * 1000)) : undefined;
       const machineRequest = {};
-      if (MachineType.AMD === machineType) {
-        machineRequest['teg.tkex.oa.com/amd-cpu'] = machineCPU;
-      } else {
-        machineRequest['teg.tkex.oa.com/intel-cpu'] = machineCPU;
+      if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+        if (MachineType.AMD === machineType) {
+          machineRequest['teg.tkex.oa.com/amd-cpu'] = machineCPU;
+        } else {
+          machineRequest['teg.tkex.oa.com/intel-cpu'] = machineCPU;
+        }
       }
       // !!!注意：如果设置了gpu，需要在limits里面设定
       if (this._isSetResource1ConditionTrue(cpuLimit, memLimit, c, networkType)) {
