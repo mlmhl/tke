@@ -12,6 +12,8 @@ import { Validation, initValidator } from '../../models';
 export const ResourceLimitType = {
   AMD_CPU: 'requests.teg.tkex.oa.com/amd-cpu',
   INTEL_CPU: 'requests.teg.tkex.oa.com/intel-cpu',
+  REQUEST_CPU: 'requests.cpu',
+  LIMIT_CPU: 'limits.cpu'
 };
 
 export const resourceLimitTypeList = [
@@ -47,6 +49,10 @@ export const resourceLimitTypeList = [
     text: t('LB模式服务数目'),
     value: 'services.loadbalancers'
   },
+  !WEBPACK_CONFIG_SHARED_CLUSTER && {
+    text: t('CPU Request'),
+    value: ResourceLimitType.REQUEST_CPU
+  },
   {
     text: t('Mem Request'),
     value: 'requests.memory'
@@ -55,15 +61,27 @@ export const resourceLimitTypeList = [
     text: t('Local ephemeral storage request'),
     value: 'requests.ephemeral-storage'
   },
-  {
+  WEBPACK_CONFIG_SHARED_CLUSTER && {
     text: t('AMD CPU Request'),
     value: ResourceLimitType.AMD_CPU
   },
-  {
+  WEBPACK_CONFIG_SHARED_CLUSTER && {
     text: t('INTEL CPU Request'),
     value: ResourceLimitType.INTEL_CPU
+  },
+  !WEBPACK_CONFIG_SHARED_CLUSTER && {
+    text: t('CPU Limits'),
+    value: ResourceLimitType.LIMIT_CPU
+  },
+  !WEBPACK_CONFIG_SHARED_CLUSTER && {
+    text: t('Mem Limits'),
+    value: 'limits.memory'
+  },
+  !WEBPACK_CONFIG_SHARED_CLUSTER && {
+    text: t('Local ephemeral storage Limits'),
+    value: 'limits.ephemeral-storage'
   }
-];
+].filter(Boolean);
 
 export const resourceTypeToUnit = {
   pods: t('个'),
@@ -74,14 +92,18 @@ export const resourceTypeToUnit = {
   persistentvolumeclaims: t('个'),
   'services.nodeports': t('个'),
   'services.loadbalancers': t('个'),
+  [ResourceLimitType.REQUEST_CPU]: t('核'),
+  [ResourceLimitType.LIMIT_CPU]: t('核'),
   'requests.memory': 'MiB',
+  'limits.memory': 'MiB',
   'requests.ephemeral-storage': 'MiB',
+  'limits.ephemeral-storage': 'MiB',
   [ResourceLimitType.AMD_CPU]: t('毫核'),
   [ResourceLimitType.INTEL_CPU]: t('毫核')
 };
 
 export const initProjectResourceLimit = {
-  type: ResourceLimitType.AMD_CPU,
+  type: WEBPACK_CONFIG_SHARED_CLUSTER ? ResourceLimitType.AMD_CPU : ResourceLimitType.REQUEST_CPU,
   value: '',
   v_type: initValidator,
   v_value: initValidator
@@ -223,7 +245,12 @@ export class CreateProjectResourceLimitPanel extends React.Component<
     let { resourceLimits, parentResourceMaxLimit } = this.state;
     let newResourceLimits = deepClone(resourceLimits);
     let finder = newResourceLimits.find(item => item.id === id);
-    finder.v_value = this._validateMemLimit(value, +parentResourceMaxLimit[type]);
+    //cpu使用_validateCpuLimit，其他判断为正整数即可
+    if (type === ResourceLimitType.REQUEST_CPU || type === ResourceLimitType.LIMIT_CPU) {
+      finder.v_value = this._validateCpuLimit(value, +parentResourceMaxLimit[type]);
+    } else {
+      finder.v_value = this._validateMemLimit(value, +parentResourceMaxLimit[type]);
+    }
     this.setState({ resourceLimits: newResourceLimits });
   }
 
@@ -287,7 +314,11 @@ export class CreateProjectResourceLimitPanel extends React.Component<
 
     let newResourceLimits = deepClone(resourceLimits);
     newResourceLimits.forEach(item => {
-      item.v_value = this._validateMemLimit(item.value, +parentResourceMaxLimit[item.type]);
+      if (item.type === ResourceLimitType.REQUEST_CPU || item.type === ResourceLimitType.LIMIT_CPU) {
+        item.v_value = this._validateCpuLimit(item.value, +parentResourceMaxLimit[item.type]);
+      } else {
+        item.v_value = this._validateMemLimit(item.value, +parentResourceMaxLimit[item.type]);
+      }
       item.v_type = this._validateProjectResourceLimitType(item.type, newResourceLimits);
     });
     this.setState({ resourceLimits: newResourceLimits });
@@ -330,8 +361,8 @@ export class CreateProjectResourceLimitPanel extends React.Component<
                   <Input
                     placeholder={
                       maxLimit
-                        ? `1-${maxLimit}`
-                        : ''
+                      ? `${item.type === ResourceLimitType.REQUEST_CPU || item.type === ResourceLimitType.LIMIT_CPU ? '0.01' : '1'}-${maxLimit}`
+                      : ''
                     }
                     maxLength={10}
                     type="text"
