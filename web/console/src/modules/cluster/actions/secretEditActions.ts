@@ -18,8 +18,14 @@ const fetchNamespaceActions = generateFetcherActionCreator({
     let { clusterVersion } = getState();
     // 获取资源的配置
     let namespaceInfo = resourceConfig(clusterVersion)['ns'];
-    let response = await WebAPI.fetchNamespaceList(getState().subRoot.secretEdit.nsQuery, namespaceInfo);
-    return response;
+    if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+      let { projectNamespaceQuery } = getState();
+      let response = await WebAPI.fetchProjectNamespaceList(projectNamespaceQuery);
+      return response;
+    } else {
+      let response = await WebAPI.fetchNamespaceList(getState().subRoot.secretEdit.nsQuery, namespaceInfo);
+      return response;
+    }
   }
 });
 
