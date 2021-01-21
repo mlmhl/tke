@@ -66,7 +66,7 @@ export const resourceLimitTypeList = [
     value: 'services.loadbalancers'
   },
   {
-    text: t('CPU Request2'),
+    text: t('CPU Request'),
     value: 'requests.cpu'
   },
   {
