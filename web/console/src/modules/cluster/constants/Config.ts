@@ -532,7 +532,7 @@ export const WorkloadNetworkType = [
   },
   {
     value: WorkloadNetworkTypeEnum.FloatingIP,
-    text: t('FloatingIP（浮动IP）')
+    text: t('ENI IP（浮动IP）')
   },
   {
     value: WorkloadNetworkTypeEnum.Nat,
