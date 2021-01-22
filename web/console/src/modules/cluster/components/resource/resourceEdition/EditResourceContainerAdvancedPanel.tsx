@@ -106,7 +106,8 @@ export class EditResourceContainerAdvancedPanel extends React.Component<Containe
             </div>
           </FormItem>
 
-          <FormItem label={t('权限集-增加')}>
+          {/* 权限集隐藏：http://tapd.oa.com//TKEx_TEG/prong/stories/view/1020426652861953581 */}
+          {/* <FormItem label={t('权限集-增加')}>
             <SelectMultiple
               size="auto"
               options={AddCapabilitiesList.map(item => ({ value: item, text: item }))}
@@ -126,7 +127,7 @@ export class EditResourceContainerAdvancedPanel extends React.Component<Containe
                 actions.editWorkload.updateContainer({ dropCapabilities: value }, cKey);
               }}
             />
-          </FormItem>
+          </FormItem> */}
         </ul>
       </div>
     );
