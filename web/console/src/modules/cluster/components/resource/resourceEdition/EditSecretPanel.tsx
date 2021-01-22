@@ -337,7 +337,7 @@ export class EditSecretPanel extends React.Component<RootProps, EditSecretPanelS
         };
         secretData['.dockercfg'] = window.btoa(JSON.stringify(finalData));
       }
-
+      const clusterId = route.queries['clusterId'];
       let finalJSON = '';
       let finalNsList =
         nsType === 'all'
@@ -349,7 +349,7 @@ export class EditSecretPanel extends React.Component<RootProps, EditSecretPanelS
           apiVersion: (resourceInfo.group ? resourceInfo.group + '/' : '') + resourceInfo.version,
           metadata: {
             name: name,
-            namespace: item.name,
+            namespace: item.name.replace(new RegExp(`^${clusterId}-`), ''),
             labels: {
               'qcloud-app': name
             }
@@ -363,7 +363,7 @@ export class EditSecretPanel extends React.Component<RootProps, EditSecretPanelS
 
       let resource: CreateResource = {
         id: uuid(),
-        clusterId: route.queries['clusterId'],
+        clusterId,
         jsonData: finalJSON
       };
 
