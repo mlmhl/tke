@@ -1,3 +1,5 @@
+import { setProjectName } from '@helper';
+
 /**
  * 缓存选择的集群
  * @param clusterName
@@ -28,6 +30,8 @@ export const getProjectCache = () => {
  */
 export const setProjectCache = projectId => {
   window.localStorage.setItem('selectedProject', projectId);
+  // 在CLB模块兼容 reduceNetworkRequest 对 X-TKE-ProjectName 的支持
+  setProjectName(projectId);
 };
 
 /**
