@@ -24,6 +24,7 @@
 /web/.pnp
 /web/.pnp.js
 /web/console/webpack/dist
+/pkg/gateway/assets/assets.go
 
 # Output of backend and frontend
 /_output

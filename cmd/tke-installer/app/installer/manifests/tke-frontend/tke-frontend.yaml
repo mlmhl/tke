@@ -1,0 +1,67 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: tke-frontend
+  namespace: tke
+spec:
+  selector:
+    app: tke-frontend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 443
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tke-frontend
+  namespace: tke
+spec:
+  selector:
+    matchLabels:
+      app: tke-frontend
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: tke-frontend
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      containers:
+        - name: tke-gateway
+          image: mirrors.tencent.com/tkestack/tke-frontend:latest
+          args:
+            - "nginx"
+            - "-g"
+            - "daemon off;"
+          ports:
+            - containerPort: 443
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              port: 80
+              path: /
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              port: 80
+              path: /
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 256Mi

@@ -22,6 +22,16 @@ all: lint test build
 
 ROOT_PACKAGE=tkestack.io/tke
 VERSION_PACKAGE=tkestack.io/tke/pkg/app/version
+EDITION ?=yunti
+FRONTEND_BUILD=yunti.web.build.console
+FRONTEND_IMAGE=mirrors.tencent.com/tkestack/tke-frontend
+IMAGE_TAGS=$(shell git describe --always --dirty --tags | sed 's/-/./2' | sed 's/-/./2' )-$(EDITION)
+
+ifeq ($(EDITION),yunti)
+	FRONTEND_BUILD=yunti.web.build.console
+else ifeq ($(EDITION),share)
+	FRONTEND_BUILD=share.cluster.web.build.console
+endif
 
 # ==============================================================================
 # Includes
@@ -160,3 +170,23 @@ help: Makefile
 	@echo -e "\nUsage: make <TARGETS> <OPTIONS> ...\n\nTargets:"
 	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
 	@echo "$$USAGE_OPTIONS"
+
+.PHONY: frontend.nginx
+frontend.nginx:
+	mkdir -p web/console/build
+	cp build/docker/tke-frontend/nginx.conf web/console/build
+
+.PHONY: frontend.build
+frontend.build: frontend.nginx
+	make ${FRONTEND_BUILD}
+
+.PHONY: frontend
+frontend: frontend.nginx
+	make ${FRONTEND_BUILD}
+	docker build -f build/docker/tke-frontend/Dockerfile -t ${FRONTEND_IMAGE}:${IMAGE_TAGS} web/console/build; \
+    docker push ${FRONTEND_IMAGE}:${IMAGE_TAGS};
+
+.PHONY: frontend.image
+frontend.image: frontend.nginx
+	docker build -f build/docker/tke-frontend/Dockerfile -t ${FRONTEND_IMAGE}:${IMAGE_TAGS} web/console/build; \
+    docker push ${FRONTEND_IMAGE}:${IMAGE_TAGS};
