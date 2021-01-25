@@ -107,7 +107,8 @@ export const resourceTypeToUnit = {
   'requests.ephemeral-storage': 'MiB',
   'limits.ephemeral-storage': 'MiB',
   'teg.tkex.oa.com/cbs-premium-storage': 'MiB',
-  'teg.tkex.oa.com/cbs-ssd-storage': 'MiB'
+  'teg.tkex.oa.com/cbs-ssd-storage': 'MiB',
+  'requests.tke.cloud.tencent.com/eni-ip': t('个')
 };
 export const resourceLimitTypeToText = {
   pods: t('Pod数目'),
@@ -125,7 +126,8 @@ export const resourceLimitTypeToText = {
   'requests.ephemeral-storage': t('Local ephemeral storage Request'),
   'limits.ephemeral-storage': t('Local ephemeral storage Limits'),
   'teg.tkex.oa.com/cbs-premium-storage': t('高性能云盘'),
-  'teg.tkex.oa.com/cbs-ssd-storage': t('SSD云盘')
+  'teg.tkex.oa.com/cbs-ssd-storage': t('SSD云盘'),
+  'requests.tke.cloud.tencent.com/eni-ip': 'ENI IP'
 };
 
 export const initProjectResourceLimit = {
