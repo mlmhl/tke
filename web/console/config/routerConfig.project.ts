@@ -110,7 +110,7 @@ export const subRouterConfig = () => {
   return routerConfig;
 };
 export const notifySubRouter = [
-  {
+  /*{
     name: t('通知渠道'),
     id: 'channel',
     basicUrl: 'channel',
@@ -124,7 +124,7 @@ export const notifySubRouter = [
     name: t('接收人'),
     id: 'receiver',
     basicUrl: 'receiver',
-  },
+  },*/
   {
     name: t('接收组'),
     id: 'receiverGroup',
