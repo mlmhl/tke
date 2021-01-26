@@ -1,24 +1,20 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { IsShowLoginDialog } from 'src/modules/cluster/constants/ActionType';
-import { TappGrayUpdateEditItem } from 'src/modules/cluster/models/ResourceDetailState';
-
+import { isEmpty, cloneDeep, uniq } from 'lodash';
 import { Bubble, Button, Justify, Modal, Table, TagSearchBox } from '@tea/component';
 import { bindActionCreators, insertCSS, uuid } from '@tencent/ff-redux';
 import { ChartInstancesPanel } from '@tencent/tchart';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
+import { TappGrayUpdateEditItem } from 'src/modules/cluster/models/ResourceDetailState';
 import { resourceConfig } from '../../../../../../config';
 import { initValidator } from '../../../../../../src/modules/common';
-import { cloneDeep, isEmpty } from '../../../../common/utils';
 import { allActions } from '../../../actions';
-import { CreateResource, PodFilterInNode } from '../../../models';
+import { CreateResource, PodFilterInNode, Pod } from '../../../models';
 import { containerMonitorFields, MonitorPanelProps, podMonitorFields } from '../../../models/MonitorPanel';
 import { router } from '../../../router';
 import { RootProps } from '../../ClusterApp';
 import { IsInNodeManageDetail } from './ResourceDetail';
-import { ResourceGrayUpgradeDialog } from './ResourceGrayUpgradeDialog';
-import { ResourceTappPodDeleteDialog } from './ResourceTappPodDeleteDialog';
 import { reduceNs } from '@helper';
 
 /** k8s pod的状态值 */
@@ -52,18 +48,16 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
       { podFilterInNode } = subRoot.resourceDetailState;
 
     // 判断是否在nodeManage的pod列表里面
-    let isInNodeManage = IsInNodeManageDetail(urlParams['type']);
+    const isInNodeManage = IsInNodeManageDetail(urlParams['type']);
     let initSearchBoxValues = [];
     // 需要初始化展示的数据，因为有可能几个tab之间切来切去
     if (isInNodeManage && !isEmpty(podFilterInNode)) {
-      let keys = Object.keys(podFilterInNode);
+      const keys = Object.keys(podFilterInNode);
       initSearchBoxValues = keys.map(item => {
         return {
           attr: {
-            // type: 'single',
             key: item,
             name: TagSearchKeyMap[item]
-            // values: []
           },
           values: [{ name: podFilterInNode[item] }]
         };
@@ -74,15 +68,23 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
     };
   }
 
+  get podRecords(): Pod[] {
+    return this.props.subRoot.resourceDetailState.podList.data.records;
+  }
+
+  get podSelections(): Pod[] {
+    return this.props.subRoot.resourceDetailState.podSelection;
+  }
+
   /**渲染pod管理页面的详情操作按钮 */
 
   render() {
-    let { route } = this.props,
+    const { route } = this.props,
       urlParams = router.resolve(route);
 
-    let type = urlParams['type'];
-    let isInNodeManage = IsInNodeManageDetail(type);
-    let { resourceName } = this.props.subRoot;
+    const type = urlParams['type'];
+    const isInNodeManage = IsInNodeManageDetail(type);
+    const { resourceName } = this.props.subRoot;
 
     let monitorButton = null;
     monitorButton = type === 'resource' || isInNodeManage ? this._renderMonitorButton() : null;
@@ -95,7 +97,7 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
               {resourceName === 'tapp' ? this._renderTappOperationBar() : null}
             </React.Fragment>
           }
-          right={isInNodeManage ? this._renderTagSearchBox() : null}
+          right={this._renderTagSearchBox()}
         />
         {this.state && this.state.monitorPanelProps && (
           <Modal
@@ -120,10 +122,13 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
   }
 
   private _renderTappOperationBar() {
-    let { podSelection } = this.props.subRoot.resourceDetailState;
+    const { podSelection } = this.props.subRoot.resourceDetailState;
+    const getPodConsistency = podRecords => uniq(podRecords.map(item => item.spec.containers.length)).length === 1;
+    const podConsistent = getPodConsistency(this.podRecords);
+
     return (
       <React.Fragment>
-        <Bubble content={podSelection.length <= 0 ? t('请先选择容器') : null} />
+        <Bubble content={podSelection.length <= 0 ? t('请先选择实例') : null} />
         <Button
           type="primary"
           disabled={podSelection.length <= 0}
@@ -131,15 +136,13 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
         >
           {t('删除')}
         </Button>
-        <Bubble content={podSelection.length <= 0 ? t('请先选择容器') : null} placement="right">
-          <Button
-            type="primary"
-            disabled={podSelection.length <= 0}
-            onClick={this._handleClickForUpdateGrayTapp.bind(this)}
-          >
-            {t('灰度升级')}
-          </Button>
-        </Bubble>
+        <Button
+          type="primary"
+          disabled={!podConsistent}
+          onClick={this._handleClickForUpdateGrayTapp.bind(this)}
+        >
+          {t('灰度升级')}
+        </Button>
       </React.Fragment>
     );
   }
@@ -148,18 +151,22 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
    * 生成搜索框
    */
   private _renderTagSearchBox() {
-    let { subRoot, namespaceList } = this.props,
-      { podList } = subRoot.resourceDetailState;
+    const { route } = this.props,
+      urlParams = router.resolve(route);
+
+    const type = urlParams['type'];
+    const isInNodeManage = IsInNodeManageDetail(type);
+    const { subRoot, namespaceList } = this.props;
 
     /** podFilter的选择项 */
-    let podNameValues: any[] = [];
-    let podPhaseValues: any[] = PodPhase.map(item => ({
+    const podNameValues: any[] = [];
+    const podPhaseValues: any[] = PodPhase.map(item => ({
       key: 'phase',
       name: item
     }));
-    let namespaceValues: any[] = [];
+    const namespaceValues: any[] = [];
 
-    podList.data.records.forEach(item => {
+    this.podRecords.forEach(item => {
       // 获取podName的集合
       podNameValues.push({
         key: 'podName',
@@ -177,10 +184,9 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
     // tagSearch的过滤选项
     const attributes = [
       {
-        type: 'single',
+        type: 'input',
         key: 'podName',
-        name: t('Pod名称'),
-        values: podNameValues
+        name: t('Pod名称')
       },
       {
         type: 'single',
@@ -188,20 +194,28 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
         name: t('状态'),
         values: podPhaseValues
       },
+
       {
-        type: 'single',
-        key: 'namespace',
-        name: t('命名空间'),
-        values: namespaceValues
+        type: 'input',
+        key: 'ip',
+        name: t('实例IP')
       }
-    ];
+    ].concat(
+      isInNodeManage
+        ? {
+            type: 'single',
+            key: 'namespace',
+            name: t('命名空间'),
+            values: namespaceValues
+          }
+        : []
+    );
 
     return (
       <div style={{ width: 600, float: 'right' }}>
         <TagSearchBox
           className="myTagSearchBox"
           attributes={attributes}
-          // minWidth={420}
           value={this.state.searchBoxValues}
           onChange={tags => {
             this._handleClickForTagSearch(tags);
@@ -213,41 +227,41 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
 
   /** 搜索框的操作，不同的搜索进行相对应的操作 */
   private _handleClickForTagSearch(tags: any[]) {
-    let { actions } = this.props;
+    const { actions } = this.props;
 
     // 这里是控制tagSearch的展示
     this.setState({
       searchBoxValues: tags
     });
 
-    let podFilter: PodFilterInNode = {};
+    const podFilter: PodFilterInNode = {};
     tags.forEach(item => {
-      let attrKey = item.attr ? item.attr.key : 'podName';
+      const attrKey = item.attr ? item.attr.key : 'podName';
       podFilter[attrKey] = item.values[0]['name'];
     });
     actions.resourceDetail.pod.updatePodFilterInNode(podFilter);
   }
 
   private _handleClickForTappPodRemove() {
-    let { podSelection } = this.props.subRoot.resourceDetailState;
-    let { clusterVersion, route } = this.props;
-    let podResourceInfo = resourceConfig(clusterVersion)['tapp'];
+    const { podSelection } = this.props.subRoot.resourceDetailState;
+    const { clusterVersion, route } = this.props;
+    const podResourceInfo = resourceConfig(clusterVersion)['tapp'];
 
     //删除tapp pod 需要修改tapp的yaml上的spec.statuses字段，具体为{'pod名字':killed}
-    let statuses = {};
+    const statuses = {};
     podSelection.forEach(pod => {
-      let indexName = pod.metadata.name.split(pod.metadata.generateName)[1];
+      const indexName = pod.metadata.name.split(pod.metadata.generateName)[1];
       if (indexName) {
         statuses[indexName] = 'Killed';
       }
     });
-    let jsonYaml = {
+    const jsonYaml = {
       spec: {
         statuses
       }
     };
     // 需要提交的数据
-    let resource: CreateResource = {
+    const resource: CreateResource = {
       id: uuid(),
       resourceInfo: podResourceInfo,
       namespace: route.queries['np'],
@@ -260,34 +274,26 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
   }
 
   private _handleClickForUpdateGrayTapp() {
-    let { podSelection } = this.props.subRoot.resourceDetailState;
-    let items: TappGrayUpdateEditItem[] = podSelection.map(pod => {
-      return {
-        name: pod.metadata.name,
-        generateName: pod.metadata.generateName,
-        containers: pod.spec.containers.map(container => {
-          let index = container.image.lastIndexOf(':'),
-            imageName,
-            imageTag;
-          if (index !== -1) {
-            imageName = container.image.slice(0, index);
-            imageTag = container.image.slice(index + 1);
-          } else {
-            imageName = container.image;
-            imageTag = '';
-          }
+    let setting: TappGrayUpdateEditItem = { containers: [] };
+    if (!isEmpty(this.podRecords)) {
+      // 取第一个pod的容器镜像列表作为初始配置(有选中的pod取选中的pod中的第一个，否则取全部列表中的第一个)
+      const pod = this.podSelections[0] || this.podRecords[0];
+      setting = {
+        containers: pod.spec.containers.map(({ name, image }) => {
+          const [imageName, imageTag = ''] = image.split(':');
           return {
-            name: container.name,
+            name,
             imageName,
             imageTag,
             v_imageName: initValidator
           };
         })
       };
-    });
-    this.props.actions.resourceDetail.pod.initTappGrayUpdate(items);
+    }
+    this.props.actions.resourceDetail.pod.initTappGrayUpdate(setting);
     this.props.actions.workflow.updateGrayTapp.start();
   }
+
   /** render监控按钮 */
   private _renderMonitorButton() {
     return (
@@ -304,19 +310,19 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
 
   /** 处理监控的相关操作 */
   private _handleMonitor(monitorType?: string, pod_name?: string) {
-    let { route, subRoot } = this.props,
+    const { route, subRoot } = this.props,
       urlParams = router.resolve(route),
       { resourceDetailState } = subRoot;
 
     // 判断是否在node详情页当中
-    let isInNodeManage = IsInNodeManageDetail(urlParams['type']);
+    const isInNodeManage = IsInNodeManageDetail(urlParams['type']);
 
-    let containerById = {};
-    for (let container of resourceDetailState.containerList) {
+    const containerById = {};
+    for (const container of resourceDetailState.containerList) {
       containerById[container.id] = container;
     }
 
-    let monitorPanelProps =
+    const monitorPanelProps =
       monitorType === 'podMonitor'
         ? {
             tables: [
@@ -328,7 +334,7 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
                     ? [['node', '=', route.queries['resourceIns'] || '']]
                     : [
                         ['workload_name', '=', route.queries['resourceIns'] || ''],
-                        ['namespace', '=', reduceNs(route.queries['np'] || 'default', route.queries['clusterId'])]
+                        ['namespace', '=', reduceNs(route.queries['np'] || 'default')]
                       ])
                 ],
                 fields: podMonitorFields
@@ -342,7 +348,7 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
                   name: t('Pod名称')
                 }
               ],
-              list: resourceDetailState.podList.data.records.map(item => ({
+              list: this.podRecords.map(item => ({
                 pod_name: item.metadata.name,
                 isChecked:
                   !resourceDetailState.podSelection.length ||
@@ -360,11 +366,11 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
                     'pod_name',
                     '=',
                     pod_name ||
-                      (resourceDetailState.podList.data.records[0]
-                        ? resourceDetailState.podList.data.records[0].metadata.name
+                      (this.podRecords[0]
+                        ? this.podRecords[0].metadata.name
                         : '')
                   ],
-                  ...(isInNodeManage ? [] : [['namespace', '=', reduceNs(route.queries['np'] || 'default', route.queries['clusterId'])]])
+                  ...(isInNodeManage ? [] : [['namespace', '=', reduceNs(route.queries['np'] || 'default')]])
                 ],
                 fields: containerMonitorFields
               }
@@ -422,7 +428,7 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
                     this._handleMonitor(monitorType, e.target.value);
                   }}
                 >
-                  {resourceDetailState.podList.data.records.map(pod => (
+                  {this.podRecords.map(pod => (
                     <option key={pod.metadata.name} value={pod.metadata.name}>
                       {pod.metadata.name}
                     </option>

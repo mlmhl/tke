@@ -1,8 +1,7 @@
 {
   "extends": [
     "eslint-config-alloy/react",
-    "eslint-config-alloy/typescript",
-    "plugin:you-dont-need-lodash-underscore/compatible"
+    "eslint-config-alloy/typescript"
   ],
   "plugins": ["prettier"],
   "rules": {

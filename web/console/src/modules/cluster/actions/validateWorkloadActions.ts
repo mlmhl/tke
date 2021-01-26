@@ -50,7 +50,7 @@ export const validateWorkloadActions = {
 
   validateWorkloadName() {
     return async (dispatch, getState: GetState) => {
-      let { workloadName } = getState().subRoot.workloadEdit;
+      const { workloadName } = getState().subRoot.workloadEdit;
 
       const result = await validateWorkloadActions._validateWorkloadName(workloadName);
 
@@ -83,7 +83,7 @@ export const validateWorkloadActions = {
 
   validateCronSchedule() {
     return async (dispatch, getState: GetState) => {
-      let { cronSchedule } = getState().subRoot.workloadEdit;
+      const { cronSchedule } = getState().subRoot.workloadEdit;
 
       const result = validateWorkloadActions._validateCronSchedule(cronSchedule);
       dispatch({
@@ -114,7 +114,7 @@ export const validateWorkloadActions = {
 
   validateJobCompletion() {
     return async (dispatch, getState: GetState) => {
-      let { completion } = getState().subRoot.workloadEdit;
+      const { completion } = getState().subRoot.workloadEdit;
 
       const result = validateWorkloadActions._validateJobCompletion(+completion);
       dispatch({
@@ -146,7 +146,7 @@ export const validateWorkloadActions = {
 
   validateJobParallel() {
     return async (dispatch, getState: GetState) => {
-      let { parallelism } = getState().subRoot.workloadEdit;
+      const { parallelism } = getState().subRoot.workloadEdit;
 
       const result = validateWorkloadActions._validateJobParallel(+parallelism);
       dispatch({
@@ -175,7 +175,7 @@ export const validateWorkloadActions = {
 
   validateWorkloadDesp() {
     return async (dispatch, getState: GetState) => {
-      let { description } = getState().subRoot.workloadEdit;
+      const { description } = getState().subRoot.workloadEdit;
 
       const result = validateWorkloadActions._validateWorkloadDesp(description);
 
@@ -189,7 +189,7 @@ export const validateWorkloadActions = {
   /** 校验标签是否正确 */
   _validateWorkloadLabelKey(name: string, labels: WorkloadLabel[]) {
     // label 支持 [A-Z0-9a-z]开头和结尾，中间还可以有 -_.
-    let reg = /^([A-Za-z0-9][-A-Za-z0-9_\.]*)?[A-Za-z0-9]$/,
+    let reg = /^[A-Za-z0-9][-A-Za-z0-9_\./]*?[A-Za-z0-9]$/,
       status = 0,
       message = '';
 
@@ -212,7 +212,7 @@ export const validateWorkloadActions = {
 
   validateWorkloadLabelKey(name: string, labelId: string) {
     return async (dispatch, getState: GetState) => {
-      let labels: WorkloadLabel[] = cloneDeep(getState().subRoot.workloadEdit.workloadLabels),
+      const labels: WorkloadLabel[] = cloneDeep(getState().subRoot.workloadEdit.workloadLabels),
         labelIndex = labels.findIndex(x => x.id === labelId),
         result = validateWorkloadActions._validateWorkloadLabelKey(name, labels);
 
@@ -262,7 +262,7 @@ export const validateWorkloadActions = {
 
   validateWorkloadLabelValue(value: string, labelId: string) {
     return async (dispatch, getState: GetState) => {
-      let labels: WorkloadLabel[] = cloneDeep(getState().subRoot.workloadEdit.workloadLabels),
+      const labels: WorkloadLabel[] = cloneDeep(getState().subRoot.workloadEdit.workloadLabels),
         labelIndex = labels.findIndex(x => x.id === labelId),
         result = validateWorkloadActions._validateWorkloadLabelValue(value);
 
@@ -315,7 +315,7 @@ export const validateWorkloadActions = {
 
   validateWorkloadAnnotationsKey(value: string, aId: string) {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
-      let annotations: WorkloadLabel[] = cloneDeep(getState().subRoot.workloadEdit.workloadAnnotations),
+      const annotations: WorkloadLabel[] = cloneDeep(getState().subRoot.workloadEdit.workloadAnnotations),
         aIndex = annotations.findIndex(x => x.id === aId),
         result = validateWorkloadActions._validateWorkloadAnnotationsKey(value, annotations);
 
@@ -367,7 +367,7 @@ export const validateWorkloadActions = {
 
   validateWorkloadAnnotationsValue(value: string, aId: string) {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
-      let annotations: WorkloadLabel[] = cloneDeep(getState().subRoot.workloadEdit.workloadAnnotations),
+      const annotations: WorkloadLabel[] = cloneDeep(getState().subRoot.workloadEdit.workloadAnnotations),
         aIndex = annotations.findIndex(x => x.id === aId),
         result = validateWorkloadActions._validateWorkloadAnnotationsValue(value);
 
@@ -414,7 +414,7 @@ export const validateWorkloadActions = {
 
   validateNamespace() {
     return async (dispatch, getState: GetState) => {
-      let { namespace } = getState().subRoot.workloadEdit;
+      const { namespace } = getState().subRoot.workloadEdit;
 
       const result = validateWorkloadActions._validateNamespace(namespace);
 
@@ -453,7 +453,7 @@ export const validateWorkloadActions = {
 
   validateVolumeName(name: string, vId: string) {
     return async (dispatch, getState: GetState) => {
-      let volumes: VolumeItem[] = cloneDeep(getState().subRoot.workloadEdit.volumes),
+      const volumes: VolumeItem[] = cloneDeep(getState().subRoot.workloadEdit.volumes),
         vIndex = volumes.findIndex(vol => vol.id === vId),
         result = validateWorkloadActions._validateVolumeName(name, volumes);
 
@@ -477,7 +477,7 @@ export const validateWorkloadActions = {
 
   validateAllVolumeName() {
     return async (dispatch, getState: GetState) => {
-      let volumes = getState().subRoot.workloadEdit.volumes;
+      const volumes = getState().subRoot.workloadEdit.volumes;
       volumes.forEach(volume => {
         dispatch(validateWorkloadActions.validateVolumeName(volume.name, volume.id + ''));
       });
@@ -504,7 +504,7 @@ export const validateWorkloadActions = {
 
   validateVolumePvc(pvcName: string, vId: string) {
     return async (dispatch, getState: GetState) => {
-      let volumes: VolumeItem[] = cloneDeep(getState().subRoot.workloadEdit.volumes),
+      const volumes: VolumeItem[] = cloneDeep(getState().subRoot.workloadEdit.volumes),
         vIndex = volumes.findIndex(vol => vol.id === vId),
         result = validateWorkloadActions._validateVolumePvc(pvcName, volumes);
 
@@ -528,7 +528,7 @@ export const validateWorkloadActions = {
 
   validateAllPvcSelection() {
     return async (dispatch, getState: GetState) => {
-      let volumes = getState().subRoot.workloadEdit.volumes;
+      const volumes = getState().subRoot.workloadEdit.volumes;
       volumes.forEach(volume => {
         volume.volumeType === 'pvc' &&
           dispatch(validateWorkloadActions.validateVolumePvc(volume.pvcSelection, volume.id + ''));
@@ -538,8 +538,8 @@ export const validateWorkloadActions = {
 
   /** 校验数据卷 nfs路径 */
   _validateNfsPath(path: string, vId: string, volumes: VolumeItem[]) {
-    let volume = volumes.find(vol => vol.id === vId);
-    let reg = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):\/(?:[a-zA-Z0-9-_.]+\/?)*$/,
+    const volume = volumes.find(vol => vol.id === vId);
+    let reg = /^(((ht|f)tps?):\/\/)?[\w-]+(\.[\w-]+)+([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?$/,
       status = 0,
       message = '';
 
@@ -569,7 +569,7 @@ export const validateWorkloadActions = {
 
   validateNfsPath(path: string, vId: string) {
     return async (dispatch, getState: GetState) => {
-      let volumes: VolumeItem[] = cloneDeep(getState().subRoot.workloadEdit.volumes),
+      const volumes: VolumeItem[] = cloneDeep(getState().subRoot.workloadEdit.volumes),
         vIndex = volumes.findIndex(v => v.id === vId),
         result = validateWorkloadActions._validateNfsPath(path, vId, volumes);
 
@@ -593,7 +593,7 @@ export const validateWorkloadActions = {
 
   validateAllNfsPath() {
     return async (dispatch, getState: GetState) => {
-      let volumes = getState().subRoot.workloadEdit.volumes;
+      const volumes = getState().subRoot.workloadEdit.volumes;
       volumes.forEach(volume => {
         dispatch(validateWorkloadActions.validateNfsPath(volume.nfsPath, volume.id + ''));
       });
@@ -621,7 +621,7 @@ export const validateWorkloadActions = {
 
   validateHostPath(path: string, vId: string) {
     return async (dispatch, getState: GetState) => {
-      let volumes: VolumeItem[] = cloneDeep(getState().subRoot.workloadEdit.volumes),
+      const volumes: VolumeItem[] = cloneDeep(getState().subRoot.workloadEdit.volumes),
         vIndex = volumes.findIndex(v => v.id === vId),
         result = validateWorkloadActions._validateHostPath(path);
 
@@ -645,7 +645,7 @@ export const validateWorkloadActions = {
 
   validateAllHosPath() {
     return async (dispatch, getState: GetState) => {
-      let volumes = getState().subRoot.workloadEdit.volumes;
+      const volumes = getState().subRoot.workloadEdit.volumes;
       volumes.forEach(volume => {
         volume.volumeType === 'hostPath' &&
           dispatch(validateWorkloadActions.validateHostPath(volume.hostPath, volume.id + ''));
@@ -658,14 +658,14 @@ export const validateWorkloadActions = {
       validateVolumes = {};
 
     // 已经挂载的数据卷的名称数组
-    let mounts: MountItem[] = [];
+    const mounts: MountItem[] = [];
     containers.forEach(c => {
       mounts.push(...c.mounts);
     });
-    let mountsName = mounts.map(m => m.volume);
+    const mountsName = mounts.map(m => m.volume);
 
     volumes.forEach(v => {
-      let isMounted = !!mountsName.find(m => m === v.name);
+      const isMounted = !!mountsName.find(m => m === v.name);
       allIsMounted = allIsMounted && isMounted;
 
       validateVolumes[v.id + ''] = isMounted;
@@ -676,9 +676,9 @@ export const validateWorkloadActions = {
 
   validateAllVolumeIsMounted() {
     return async (dispatch, getState: GetState) => {
-      let { volumes, containers } = getState().subRoot.workloadEdit;
+      const { volumes, containers } = getState().subRoot.workloadEdit;
 
-      let result = validateWorkloadActions._validateAllVolumeIsMounted(volumes, containers);
+      const result = validateWorkloadActions._validateAllVolumeIsMounted(volumes, containers);
 
       // 更新全部是否ok的标志
       dispatch({
@@ -687,7 +687,7 @@ export const validateWorkloadActions = {
       });
 
       // 更新每一个挂在项的校验状态
-      let newVolumes: VolumeItem[] = cloneDeep(volumes),
+      const newVolumes: VolumeItem[] = cloneDeep(volumes),
         validateVolumes = result.validateVolumes;
       newVolumes.forEach(v => {
         v['isMounted'] = validateVolumes[v.id + ''];
@@ -741,7 +741,7 @@ export const validateWorkloadActions = {
 
   validateContainerName(name: string, cKey: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(item => item.id === cKey),
         result = validateWorkloadActions._validateContainerName(name, containers);
 
@@ -755,7 +755,7 @@ export const validateWorkloadActions = {
 
   validateAllContainerName() {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = getState().subRoot.workloadEdit.containers;
+      const containers: ContainerItem[] = getState().subRoot.workloadEdit.containers;
       containers.forEach(container => {
         dispatch(validateWorkloadActions.validateContainerName(container.name, container.id + ''));
       });
@@ -780,7 +780,7 @@ export const validateWorkloadActions = {
 
   validateRegistrySelection(registry: string, cKey: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cKey),
         result = validateWorkloadActions._validateRegistrySelection(registry);
 
@@ -792,11 +792,11 @@ export const validateWorkloadActions = {
     };
   },
 
-  validateGrayUpdateRegistrySelection(index_out: number, index_in: number, imageName: string) {
+  validateGrayUpdateRegistrySelection(index_in: number, imageName: string) {
     return async (dispatch, getState: GetState) => {
-      let { editTappGrayUpdate } = getState().subRoot.resourceDetailState;
-      let target: TappGrayUpdateEditItem[] = cloneDeep(editTappGrayUpdate);
-      target[index_out].containers[index_in].v_imageName = validateWorkloadActions._validateRegistrySelection(
+      const { editTappGrayUpdate } = getState().subRoot.resourceDetailState;
+      const target: TappGrayUpdateEditItem = cloneDeep(editTappGrayUpdate);
+      target.containers[index_in].v_imageName = validateWorkloadActions._validateRegistrySelection(
         imageName
       );
 
@@ -809,13 +809,11 @@ export const validateWorkloadActions = {
 
   validateGrayUpdate() {
     return async (dispatch, getState: GetState) => {
-      let { editTappGrayUpdate } = getState().subRoot.resourceDetailState;
-      editTappGrayUpdate.forEach((item, index_out) => {
-        item.containers.forEach((container, index_in) => {
-          dispatch(
-            validateWorkloadActions.validateGrayUpdateRegistrySelection(index_out, index_in, container.imageName)
-          );
-        });
+      const { editTappGrayUpdate } = getState().subRoot.resourceDetailState;
+      editTappGrayUpdate.containers.forEach((container, index_in) => {
+        dispatch(
+          validateWorkloadActions.validateGrayUpdateRegistrySelection(index_in, container.imageName)
+        );
       });
     };
   },
@@ -841,9 +839,9 @@ export const validateWorkloadActions = {
 
   validateVolumeMount(volumeName: string, cId: string, mId: string) {
     return async (dispatch, getState: GetState) => {
-      let { containers, volumes, volumeTemplates } = getState().subRoot.workloadEdit;
+      const { containers, volumes, volumeTemplates } = getState().subRoot.workloadEdit;
 
-      let newContainers: ContainerItem[] = cloneDeep(containers),
+      const newContainers: ContainerItem[] = cloneDeep(containers),
         cIndex = newContainers.findIndex(c => c.id === cId),
         mIndex = newContainers[cIndex]['mounts'].findIndex(m => m.id === mId),
         result = validateWorkloadActions._validateVolumeMount(
@@ -885,7 +883,7 @@ export const validateWorkloadActions = {
 
   /** 校验挂载的挂载路径 */
   _validateVolumeMountPath(mountPath: string, mId: string, mounts: MountItem[]) {
-    let mount = mounts.find(m => m.id === mId);
+    const mount = mounts.find(m => m.id === mId);
     let status = 0,
       message = '',
       reg = /:/;
@@ -908,9 +906,9 @@ export const validateWorkloadActions = {
 
   validateVolumeMountPath(mountPath: string, cId: string, mId: string) {
     return async (dispatch, getState: GetState) => {
-      let { containers, volumes } = getState().subRoot.workloadEdit;
+      const { containers, volumes } = getState().subRoot.workloadEdit;
 
-      let newContainers: ContainerItem[] = cloneDeep(containers),
+      const newContainers: ContainerItem[] = cloneDeep(containers),
         cIndex = newContainers.findIndex(c => c.id === cId),
         mIndex = newContainers[cIndex]['mounts'].findIndex(m => m.id === mId),
         result = validateWorkloadActions._validateVolumeMountPath(mountPath, mId, newContainers[cIndex]['mounts']);
@@ -969,7 +967,7 @@ export const validateWorkloadActions = {
         status = 1;
         message = '';
       } else {
-        let limit = cpuLimit.find(cpu => cpu.type === 'limit');
+        const limit = cpuLimit.find(cpu => cpu.type === 'limit');
         if (!limit || (limit && cpu - +limit.value <= 0) || !limit.value) {
           status = 1;
           message = '';
@@ -985,7 +983,7 @@ export const validateWorkloadActions = {
 
   validateCpuLimit(cpu: string, cId: string, cpuId: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cId),
         cpuLimit = containers[cIndex].cpuLimit,
         cpuIndex = cpuLimit.findIndex(c => c.id === cpuId),
@@ -1041,7 +1039,7 @@ export const validateWorkloadActions = {
           message = t('limit限制要大于等于4Mib');
         }
       } else {
-        let limit = memLimit[1];
+        const limit = memLimit[1];
         if (mem > 0) {
           if ((limit && limit.value === '') || (limit && mem - +limit.value <= 0)) {
             status = 1;
@@ -1089,7 +1087,7 @@ export const validateWorkloadActions = {
 
   validateGpuCoreLimit(gpuCore: string, cId: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cId),
         result = validateWorkloadActions._validateGpuCoreLimit(+gpuCore);
 
@@ -1125,7 +1123,7 @@ export const validateWorkloadActions = {
 
   validateGpuMemLimit(gpuMem: string, cId: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cId),
         result = validateWorkloadActions._validateGpuMemLimit(+gpuMem);
 
@@ -1138,7 +1136,7 @@ export const validateWorkloadActions = {
   },
   validateMemLimit(mem: string, cId: string, mId: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cId),
         memLimit = containers[cIndex].memLimit,
         mIndex = memLimit.findIndex(m => m.id === mId),
@@ -1192,7 +1190,7 @@ export const validateWorkloadActions = {
 
   validateEnvName(name: string, cId: string, eId: string) {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cId),
         envs: ContainerEnv.ItemWithId[] = containers[cIndex].envItems,
         eIndex = envs.findIndex(e => e.id === eId),
@@ -1236,13 +1234,13 @@ export const validateWorkloadActions = {
 
   validateNewEnvItemValue(keyNames: (keyof ContainerEnv.Item)[], cId: string, eId: string) {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cId),
         newEnvItems: ContainerEnv.ItemWithId[] = containers[cIndex]['envItems'],
         vIndex = newEnvItems.findIndex(e => e.id === eId);
 
       keyNames.forEach(keyName => {
-        let result = validateWorkloadActions._validateNewEnvItemValue(newEnvItems[vIndex][keyName] as string);
+        const result = validateWorkloadActions._validateNewEnvItemValue(newEnvItems[vIndex][keyName] as string);
         containers[cIndex]['envItems'][vIndex][`v_${keyName}`] = result;
       });
       dispatch({
@@ -1274,8 +1272,8 @@ export const validateWorkloadActions = {
   validateAllNewEnvItemValue(container: ContainerItem) {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
       container.envItems.forEach(envItem => {
-        let cId = container.id + '';
-        let eId = envItem.id + '';
+        const cId = container.id + '';
+        const eId = envItem.id + '';
         if (envItem.type === ContainerEnv.EnvTypeEnum.ConfigMapRef) {
           dispatch(validateWorkloadActions.validateNewEnvItemValue(['configMapName', 'configMapDataKey'], cId, eId));
         } else if (envItem.type === ContainerEnv.EnvTypeEnum.SecretKeyRef) {
@@ -1339,7 +1337,7 @@ export const validateWorkloadActions = {
 
   validateHealthPort(cKey: string, hType: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cKey),
         result = validateWorkloadActions._validateHealthPort(containers[cIndex]['healthCheck'][hType]['port']);
 
@@ -1368,7 +1366,7 @@ export const validateWorkloadActions = {
 
   validateHealthCmd(cKey: string, hType: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cKey),
         result = validateWorkloadActions._validateHealthCmd(containers[cIndex]['healthCheck'][hType]['cmd']);
 
@@ -1405,7 +1403,7 @@ export const validateWorkloadActions = {
 
   validateHealthDelayTime(cKey: string, hType: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cKey),
         result = validateWorkloadActions._validateHealthDelayTime(
           +containers[cIndex]['healthCheck'][hType]['delayTime']
@@ -1443,7 +1441,7 @@ export const validateWorkloadActions = {
 
   validateHealthTimeOut(cKey: string, hType: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cKey),
         result = validateWorkloadActions._validateHealthTimeOut(+containers[cIndex]['healthCheck'][hType]['timeOut']);
 
@@ -1479,7 +1477,7 @@ export const validateWorkloadActions = {
 
   validateHealthIntervalTime(cKey: string, hType: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cKey),
         result = validateWorkloadActions._validateHealthIntervalTime(
           +containers[cIndex]['healthCheck'][hType]['intervalTime'],
@@ -1518,7 +1516,7 @@ export const validateWorkloadActions = {
 
   validateHealthThreshold(cKey: string, hType: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cKey),
         result = validateWorkloadActions._validateHealthThreshold(
           +containers[cIndex]['healthCheck'][hType]['healthThreshold']
@@ -1556,7 +1554,7 @@ export const validateWorkloadActions = {
 
   validateUnHealthThreshold(cKey: string, hType: string) {
     return async (dispatch, getState: GetState) => {
-      let containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
+      const containers: ContainerItem[] = cloneDeep(getState().subRoot.workloadEdit.containers),
         cIndex = containers.findIndex(c => c.id === cKey),
         result = validateWorkloadActions._validateUnhealthThreshold(
           +containers[cIndex]['healthCheck'][hType]['unhealthThreshold']
@@ -1591,7 +1589,7 @@ export const validateWorkloadActions = {
 
   validateHealthCheck(container: ContainerItem, hType: string) {
     return async (dispatch, getState: GetState) => {
-      let cKey = container.id + '';
+      const cKey = container.id + '';
       dispatch(validateWorkloadActions.validateHealthPort(cKey, hType));
       dispatch(validateWorkloadActions.validateHealthDelayTime(cKey, hType));
       dispatch(validateWorkloadActions.validateHealthTimeOut(cKey, hType));
@@ -1641,7 +1639,7 @@ export const validateWorkloadActions = {
 
     // 如果有健康检查，则校验健康检查
     if (container.healthCheck.isOpenLiveCheck) {
-      let liveCheck = container.healthCheck.liveCheck;
+      const liveCheck = container.healthCheck.liveCheck;
       state =
         state ||
         liveCheck.v_port.status === 2 ||
@@ -1653,7 +1651,7 @@ export const validateWorkloadActions = {
     }
 
     if (container.healthCheck.isOpenReadyCheck) {
-      let readyCheck = container.healthCheck.readyCheck;
+      const readyCheck = container.healthCheck.readyCheck;
       state =
         state ||
         readyCheck.v_port.status === 2 ||
@@ -1689,7 +1687,7 @@ export const validateWorkloadActions = {
     }
 
     // 校验挂载业务
-    let filters = volumes.filter(v => {
+    const filters = volumes.filter(v => {
       // 判断当前的挂载项是否还存在，是否已经被删除
       return v.name;
     });
@@ -1719,7 +1717,7 @@ export const validateWorkloadActions = {
       if (container) {
         let isHealthCheckOk = true;
 
-        let cKey = container.id + '';
+        const cKey = container.id + '';
         dispatch(validateWorkloadActions.validateContainerName(container.name, cKey));
         dispatch(validateWorkloadActions.validateRegistrySelection(container.registry, cKey));
         dispatch(validateWorkloadActions.validateAllCpuLimit(container));
@@ -1795,7 +1793,7 @@ export const validateWorkloadActions = {
 
   validateHpaType(type: string, mId: string) {
     return async (dispatch, getState: GetState) => {
-      let metricArr: HpaMetrics[] = cloneDeep(getState().subRoot.workloadEdit.metrics),
+      const metricArr: HpaMetrics[] = cloneDeep(getState().subRoot.workloadEdit.metrics),
         result = validateWorkloadActions._validateHpaType(type, metricArr),
         mIndex = metricArr.findIndex(item => item.id === mId);
 
@@ -1859,8 +1857,8 @@ export const validateWorkloadActions = {
 
   validateHpaValue(value: string, mId: string) {
     return async (dispatch, getState: GetState) => {
-      let { containers, metrics } = getState().subRoot.workloadEdit;
-      let metricArr: HpaMetrics[] = cloneDeep(metrics),
+      const { containers, metrics } = getState().subRoot.workloadEdit;
+      const metricArr: HpaMetrics[] = cloneDeep(metrics),
         mIndex = metricArr.findIndex(item => item.id === mId),
         result = validateWorkloadActions._validateHpaValue(value, metricArr[mIndex].type, containers);
 
@@ -1912,7 +1910,7 @@ export const validateWorkloadActions = {
 
   validateMinReplicas() {
     return async (dispatch, getState: GetState) => {
-      let { minReplicas } = getState().subRoot.workloadEdit,
+      const { minReplicas } = getState().subRoot.workloadEdit,
         result = validateWorkloadActions._validateMinReplicas(minReplicas);
 
       dispatch({
@@ -1946,7 +1944,7 @@ export const validateWorkloadActions = {
 
   validateMaxReplicas() {
     return async (dispatch, getState: GetState) => {
-      let { maxReplicas, minReplicas } = getState().subRoot.workloadEdit,
+      const { maxReplicas, minReplicas } = getState().subRoot.workloadEdit,
         result = validateWorkloadActions._validateMaxReplicas(maxReplicas, minReplicas);
 
       dispatch({
@@ -1959,7 +1957,7 @@ export const validateWorkloadActions = {
   /** 校验cronHpa的crontab是否正确 */
   validateCronTab(mId: string) {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
-      let metricArr: CronMetrics[] = cloneDeep(getState().subRoot.workloadEdit.cronMetrics),
+      const metricArr: CronMetrics[] = cloneDeep(getState().subRoot.workloadEdit.cronMetrics),
         mIndex = metricArr.findIndex(item => item.id === mId),
         result = validateWorkloadActions._validateCronSchedule(metricArr[mIndex].crontab);
 
@@ -2001,7 +1999,7 @@ export const validateWorkloadActions = {
 
   validateCronTargetReplicas(mId: string) {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
-      let metricArr: CronMetrics[] = cloneDeep(getState().subRoot.workloadEdit.cronMetrics),
+      const metricArr: CronMetrics[] = cloneDeep(getState().subRoot.workloadEdit.cronMetrics),
         mIndex = metricArr.findIndex(item => item.id === mId),
         result = validateWorkloadActions._validateCronTargetReplicas(metricArr[mIndex].targetReplicas);
 
@@ -2041,7 +2039,7 @@ export const validateWorkloadActions = {
 
   validateImagePullSecret(secretName: string, sId: string) {
     return async (dispatch, getState: GetState) => {
-      let newList: ImagePullSecrets[] = cloneDeep(getState().subRoot.workloadEdit.imagePullSecrets),
+      const newList: ImagePullSecrets[] = cloneDeep(getState().subRoot.workloadEdit.imagePullSecrets),
         sIndex = newList.findIndex(item => item.id === sId),
         result = validateWorkloadActions._validateImagePullSecret(secretName, newList);
 
@@ -2083,7 +2081,7 @@ export const validateWorkloadActions = {
     });
 
     // 判断当前的workload的类型
-    let isCronJob = workloadEdit.workloadType === 'cronjob',
+    const isCronJob = workloadEdit.workloadType === 'cronjob',
       isJob = workloadEdit.workloadType === 'job',
       isDeployment = workloadEdit.workloadType === 'deployment',
       isStatefulset = workloadEdit.workloadType === 'statefulset',
@@ -2157,7 +2155,7 @@ export const validateWorkloadActions = {
       });
 
       // 判断当前的workload的类型
-      let isCronJob = workloadType === 'cronjob',
+      const isCronJob = workloadType === 'cronjob',
         isJob = workloadType === 'job',
         isDeployment = workloadEdit.workloadType === 'deployment',
         isStatefulset = workloadEdit.workloadType === 'statefulset',
@@ -2216,7 +2214,7 @@ export const validateWorkloadActions = {
 
   validateMinReadySeconds() {
     return async (dispatch, getState: GetState) => {
-      let { minReadySeconds } = getState().subRoot.workloadEdit,
+      const { minReadySeconds } = getState().subRoot.workloadEdit,
         result = validateWorkloadActions._validateMinReadySeconds(minReadySeconds);
 
       dispatch({
@@ -2244,7 +2242,7 @@ export const validateWorkloadActions = {
 
   validateBatchSize() {
     return async (dispatch, getState: GetState) => {
-      let { batchSize } = getState().subRoot.workloadEdit,
+      const { batchSize } = getState().subRoot.workloadEdit,
         result = validateWorkloadActions._validateBatchSize(batchSize);
 
       dispatch({
@@ -2257,7 +2255,7 @@ export const validateWorkloadActions = {
   /** 校验maxSurge */
   validateMaxSurge() {
     return async (dispatch, getState: GetState) => {
-      let { maxSurge } = getState().subRoot.workloadEdit,
+      const { maxSurge } = getState().subRoot.workloadEdit,
         result = validateWorkloadActions._validateBatchSize(maxSurge);
 
       dispatch({
@@ -2270,8 +2268,8 @@ export const validateWorkloadActions = {
   /** 校验 maxUnavailable */
   validateMaxUnavaiable(noZero?: boolean) {
     return async (dispatch, getState: GetState) => {
-      let { maxUnavailable, workloadType } = getState().subRoot.workloadEdit;
-      let isTapp = workloadType === 'tapp';
+      const { maxUnavailable, workloadType } = getState().subRoot.workloadEdit;
+      const isTapp = workloadType === 'tapp';
       let result;
       if (isTapp) {
         result = validateWorkloadActions._validateMaxUnavaiableForTapp(maxUnavailable, noZero);
@@ -2309,7 +2307,7 @@ export const validateWorkloadActions = {
   /** 校验 partition的合法性 */
   validatePartition() {
     return async (dispatch, getState: GetState) => {
-      let { partition } = getState().subRoot.workloadEdit,
+      const { partition } = getState().subRoot.workloadEdit,
         result = validateWorkloadActions._validateBatchSize(partition);
 
       dispatch({
@@ -2321,7 +2319,7 @@ export const validateWorkloadActions = {
 
   /** 校验更新的所有选项是否合法 */
   _validateUpdateRegistryEdit(workloadEdit: WorkloadEdit) {
-    let {
+    const {
       minReadySeconds,
       resourceUpdateType,
       workloadType,
@@ -2365,10 +2363,10 @@ export const validateWorkloadActions = {
 
   validateUpdateRegistryEdit() {
     return async (dispatch, getState: GetState) => {
-      let { rollingUpdateStrategy, resourceUpdateType, containers, workloadType } = getState().subRoot.workloadEdit;
+      const { rollingUpdateStrategy, resourceUpdateType, containers, workloadType } = getState().subRoot.workloadEdit;
 
-      let isStatefulset = workloadType === 'statefulset';
-      let isTapp = workloadType === 'tapp';
+      const isStatefulset = workloadType === 'statefulset';
+      const isTapp = workloadType === 'tapp';
 
       if (resourceUpdateType === 'RollingUpdate') {
         !isStatefulset && dispatch(validateWorkloadActions.validateMinReadySeconds());
@@ -2414,7 +2412,7 @@ export const validateWorkloadActions = {
 
   validatePodNumEdit() {
     return async (dispatch, getState: GetState) => {
-      let { scaleType } = getState().subRoot.workloadEdit;
+      const { scaleType } = getState().subRoot.workloadEdit;
 
       // 只有hpa的东西需要校验
       if (scaleType === 'autoScale') {
@@ -2459,7 +2457,7 @@ export const validateWorkloadActions = {
         status = 2;
         message = t('自定义规则不能为空');
       } else {
-        let valueArray = value.split(';');
+        const valueArray = value.split(';');
         if (operator === 'Lt' || operator === 'Gt') {
           if (valueArray.length !== 1) {
             status = 2;
@@ -2507,12 +2505,12 @@ export const validateWorkloadActions = {
         preferredExecution = cloneDeep(nodeAffinityRule.preferredExecution),
         result;
       if (type === 'preferred') {
-        let preferredMatchExpressions = preferredExecution[0].preference.matchExpressions,
+        const preferredMatchExpressions = preferredExecution[0].preference.matchExpressions,
           index = preferredMatchExpressions.findIndex(e => e.id === id);
         result = validateWorkloadActions._validateNodeAffinityRuleKey(preferredMatchExpressions[index].key);
         preferredExecution[0].preference.matchExpressions[index].v_key = result;
       } else if (type === 'required') {
-        let requiredMatchExpressions = requiredExecution[0].matchExpressions,
+        const requiredMatchExpressions = requiredExecution[0].matchExpressions,
           index = requiredMatchExpressions.findIndex(e => e.id === id);
         result = validateWorkloadActions._validateNodeAffinityRuleKey(requiredMatchExpressions[index].key);
         requiredExecution[0].matchExpressions[index].v_key = result;
@@ -2533,7 +2531,7 @@ export const validateWorkloadActions = {
         preferredExecution = cloneDeep(nodeAffinityRule.preferredExecution),
         result;
       if (type === 'preferred') {
-        let preferredMatchExpressions = preferredExecution[0].preference.matchExpressions,
+        const preferredMatchExpressions = preferredExecution[0].preference.matchExpressions,
           index = preferredMatchExpressions.findIndex(e => e.id === id);
         result = validateWorkloadActions._validateNodeAffinityRuleValue(
           preferredMatchExpressions[index].values,
@@ -2541,7 +2539,7 @@ export const validateWorkloadActions = {
         );
         preferredExecution[0].preference.matchExpressions[index].v_values = result;
       } else if (type === 'required') {
-        let requiredMatchExpressions = requiredExecution[0].matchExpressions,
+        const requiredMatchExpressions = requiredExecution[0].matchExpressions,
           index = requiredMatchExpressions.findIndex(e => e.id === id);
         result = validateWorkloadActions._validateNodeAffinityRuleValue(
           requiredMatchExpressions[index].values,
@@ -2575,7 +2573,7 @@ export const validateWorkloadActions = {
   },
 
   _validateAllNodeAffinityRule(nodeAffinityRule: AffinityRule) {
-    let { requiredExecution, preferredExecution } = nodeAffinityRule;
+    const { requiredExecution, preferredExecution } = nodeAffinityRule;
     let result = true;
     requiredExecution[0].matchExpressions.forEach(rule => {
       result =
@@ -2594,7 +2592,7 @@ export const validateWorkloadActions = {
 
   validateNodeAffinitySelector() {
     return async (dispatch, getState: GetState) => {
-      let { computer } = getState().subRoot.workloadEdit;
+      const { computer } = getState().subRoot.workloadEdit;
       let status = 0,
         message = '';
       if (computer.selections.length === 0) {
