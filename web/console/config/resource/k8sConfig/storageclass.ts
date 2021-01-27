@@ -1,5 +1,10 @@
 import { DetailField, DisplayField, DetailInfo } from '../../../src/modules/common/models';
-import { defaulNotExistedValue, dataFormatConfig, commonActionField, generateResourceInfo } from '../common';
+import {
+  defaulNotExistedValue,
+  dataFormatConfig,
+  immutableActionField,
+  generateResourceInfo
+} from '../common';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
 const displayField: DisplayField = {
@@ -94,17 +99,19 @@ const displayField: DisplayField = {
     width: '15%',
     headTitle: t('操作'),
     operatorList: [
-      {
+      /**
+       {
         name: t('删除'),
         actionType: 'delete',
         isInMoreOp: false
       }
+       */
     ]
   }
 };
 
 /** resource action当中的配置 */
-const actionField = Object.assign({}, commonActionField);
+const actionField = Object.assign({}, immutableActionField);
 
 /** 自定义tabList */
 const tabList = [

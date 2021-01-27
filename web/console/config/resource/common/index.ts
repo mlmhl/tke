@@ -3,4 +3,5 @@ export { commonDetailInfo, commonTabList, workloadCommonTabList, defaulNotExiste
 export { apiVersion, ApiVersion, ApiVersionKeyName } from './apiVersion';
 export { dataFormatConfig } from './dataFormat';
 export { commonActionField } from './actionField';
+export { immutableActionField } from './actionField';
 export { generateResourceInfo } from './generateResourceInfo';

@@ -56,11 +56,11 @@ export const subRouterConfig = () => {
         {
           name: 'Service',
           path: 'svc',
-        },
-        {
+        }
+        /*{
           name: 'Ingress',
           path: 'ingress',
-        },
+        },*/
       ],
     },
     {
