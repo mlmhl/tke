@@ -95,7 +95,7 @@ export class EditOriginContainerItemPanel extends React.Component<ContainerItemP
             <div className="param-box" style={{ paddingBottom: '0' }}>
               <div className="param-bd">
                 <ul className="form-list fixed-layout">
-                  <FormPanel.Item label={t('所属Namespace')}>
+                  <FormPanel.Item label={t('所属命名空间')}>
                     <Bubble
                       content={
                         containerLog.v_namespaceSelection.message ? containerLog.v_namespaceSelection.message : null

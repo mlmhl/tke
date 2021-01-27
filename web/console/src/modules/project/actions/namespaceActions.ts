@@ -259,16 +259,16 @@ const restActions = {
     // 验证ingress名称
     if (!name) {
       status = 2;
-      message = t('Namespace名称不能为空');
+      message = t('命名空间名称不能为空');
     } else if (name.length > 48) {
       status = 2;
-      message = t('Namespace名称不能超过48个字符');
+      message = t('命名空间名称不能超过48个字符');
     } else if (!reg.test(name)) {
       status = 2;
-      message = t('Namespace名称格式不正确');
+      message = t('命名空间名称格式不正确');
     } else if (name.startsWith('kube-')) {
       status = 2;
-      message = t('Namespace名称格式不正确');
+      message = t('命名空间名称格式不正确');
     } else {
       status = 1;
       message = '';

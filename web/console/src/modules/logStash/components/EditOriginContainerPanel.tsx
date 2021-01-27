@@ -89,7 +89,7 @@ export class EditOriginContainerPanel extends React.Component<RootProps, any> {
               }}
               style={{ marginTop: '10px' }}
             >
-              {t('添加Namespace')}
+              {t('添加命名空间')}
             </a>
           </Bubble>
         )}

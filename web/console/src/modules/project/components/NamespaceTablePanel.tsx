@@ -369,7 +369,7 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
     const { actions, route, deleteNamespace } = this.props;
     return (
       <WorkflowDialog
-        caption={t('删除Namespace')}
+        caption={t('删除命名空间')}
         workflow={deleteNamespace}
         action={actions.namespace.deleteNamespace}
         targets={deleteNamespace.targets}
@@ -381,12 +381,12 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
         <DialogBodyLayout>
           <p className="til">
             <strong className="tip-top">
-              {t('确定要删除Namespace {{name}}么？', {
+              {t('确定要删除命名空间 {{name}}么？', {
                 name: deleteNamespace.targets ? deleteNamespace.targets[0].metadata.name : '',
               })}
             </strong>
           </p>
-          <p className="text-danger">{t('删除Namespace将删除该Namespace下所有资源，该操作不可逆，请谨慎操作。')}</p>
+          <p className="text-danger">{t('删除命名空间将删除该命名空间下所有资源，该操作不可逆，请谨慎操作。')}</p>
         </DialogBodyLayout>
       </WorkflowDialog>
     );

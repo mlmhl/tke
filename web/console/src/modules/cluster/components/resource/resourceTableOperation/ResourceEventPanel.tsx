@@ -244,7 +244,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
                 </FormItem>
                 <FormItem label={t('名称')}>
                   {workloadType === '' ? (
-                    <p className="text-label">{t('请先选择类型和Namespace')}</p>
+                    <p className="text-label">{t('请先选择类型和命名空间')}</p>
                   ) : workloadList.fetchState === FetchState.Fetching ? (
                     loadingElement
                   ) : (
