@@ -58,11 +58,12 @@ export function getClusterId(): string {
  */
 export function setProjectName(projectId: string) {
   util.cookie.set('projectId', projectId);
+  // cookie有时候不可用(嵌入云梯)，同时写localStorage
+  localStorage.setItem('projectId', projectId);
 }
 
 export function getProjectName(): string {
-  let rId = util.cookie.get('projectId');
-  return rId;
+  return util.cookie.get('projectId') || localStorage.getItem('projectId');
 }
 
 /**
