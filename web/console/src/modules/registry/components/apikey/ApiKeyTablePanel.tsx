@@ -44,7 +44,6 @@ export class ApiKeyTablePanel extends React.Component<RootProps, ApiKeyState> {
                     {t('新建')}
                   </Button>
                   <Button
-                    type="weak"
                     onClick={() => {
                       this.setState({ showUsageGuideline: true });
                     }}

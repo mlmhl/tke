@@ -532,7 +532,7 @@ export const WorkloadNetworkType = [
   },
   {
     value: WorkloadNetworkTypeEnum.FloatingIP,
-    text: t('ENI IP（浮动IP）')
+    text: t('FloatingIP（浮动IP）')
   },
   {
     value: WorkloadNetworkTypeEnum.Nat,
@@ -542,6 +542,21 @@ export const WorkloadNetworkType = [
   //   value: WorkloadNetworkTypeEnum.Host,
   //   text: t('Host（主机网络）')
   // }
+];
+
+export const SharedClusterWorkloadNetworkType = [
+  {
+    value: WorkloadNetworkTypeEnum.Overlay,
+    text: t('Global Route（VPC内私有IP）')
+  },
+  {
+    value: WorkloadNetworkTypeEnum.FloatingIP,
+    text: t('ENI IP（公司内可路由IP）')
+  },
+  {
+    value: WorkloadNetworkTypeEnum.Nat,
+    text: t('Nat（端口映射）')
+  },
 ];
 
 export const FloatingIPReleasePolicy = [

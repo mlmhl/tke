@@ -52,6 +52,8 @@ import { CmdbInfo } from './EditNamespace/CmdbInfo';
 import { SharedClusterCmdbInfo, InitialData, SharedClusterCmdbData } from './EditNamespace/SharedClusterCmdbInfo';
 import EditResourceVolumeTemplatePanel from './EditResourceVolumeTemplatePanel';
 import { reduceNs } from '../../../../../../helpers';
+import { EditResourceNetworkTypePanel } from './EditResourceNetworkTypePanel';
+
 const { forwardRef } = React;
 const NewCmdbInfo = forwardRef(CmdbInfo);
 const NewSharedClusterCmdbInfo = forwardRef(SharedClusterCmdbInfo);
@@ -415,6 +417,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               <EditResourceContainerPanel />
 
               <EditResourceContainerNumPanel />
+              <EditResourceNetworkTypePanel />
               <FormItem label={t('优雅终止等待时间')} >
                 <InputAdornment after="秒"><InputNumber max={65535} min={0} value={terminationGracePeriodSeconds} onChange={actions.editWorkload.changeTerminationGracePeriodSeconds} /></InputAdornment>
               </FormItem>

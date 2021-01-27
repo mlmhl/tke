@@ -1,16 +1,9 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 
-import { FormPanel } from '@tencent/ff-component';
 import { bindActionCreators } from '@tencent/ff-redux';
-import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import { Select } from '@tencent/tea-component';
 
-import { FormItem } from '../../../../common';
 import { allActions } from '../../../actions';
-import {
-    FloatingIPReleasePolicy, WorkloadNetworkType, WorkloadNetworkTypeEnum
-} from '../../../constants/Config';
 import { RootProps } from '../../ClusterApp';
 import { EditResourceAnnotations } from './EditResourceAnnotations';
 import { EditResourceImagePullSecretsPanel } from './EditResourceImagePullSecretsPanel';
@@ -38,26 +31,6 @@ export class EditResourceAdvancedPanel extends React.Component<EditResourceAdvan
         <EditResourceImagePullSecretsPanel />
         <EditResourceNodeAffinityPanel />
         <EditResourceAnnotations />
-        <FormItem label={t('网络模式')}>
-          <Select
-            size="m"
-            options={WorkloadNetworkType}
-            value={networkType}
-            onChange={value => {
-              actions.editWorkload.selectNetworkType(value);
-            }}
-          />
-        </FormItem>
-        <FormItem isShow={networkType === WorkloadNetworkTypeEnum.FloatingIP} label={t('IP回收策略')}>
-          <FormPanel.Select
-            size="m"
-            options={FloatingIPReleasePolicy}
-            value={floatingIPReleasePolicy}
-            onChange={value => {
-              actions.editWorkload.selectFloatingIPReleasePolicy(value);
-            }}
-          ></FormPanel.Select>
-        </FormItem>
         {/* <FormItem label={t('端口')} isShow={isShowPort}>
         </FormItem> */}
       </React.Fragment>
