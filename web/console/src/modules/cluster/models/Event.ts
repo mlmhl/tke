@@ -12,6 +12,9 @@ export interface Event extends Identifiable {
   /** 最后出现的时间 */
   lastTimestamp?: string;
 
+  /** 新版event类型时间戳字段 */
+  eventTime?: string;
+
   /** message */
   message?: string;
 
