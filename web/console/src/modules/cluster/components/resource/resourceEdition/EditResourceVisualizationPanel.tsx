@@ -232,10 +232,20 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
     let finalResourceTypeList = [];
     ResourceTypeList.forEach(list => {
-      if (list.value !== 'tapp' || isCanUseTapp) {
-        finalResourceTypeList.push(list);
-      } else if (list.value === 'tapp' && addons['TappController'] !== undefined) {
-        finalResourceTypeList.push(list);
+      switch (list.value) {
+        case 'tapp':
+          if (isCanUseTapp || addons['TappController'] !== undefined) {
+            finalResourceTypeList.push(list);
+          }
+          break;
+        case 'daemonset':
+          if (!(WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS)) {
+            finalResourceTypeList.push(list);
+          }
+          break;
+        default:
+          finalResourceTypeList.push(list);
+          break;
       }
     });
 
