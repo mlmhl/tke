@@ -705,10 +705,11 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
       const [prefix, area, number] = zoneStr.split('-');
       console.log('zoneStr & newAreaMap is:', zoneStr, newAreaMap, newAreaMap[area]);
       const zoneMap = newAreaMap[area]['zoneMap'];
-      areaText = zoneMap ? zoneMap[zoneStr]['text'] : '-';
-      hard = zoneMap ? zoneMap[zoneStr]['hard'] : '';
+      const zoneData = zoneMap[zoneStr];
+      areaText = zoneMap ? (zoneData ? zoneData['text'] : '-') : '-';
+      hard = zoneMap ? (zoneData ? zoneData['hard'] : '') : '';
       if (isReturnHard) {
-        return zoneMap ? zoneMap[zoneStr]['hard'] : '';
+        return hard;
       }
     }
     if (isReturnHard) {
