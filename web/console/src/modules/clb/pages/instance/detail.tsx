@@ -39,6 +39,10 @@ type InstanceInfo = {
 
   disabled: boolean;
 
+  product?: string;
+
+  productID?: string;
+
   projectName?: string;
 
   department?: string;
@@ -189,7 +193,7 @@ class InstanceDetail extends React.Component<PropTypes, StateTypes> {
           {WEBPACK_CONFIG_SHARED_CLUSTER && (
             <>
               <Form.Item label="用户所在业务">
-                <Form.Text>{`${instanceInfo.projectName}(${instanceInfo.department}-${instanceInfo.business1}-${instanceInfo.business2})`}</Form.Text>
+                <Form.Text>{`${instanceInfo.projectName}(${instanceInfo.department}-${instanceInfo.business1}-${instanceInfo.business2}-${instanceInfo.product})`}</Form.Text>
               </Form.Item>
               <Form.Item label="用户申请人">
                 <Form.Text>{instanceInfo.user}</Form.Text>

@@ -104,6 +104,8 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
       scope: [],
       user: '',
       project: {
+        project: '',
+        projectId: '',
         projectName: '',
         projectDisplayName: '',
         department: '',
@@ -199,6 +201,8 @@ export class InstanceList extends React.Component<PropTypes, StateTypes> {
         Object.assign(payload, {
           user: currentItem.user,
           ...pick(currentItem.project, [
+            'product',
+            'productId',
             'projectName',
             'department',
             'departmentID',

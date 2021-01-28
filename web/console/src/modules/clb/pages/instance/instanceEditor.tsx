@@ -17,6 +17,7 @@ import {
   SearchBox,
 } from '@tencent/tea-component';
 import { autotip } from '@tencent/tea-component/lib/table/addons/autotip';
+import { get } from 'lodash';
 
 import { Cluster as ClusterType, PagingQuery } from '../../models';
 import { ImportedInstance, Instance, InstanceForTable } from '../../models/instance';
@@ -146,10 +147,16 @@ const CMDBMapping = {
   'teg.tkex.oa.com/business1-id': 'business1ID',
   'teg.tkex.oa.com/business2': 'business2',
   'teg.tkex.oa.com/business2-id': 'business2ID',
+  'teg.tkex.oa.com/product': 'product',
+  'teg.tkex.oa.com/product-id': 'productId',
 };
 
 // 共享集群的业务信息
 export type ProjectInfoType = {
+  project: string;
+
+  projectId: string;
+
   projectName: string;
 
   projectDisplayName?: string;
@@ -210,6 +217,7 @@ function ProjectSelector(props) {
         onChange={value => {
           setCurrentProject(value);
           const project = projectList.find(item => item.projectName === value);
+
           if (onChange) {
             onChange(project);
           }
