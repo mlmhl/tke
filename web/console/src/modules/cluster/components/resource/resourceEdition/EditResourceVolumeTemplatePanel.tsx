@@ -364,8 +364,8 @@ const EditResourceVolumeTemplatePanel = (props: ERVTPanel, ref) => {
                   as={
                     <Radio.Group>
                       <Radio name="ReadWriteOnce">被一个Pod读写</Radio>
-                      <Radio name="ReadOnlyMany">被多个Pod只读</Radio>
-                      <Radio name="ReadWriteMany">被多个Pod读写</Radio>
+                      {/*<Radio name="ReadOnlyMany">被多个Pod只读</Radio>*/}
+                      {/*<Radio name="ReadWriteMany">被多个Pod读写</Radio>*/}
                     </Radio.Group>
                   }
                   name="accessModes"

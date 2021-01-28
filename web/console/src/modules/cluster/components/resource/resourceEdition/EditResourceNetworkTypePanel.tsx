@@ -41,6 +41,9 @@ export class EditResourceNetworkTypePanel extends React.Component<RootProps, {}>
                         actions.editWorkload.selectNetworkType(value);
                     }}
             />
+            <p className="text-label">{t('Global Route：VPC内私有IP，无法从集群外访问，不可绑定CLB，但可以绑定北极星。绑定北极星时，注册的IP依然是VPC内IP，无法从集群外访问。')}</p>
+            <p className="text-label">{t('ENI IP：公司内可路由IP，可从集群外访问，可以绑定CLB、北极星。')}</p>
+            <p className="text-label">{t('NAT：母机上会自动创建随机端口映射至容器内端口，不可绑定CLB，但可以绑定北极星。绑定北极星时，注册的地址是母机IP和端口，可以从集群外访问。')}</p>
           </FormItem>
           <FormItem isShow={networkType === WorkloadNetworkTypeEnum.FloatingIP} label={t('IP回收策略')}>
             <FormPanel.Select

@@ -587,10 +587,6 @@ export const FloatingIPReleasePolicy = [
     text: t('缩容或删除APP时回收')
   },
   {
-    value: 'never',
-    text: t('永不回收')
-  },
-  {
     value: 'always',
     text: t('随时回收')
   }
