@@ -162,7 +162,7 @@ export class Selector extends React.Component<PropTypes, StateTypes> {
               value={selectedWorkload}
               options={workloadList}
               onChange={this.handleWorkloadChanged}
-              placeholder="请选择hostNetwork或Floating IP的容器"
+              placeholder="请选择网络模式为ENI IP的容器"
             />
           </Form.Item>
           <Form.Item label="Labels">
