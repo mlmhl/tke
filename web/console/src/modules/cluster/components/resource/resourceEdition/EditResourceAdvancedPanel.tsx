@@ -36,7 +36,6 @@ export class EditResourceAdvancedPanel extends React.Component<EditResourceAdvan
     return isOpenAdvanced ? (
       <React.Fragment>
         <EditResourceImagePullSecretsPanel />
-        <EditResourceNodeAffinityPanel />
         <FormItem label={t('实例(Pod)反亲和性')}>
           <Radio.Group
             defaultValue={PodAffinityType.unset}
