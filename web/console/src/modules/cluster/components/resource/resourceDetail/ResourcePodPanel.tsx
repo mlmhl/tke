@@ -522,7 +522,7 @@ export class ResourcePodPanel extends React.Component<RootProps, ResourcePodPane
     return <Text>{`${first} ${second}`}</Text>;
   }
 
-  private runningTime = (startTime: string) => moment.duration(moment().diff(moment(startTime))).humanize(true);
+  private runningTime = (startTime: string) => moment.duration(moment().diff(moment(startTime))).humanize(false);
 
   /** 运行时间 */
   private _getDays(startTime: string) {
