@@ -183,7 +183,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         terminationGracePeriodSeconds
       } = workloadEdit,
       { secretList } = configEdit;
-    const { isVolumeTemplateSetting } = this.state;
+    const isVolumeTemplateSetting = this._enableVolumeTemplateSetting(workloadEdit.workloadType);
     // 是否开启高级设置
     let isOpenAdvanced = this.state.isOpenAdvancedSetting;
     /** 渲染 重启策略列表 */
@@ -564,15 +564,26 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
   /** 生成 workload类型的radio列表 */
   private _handleResourceTypeSelect(resourceType: string) {
-    let isVolumeTemplateSetting = false;
-    if (['statefulset', 'tapp'].indexOf(resourceType) !== -1 && WEBPACK_CONFIG_SHARED_CLUSTER) {
-      isVolumeTemplateSetting = true;
-    }
+    let isVolumeTemplateSetting = this._enableVolumeTemplateSetting(resourceType);
     this.setState({
       isVolumeTemplateSetting
     });
     let { actions } = this.props;
     actions.editWorkload.selectResourceType(resourceType);
+  }
+
+  private _enableVolumeTemplateSetting(resourceType: string): boolean {
+    let enabled = false;
+    switch (resourceType) {
+      case 'statefulset':
+      case 'tapp':
+        enabled = WEBPACK_CONFIG_SHARED_CLUSTER;
+        break;
+      default:
+        break;
+    }
+
+    return enabled;
   }
 
   /** 处理提交请求 */
