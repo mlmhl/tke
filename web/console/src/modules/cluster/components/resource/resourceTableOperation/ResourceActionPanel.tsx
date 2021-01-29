@@ -179,13 +179,15 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
 
   /** render新建按钮 */
   private _renderCreateButton() {
-    let { subRoot } = this.props,
+    let { subRoot, namespaceList } = this.props,
       { resourceInfo } = subRoot;
 
+    const disabled: boolean = namespaceList.data.recordCount === 0;
     const isShow = !isEmpty(resourceInfo) && resourceInfo.actionField && resourceInfo.actionField.create.isAvailable;
     return isShow ? (
       <Button
         type="primary"
+        disabled={disabled}
         onClick={() => {
           this._handleClickForCreate();
         }}
