@@ -81,7 +81,7 @@ const TempReducer = combineReducers({
     actionType: ActionType.UpdateGrayTapp
   }),
 
-  editTappGrayUpdate: reduceToPayload(ActionType.W_TappGrayUpdate, []),
+  editTappGrayUpdate: reduceToPayload(ActionType.W_TappGrayUpdate, { containers: [] }),
 
   isShowLoginDialog: reduceToPayload(ActionType.IsShowLoginDialog, false),
 

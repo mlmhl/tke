@@ -44,7 +44,7 @@ export class NamespaceActionPanel extends React.Component<RootProps, {}> {
                 }}
               >
                 {/* <b className="icon-add" /> */}
-                {'新建 Namespace'}
+                {'新建命名空间'}
               </Button>
             )
           }
@@ -53,7 +53,7 @@ export class NamespaceActionPanel extends React.Component<RootProps, {}> {
               value={namespace.query.keyword || ''}
               onChange={actions.namespace.changeKeyword}
               onSearch={actions.namespace.performSearch}
-              placeholder={'请输入Namespace名称'}
+              placeholder={'请输入命名空间名称'}
             />
           }
         />

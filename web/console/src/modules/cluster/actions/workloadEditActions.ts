@@ -991,6 +991,15 @@ export const workloadEditActions = {
       });
     };
   },
+  /**实例(Pod)反亲和性 */
+  selectPodAffinity: (type?: string) => {
+    return async (dispatch, getState: GetState) => {
+      dispatch({
+        type: ActionType.W_SelectPodAffinity,
+        payload: type,
+      });
+    };
+  },
   /** 判断是否是gpu的白名单 */
   isCanUseGpu: () => {
     return async (dispatch, getState: GetState) => {

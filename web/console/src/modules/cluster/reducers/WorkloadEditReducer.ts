@@ -1,5 +1,5 @@
 import { ComputerFilter, Computer } from './../models/Computer';
-import { FFReduxActionName } from './../constants/Config';
+import { FFReduxActionName, PodAffinityType } from './../constants/Config';
 import { combineReducers } from 'redux';
 
 import { RecordSet, reduceToPayload, createFFListReducer } from '@tencent/ff-redux';
@@ -163,6 +163,8 @@ const TempReducer = combineReducers({
   isCanUseTapp: reduceToPayload(ActionType.W_IsCanUseTapp, false),
 
   networkType: reduceToPayload(ActionType.W_NetworkType, 'Overlay'),
+
+  podAffinityType: reduceToPayload(ActionType.W_SelectPodAffinity, PodAffinityType.unset),
 
   hpaQuery: generateQueryReducer({
     actionType: ActionType.W_QueryHpaList

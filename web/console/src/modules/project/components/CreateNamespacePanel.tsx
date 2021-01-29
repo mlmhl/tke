@@ -63,7 +63,7 @@ function CMDBModule(props) {
               onChange(cmdbModuleInfo);
             }
           }}
-          options={businessLevelThreeList.map(item => ({ text: item.name, value: item.id }))}
+          options={businessLevelThreeList.map(item => ({ text: item.name, value: item.id, tooltip: item.name }))}
           searchable
           type="simulate"
           appearence="button"

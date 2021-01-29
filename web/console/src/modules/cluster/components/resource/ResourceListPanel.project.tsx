@@ -96,6 +96,14 @@ export class ResourceListPanel extends React.Component<ResourceListPanelProps, {
         break;
     }
 
+    switch (headTitle) {
+      case 'Namespace':
+        headTitle = t('命名空间');
+        break;
+      default:
+        break;
+    }
+
     return (
       <React.Fragment>
         <ContentView>

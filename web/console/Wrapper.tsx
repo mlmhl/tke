@@ -718,7 +718,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
         <div className="qc-aside-area">
           <div className="qc-aside-area-main">
             <h2 className="qc-aside-headline">
-              <Text verticalAlign="middle">{platformType === PlatformTypeEnum.Manager ? '平台管理' : '业务管理'}</Text>
+              <Text verticalAlign="middle">{platformType === PlatformTypeEnum.Manager ? '平台侧' : '业务侧'}</Text>
               {userType === UserType.admin && projects.length ? (
                 <Bubble
                   content={platformType === PlatformTypeEnum.Manager ? '切换至业务管理控制台' : '切换至平台管理控制台'}

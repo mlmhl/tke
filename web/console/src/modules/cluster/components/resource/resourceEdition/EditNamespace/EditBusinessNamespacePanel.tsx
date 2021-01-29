@@ -466,16 +466,16 @@ export const EditBusinessNamespacePanel = () => {
                       name="namespaceName"
                       control={control}
                       rules={{
-                            required: t('Namespace名称不能为空'),
+                            required: t('命名空间名称不能为空'),
                             maxLength: {
                               value: 48,
-                              message: 'Namespace名称不能超过48个字符'
+                              message: '命名空间名称不能超过48个字符'
                             },
                             pattern: {
                               value: /^[a-z]([-a-z0-9]*[a-z0-9])?$/,
-                              message: 'Namespace名称格式不正确'
+                              message: '命名空间名称格式不正确'
                             },
-                            validate: value => !value.startsWith('kube-') || 'Namespace不能以kube-开头'
+                            validate: value => !value.startsWith('kube-') || '命名空间不能以kube-开头'
                           }}
                     />
                   )}
@@ -597,7 +597,7 @@ export const EditBusinessNamespacePanel = () => {
         <Card>
           <Card.Body>
             <Button type="primary" htmlType="submit" disabled={isDisabled} onClick={handleSubmit(onSubmit)}>
-              {editResult && editResult.error ? t('重试') : mode === MODIFY ? t('修改Namespace') : t('创建Namespace')}
+              {editResult && editResult.error ? t('重试') : mode === MODIFY ? t('修改命名空间') : t('创建命名空间')}
             </Button>
             <Button
               style={bottomButtonStyle}

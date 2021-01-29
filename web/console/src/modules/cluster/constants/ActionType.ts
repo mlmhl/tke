@@ -178,6 +178,7 @@ export const W_CanAddContainer = 'W_CanAddContainer';
 export const W_IsCanUseGpu = 'W_IsCanUseGpu';
 export const W_IsCanUseTapp = 'W_IsCanUseTapp';
 export const W_NetworkType = 'W_NetworkType';
+export const W_SelectPodAffinity = 'W_SelectPodAffinity';
 export const W_FloatingIPReleasePolicy = 'W_FloatingIPReleasePolicy';
 export const W_UpdateContainers = 'W_UpdateContainers';
 export const W_ChangeScaleType = 'W_ChangeScaleType';

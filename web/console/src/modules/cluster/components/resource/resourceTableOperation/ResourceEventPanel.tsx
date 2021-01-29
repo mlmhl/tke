@@ -244,7 +244,7 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
                 </FormItem>
                 <FormItem label={t('名称')}>
                   {workloadType === '' ? (
-                    <p className="text-label">{t('请先选择类型和Namespace')}</p>
+                    <p className="text-label">{t('请先选择类型和命名空间')}</p>
                   ) : workloadList.fetchState === FetchState.Fetching ? (
                     loadingElement
                   ) : (
@@ -334,8 +334,12 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
       { eventList, eventQuery } = subRoot.resourceEventOption;
 
     /** 处理时间 */
-    const reduceTime = (time: string) => {
-      let [first, second] = dateFormatter(new Date(time), 'YYYY-MM-DD HH:mm:ss').split(' ');
+    const reduceTime = (time: string, newTime: string) => {
+      let t = new Date(time);
+      if (t.getTime() === 0) {
+        t = new Date(newTime);
+      }
+      let [first, second] = dateFormatter(t, 'YYYY-MM-DD HH:mm:ss').split(' ');
 
       return <Text>{`${first} ${second}`}</Text>;
     };
@@ -345,13 +349,13 @@ export class ResourceEventPanel extends React.Component<RootProps, ResourceEvent
         key: 'firstTime',
         header: t('首次出现时间'),
         width: '10%',
-        render: x => reduceTime(x.firstTimestamp),
+        render: x => reduceTime(x.firstTimestamp, x.eventTime),
       },
       {
         key: 'lastTime',
         header: t('最后出现时间'),
         width: '10%',
-        render: x => reduceTime(x.lastTimestamp),
+        render: x => reduceTime(x.lastTimestamp, x.eventTime),
       },
       {
         key: 'type',

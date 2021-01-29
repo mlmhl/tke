@@ -44,8 +44,12 @@ export class ResourceDetailEventTablePanel extends React.Component<RootProps, {}
       { event } = resourceDetailState;
 
     /** 处理时间 */
-    const reduceTime = (time: string) => {
-      let [first, second] = dateFormatter(new Date(time), 'YYYY-MM-DD HH:mm:ss').split(' ');
+    const reduceTime = (time: string, newTime: string) => {
+      let t = new Date(time);
+      if (t.getTime() === 0) {
+        t = new Date(newTime);
+      }
+      let [first, second] = dateFormatter(t, 'YYYY-MM-DD HH:mm:ss').split(' ');
 
       return (
         <React.Fragment>
@@ -59,13 +63,13 @@ export class ResourceDetailEventTablePanel extends React.Component<RootProps, {}
         key: 'firstTime',
         header: t('首次出现时间'),
         width: '10%',
-        render: x => reduceTime(x.firstTimestamp)
+        render: x => reduceTime(x.firstTimestamp, x.eventTime)
       },
       {
         key: 'lastTime',
         header: t('最后出现时间'),
         width: '10%',
-        render: x => reduceTime(x.lastTimestamp)
+        render: x => reduceTime(x.lastTimestamp, x.eventTime)
       },
       {
         key: 'type',

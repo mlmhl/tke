@@ -19,6 +19,8 @@ import { router } from '../../../router';
 import { RootProps } from '../../ClusterApp';
 import { TellIsNeedFetchNS } from '../ResourceSidebarPanel';
 import { PlatformContext, IPlatformContext, PlatformTypeEnum } from '@/Wrapper';
+import { resourceLimitTypeToText, resourceTypeToUnit } from '@src/modules/project/constants/Config';
+import { K8SUNIT, valueLabels1000, valueLabels1024 } from '@helper/k8sUnitUtil';
 
 interface ResouceActionPanelState {
   /** 是否开启自动刷新 */
@@ -495,9 +497,10 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
     let headKeys = [],
       displayKeys = Object.keys(resourceInfo.displayField);
 
+    let displayField: DisplayFiledProps;
     displayKeys.forEach(item => {
-      if (item !== 'operator') {
-        let displayField: DisplayFiledProps = resourceInfo.displayField[item];
+      if (this._isDownloadField(item)) {
+        displayField = resourceInfo.displayField[item];
         headKeys.push(displayField.headTitle);
       }
     });
@@ -509,7 +512,7 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
       let row = [];
       let rowInfos: DisplayFiledProps[] = [];
       displayKeys.forEach(item => {
-        if (item !== 'operator') {
+        if (this._isDownloadField(item)) {
           rowInfos.push(resourceInfo.displayField[item]);
         }
       });
@@ -527,26 +530,60 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
         showData = showData.length === 1 ? showData[0] : showData;
 
         let content;
-        if (item.dataFormat === 'text' || item.dataFormat === 'status' || item.dataFormat === 'mapText') {
-          content = showData;
-        } else if (item.dataFormat === 'labels') {
-          content = this._reduceLabelsForData(showData);
-        } else if (item.dataFormat === 'time') {
-          content = dateFormatter(new Date(showData), 'YYYY-MM-DD HH:mm:ss');
-        } else if (item.dataFormat === 'ip') {
-          content =
-            typeof showData === 'string'
-              ? showData
-              : t('负载均衡IP：') + showData[0] + '\n' + t('服务IP：') + showData[1];
-        } else if (item.dataFormat === 'replicas') {
-          content = showData[0] + '、' + showData[1];
-        } else if (item.dataFormat === 'ingressType') {
-          let ingressId = showData['kubernetes.io/ingress.qcloud-loadbalance-id'] || '-';
-          content = ingressId + '\n' + t('应用型负载均衡');
-        } else if (item.dataFormat === 'ingressRule') {
-          content = this._reduceIngressRule(showData, resource);
-        } else {
-          content = showData;
+        let ingressId;
+        let hard;
+
+        switch (item.dataFormat) {
+          case 'text':
+            if (item.headTitle === '归属集群') {
+              content = ('' + showData).split(',')[0] || showData;
+            } else {
+              content = showData;
+            }
+            break;
+          case 'status':
+          case 'mapText':
+            content = showData;
+            break;
+          case 'labels':
+            content = this._reduceLabelsForData(showData);
+            break;
+          case 'time':
+            content = dateFormatter(new Date(showData), 'YYYY-MM-DD HH:mm:ss');
+            break;
+          case 'ip':
+            content =
+              typeof showData === 'string'
+                ? showData
+                : t('负载均衡IP：') + showData[0] + '\n' + t('服务IP：') + showData[1];
+            break;
+          case 'replicas':
+            content = showData[0] + '、' + showData[1];
+            break;
+          case 'ingressType':
+            ingressId = showData['kubernetes.io/ingress.qcloud-loadbalance-id'] || '-';
+            content = ingressId + '\n' + t('应用型负载均衡');
+            break;
+          case 'ingressRule':
+            content = this._reduceIngressRule(showData, resource);
+            break;
+          case 'zone':
+            content = this._resourceZone(showData);
+            break;
+          case 'zoneHard':
+            hard = this._resourceZone(showData, true);
+            if (hard) {
+              content = this._resourceLimit(hard);
+            } else {
+              content = '-';
+            }
+            break;
+          case 'resourceLimit':
+            content = this._resourceLimit(showData);
+            break;
+          default:
+            content = showData;
+            break;
         }
 
         row.push(content);
@@ -625,5 +662,64 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
 
     // 返回空值，是因为如果不存在值，则使用配置文件的默认值
     return result || '';
+  }
+
+  private _resourceZone(showData, isReturnHard = false) {
+    const { newAreaMap } = this.state;
+    let zoneStr = '';
+    let areaText = '-';
+    let hard;
+    Object.keys(showData).forEach(key => {
+      if (key.indexOf('zone.teg.tkex.oa.com') !== -1) {
+        // 要找的字符串举例: zone.teg.tkex.oa.com/ap-nanjing-1
+        zoneStr = key.split('/')[1];
+      }
+    });
+    if (zoneStr) {
+      const [prefix, area, number] = zoneStr.split('-');
+      const zoneMap = newAreaMap[area]['zoneMap'];
+      areaText = zoneMap ? zoneMap[zoneStr]['text'] : '-';
+      hard = zoneMap ? zoneMap[zoneStr]['hard'] : '';
+      if (isReturnHard) {
+        return zoneMap ? zoneMap[zoneStr]['hard'] : '';
+      }
+    }
+    if (isReturnHard) {
+      return hard;
+    }
+    return areaText;
+  }
+
+  private _resourceLimit(showData) {
+    let resourceLimitKeys = showData && showData !== '-' ? Object.keys(showData) : [];
+    let content = '';
+    let unit = '';
+
+    resourceLimitKeys.forEach(item => {
+      unit = resourceTypeToUnit[item] === 'MiB' ?
+        valueLabels1024(showData[item], K8SUNIT.Mi) :
+        valueLabels1000(showData[item], K8SUNIT.unit);
+      content += resourceLimitTypeToText[item] + ':' + unit + ';';
+    });
+
+    return content;
+  }
+
+  private _isDownloadField(key) {
+    let allowed = false;
+    switch (key) {
+      case 'operator':
+        break;
+      case 'business':
+        if (!WEBPACK_CONFIG_SHARED_CLUSTER) {
+          allowed = true;
+        }
+        break;
+      default:
+        allowed = true;
+        break;
+    }
+
+    return allowed;
   }
 }

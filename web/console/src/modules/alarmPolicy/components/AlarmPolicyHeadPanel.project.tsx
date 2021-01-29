@@ -37,7 +37,7 @@ export class AlarmPolicyHeadPanel extends React.Component<RootProps, {}> {
         left={
           <div style={{ lineHeight: '28px' }}>
             <h2 style={{ float: 'left' }}>{t('告警设置')}</h2>
-            <FormPanel.InlineText>{t('项目：')}</FormPanel.InlineText>
+            <FormPanel.InlineText>{t('业务：')}</FormPanel.InlineText>
             <FormPanel.Select
               label={t('业务')}
               options={projectListOptions}

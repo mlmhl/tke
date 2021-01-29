@@ -162,7 +162,7 @@ export async function fetchUserList() {
 
   try {
     // const resourceInfo: ResourceInfo = isPolicyUser ? resourceConfig()['user'] : resourceConfig()['localidentity'];
-    const resourceInfo: ResourceInfo = resourceConfig()['localidentity'];
+    const resourceInfo: ResourceInfo = resourceConfig()['user'];
 
     const url = reduceK8sRestfulPath({ resourceInfo });
     const response = await reduceNetworkRequest({

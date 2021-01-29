@@ -1,5 +1,5 @@
 import { DetailField, DisplayField, DetailInfo } from '../../../src/modules/common/models';
-import { defaulNotExistedValue, dataFormatConfig, commonActionField, generateResourceInfo } from '../common';
+import { defaulNotExistedValue, dataFormatConfig, immutableActionField, generateResourceInfo } from '../common';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
 const displayField: DisplayField = {
@@ -73,7 +73,7 @@ const displayField: DisplayField = {
 };
 
 /** resource action当中的配置 */
-const actionField = Object.assign({}, commonActionField);
+const actionField = Object.assign({}, immutableActionField);
 
 /** 自定义tablist */
 const tabList = [

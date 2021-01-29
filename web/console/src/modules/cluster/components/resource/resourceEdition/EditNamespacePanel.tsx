@@ -74,7 +74,7 @@ export class EditNamespacePanel extends React.Component<RootProps, {}> {
                   disabled={applyResourceFlow.operationState === OperationState.Performing}
                   onClick={this._handleSubmit.bind(this)}
                 >
-                  {failed ? t('重试') : t('创建Namespace')}
+                  {failed ? t('重试') : t('创建命名空间')}
                 </Button>
                 <Button onClick={e => router.navigate(Object.assign({}, urlParams, { mode: 'list' }), route.queries)}>
                   {t('取消')}

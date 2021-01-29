@@ -1,15 +1,15 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 
-import { FormPanel } from '@tencent/ff-component';
 import { bindActionCreators } from '@tencent/ff-redux';
-import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import { Select } from '@tencent/tea-component';
+import { t } from '@tencent/tea-app/lib/i18n';
+import { Radio } from '@tencent/tea-component';
 
 import { FormItem } from '../../../../common';
 import { allActions } from '../../../actions';
 import {
-    FloatingIPReleasePolicy, WorkloadNetworkType, WorkloadNetworkTypeEnum
+  PodAffinityType,
+  PodAffinityTypeList,
 } from '../../../constants/Config';
 import { RootProps } from '../../ClusterApp';
 import { EditResourceAnnotations } from './EditResourceAnnotations';
@@ -36,28 +36,21 @@ export class EditResourceAdvancedPanel extends React.Component<EditResourceAdvan
     return isOpenAdvanced ? (
       <React.Fragment>
         <EditResourceImagePullSecretsPanel />
-        <EditResourceNodeAffinityPanel />
+        <FormItem label={t('实例(Pod)反亲和性')}>
+          <Radio.Group
+            defaultValue={PodAffinityType.unset}
+            onChange={value => {
+              actions.editWorkload.selectPodAffinity(value);
+            }}
+          >
+            {PodAffinityTypeList.map(_ => (
+              <Radio key={_.value} name={_.value} style={{ lineHeight: '18px' }}>
+                {_.name}
+              </Radio>
+            ))}
+          </Radio.Group>
+        </FormItem>
         <EditResourceAnnotations />
-        <FormItem label={t('网络模式')}>
-          <Select
-            size="m"
-            options={WorkloadNetworkType}
-            value={networkType}
-            onChange={value => {
-              actions.editWorkload.selectNetworkType(value);
-            }}
-          />
-        </FormItem>
-        <FormItem isShow={networkType === WorkloadNetworkTypeEnum.FloatingIP} label={t('IP回收策略')}>
-          <FormPanel.Select
-            size="m"
-            options={FloatingIPReleasePolicy}
-            value={floatingIPReleasePolicy}
-            onChange={value => {
-              actions.editWorkload.selectFloatingIPReleasePolicy(value);
-            }}
-          ></FormPanel.Select>
-        </FormItem>
         {/* <FormItem label={t('端口')} isShow={isShowPort}>
         </FormItem> */}
       </React.Fragment>

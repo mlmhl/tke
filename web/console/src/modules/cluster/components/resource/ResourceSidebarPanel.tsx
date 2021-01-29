@@ -214,7 +214,6 @@ export class ResourceSidebarPanel extends React.Component<ResourceListPanelProps
    */
   private _renderSecondBarList(subMenu: BasicRouter[], sidebarPath: string) {
     let subMenuList = [];
-    console.log('resource sidebar panel props:', this.props);
     subMenu.forEach((subSidebar, index) => {
       if (subSidebar.path === 'csi' && WEBPACK_CONFIG_SHARED_CLUSTER === false) {
         return;

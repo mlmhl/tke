@@ -59,7 +59,7 @@ export class ProjectDetail extends React.Component<RootProps, ProjectDetailState
       },
       {
         id: 'namespace',
-        label: t('Namespace列表')
+        label: t('命名空间列表')
       }
     ];
     if (WEBPACK_CONFIG_SHARED_CLUSTER) {
@@ -78,7 +78,7 @@ export class ProjectDetail extends React.Component<RootProps, ProjectDetailState
     const { action } = urlParams;
     let header;
     if (action === 'createNS') {
-      header = <ProjectHeadPanel isNeedBack={true} title={t('新建Namespace')} />;
+      header = <ProjectHeadPanel isNeedBack={true} title={t('新建命名空间')} />;
     } else if (action === 'create') {
       header = <ProjectHeadPanel isNeedBack={true} title={t('添加成员')} />;
     } else {
