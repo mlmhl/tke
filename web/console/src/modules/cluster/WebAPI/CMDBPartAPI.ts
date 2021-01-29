@@ -33,7 +33,8 @@ export async function fetchDepartmentList() {
         return {
           ...item,
           value: item.Name,
-          text: item.Name
+          text: item.Name,
+          tooltip: item.Name,
         };
       });
     }
@@ -69,6 +70,7 @@ export async function fetchBsiPath1List(department: { dept_name: string }) {
           ...item,
           value: item.bs1NameId,
           text: item.bs1Name,
+          tooltip: item.bs1Name,
         };
       });
     }
@@ -102,6 +104,7 @@ export async function fetchBsiPath2List(bs1_info: { bs1_name_id: number }) {
           ...item,
           value: item.bs2NameId,
           text: item.bs2Name,
+          tooltip: item.bs2Name,
         };
       });
     }
@@ -135,6 +138,7 @@ export async function fetchBsiPath3List(bs2_info: { bs2_name_id: number }) {
           ...item,
           value: item.bs3NameId,
           text: item.bs3Name,
+          tooltip: item.bs3Name,
         };
       });
     }
