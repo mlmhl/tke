@@ -15,10 +15,6 @@ import {
   fetchUserList,
   getLoginUserInfo
 } from '../../../../WebAPI/CMDBPartAPI';
-import { allActions } from '@src/modules/cluster/actions';
-import { useReduxActions } from '@src/modules/common/hooks/redux';
-import { fetchUser } from '@src/modules/project/WebAPI';
-import * as _ from 'lodash';
 const { useState, useEffect, useRef, useImperativeHandle } = React;
 
 insertCSS(
@@ -66,7 +62,7 @@ export const CmdbInfo = (
   const [bsiPath3List, setBsiPath3List] = useState([]);
   const [userList, setUserList] = useState([]);
   const [loginUserInfo, setLoginUserInfo] = useState(null);
-  // const actions = useReduxActions(allActions);
+
   /**
    * 如果有默认值，用默认值进行初始化
    */
@@ -87,21 +83,15 @@ export const CmdbInfo = (
       setDepartmentList(departmentListData);
     }
     fetchData();
+
+    fetchUserList().then(result => {
+      setUserList(result);
+    });
     getLoginUserInfo().then(result => {
       setLoginUserInfo(result);
     });
   }, []);
 
-  const searchUser =  async (keyword: string) => {
-    const data =  await fetchUser({ search: keyword });
-    if (data && data.records) {
-      // 最多显示20个
-      const showUsers = data.records.map((item) => {
-        return { value: item.name, text: item.name };
-      });
-      setUserList(showUsers.slice(0, 20));
-    }
-  };
   /**
    * 相关数据发生变更时，做进一步处理
    */
@@ -254,15 +244,14 @@ export const CmdbInfo = (
 
             <Form.Item label="负责人" showStatusIcon={false}>
               <Controller
-                as={<Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={userList} onSearch={_.debounce(searchUser, 300)} />}
+                as={<Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={userList} />}
                 name="operator"
                 control={control}
               />
-
             </Form.Item>
             <Form.Item label="备份负责人" showStatusIcon={false}>
               <Controller
-                as={<SelectMultiple staging={false} searchable size="m" appearence="button" options={userList} onSearch={_.debounce(searchUser, 300)} />}
+                as={<SelectMultiple staging={false} searchable size="m" appearence="button" options={userList} />}
                 name="bakOperator"
                 control={control}
               />

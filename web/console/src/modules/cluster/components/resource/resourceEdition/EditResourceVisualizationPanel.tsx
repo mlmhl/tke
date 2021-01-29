@@ -597,14 +597,14 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     const creator = userInfo.object.data && userInfo.object.data.name || '';
     const { current: volumeTemplateCurrent } = this.volumeTemplateRef;
     const { current: mySharedClusterCMDBRefCurrent } = this.mySharedClusterCMDBRef;
-    if(WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && !mySharedClusterCMDBRefCurrent.triggerValidation())  {
-      return;
-    }
+
     actions.validate.workload.validateWorkloadEdit();
     if(isVolumeTemplateSetting && !volumeTemplateCurrent.triggerValidation()) {
       return;
     }
-
+    if(WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && !mySharedClusterCMDBRefCurrent.triggerValidation())  {
+      return;
+    }
     if (validateWorkloadActions._validateWorkloadEdit(workloadEdit, serviceEdit)) {
       let {
         isCreateService,
@@ -711,7 +711,6 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       }
 
       const CMDBData = this.myCMDBComponentRef.current ? this.myCMDBComponentRef.current.getCMDBData() : {};
-      debugger
       const templateLabels = cloneDeep(labelsInfo);
 
       const {

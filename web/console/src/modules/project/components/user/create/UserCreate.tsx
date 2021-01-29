@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
-import * as _ from 'lodash';
 import { bindActionCreators, insertCSS, uuid } from '@tencent/ff-redux';
 import { useForm, useField } from 'react-final-form-hooks';
 import { allActions } from '../../../actions';
@@ -118,15 +117,15 @@ export const UserCreate = props => {
                     tip="支持按住 shift 键进行多选"
                     header={
                       <SearchBox
-                        defaultValue={userInputValue}
-                        onChange={_.debounce(keyword => {
+                        value={userInputValue}
+                        onChange={keyword => {
                           setUserInputValue(keyword);
                           // actions.manager.changeKeyword((keyword || '').trim());
                           actions.manager.performSearch((keyword || '').trim());
-                        }, 300)}
-                        onSearch={_.debounce(keyword => {
+                        }}
+                        onSearch={keyword => {
                           actions.manager.performSearch((keyword || '').trim());
-                        }, 300)}
+                        }}
                         onClear={() => {
                           actions.manager.changeKeyword('');
                           actions.manager.performSearch('');
