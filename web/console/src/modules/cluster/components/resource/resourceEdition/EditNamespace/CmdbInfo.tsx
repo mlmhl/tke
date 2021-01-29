@@ -50,7 +50,7 @@ export interface DefaultBusinessInfo {
 }
 
 export const CmdbInfo = (
-  props: { defaultBusinessInfo?: any; hasPod?: boolean; isModify?: boolean },
+  props: { defaultBusinessInfo?: any; hasPod?: boolean; isModify?: boolean; disabled?: boolean; },
   ref
 ) => {
   const { register, watch, handleSubmit, reset, control, setValue, getValues, triggerValidation, errors } = useForm({
@@ -70,7 +70,7 @@ export const CmdbInfo = (
   /**
    * 如果有默认值，用默认值进行初始化
    */
-  const { defaultBusinessInfo, hasPod, isModify } = props;
+  const { defaultBusinessInfo, hasPod, isModify, disabled = false } = props;
   useEffect(() => {
     if (defaultBusinessInfo) {
       reset(defaultBusinessInfo);
@@ -191,7 +191,7 @@ export const CmdbInfo = (
     <section className="CMDB-creat-section">
       <Controller
         as={
-          <Switch defaultValue={Boolean(isModify && defaultBusinessInfo)}>
+          <Switch defaultValue={Boolean(isModify && defaultBusinessInfo)} disabled={disabled}>
             <Trans>CMDB录入</Trans>
           </Switch>
         }

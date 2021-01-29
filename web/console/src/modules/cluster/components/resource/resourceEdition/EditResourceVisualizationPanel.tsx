@@ -181,7 +181,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         configEdit,
         nodeAbnormalMigratePolicy,
         isCanUseTapp,
-        terminationGracePeriodSeconds
+        terminationGracePeriodSeconds,
+        networkType,
       } = workloadEdit,
       { secretList } = configEdit;
     const isVolumeTemplateSetting = this._enableVolumeTemplateSetting(workloadEdit.workloadType);
@@ -274,16 +275,6 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               className="form-list jiqun fixed-layout"
               style={isDeploymentOrStateful ? {} : { paddingBottom: '50px' }}
             >
-              {
-                WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && (
-                  <FormItem>
-                    <NewSharedClusterCmdbInfo ref={this.mySharedClusterCMDBRef} initialData={sharedClusterCmdbInitialData} />
-                  </FormItem>
-                )
-              }
-              <FormItem label={t('业务信息')}>
-                <NewCmdbInfo ref={this.myCMDBComponentRef} />
-              </FormItem>
               <FormItem label={t('工作负载名')}>
                 <InputField
                   type="text"
@@ -429,6 +420,16 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
               <EditResourceContainerNumPanel />
               <EditResourceNetworkTypePanel />
+              {
+                WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && (
+                  <FormItem>
+                    <NewSharedClusterCmdbInfo ref={this.mySharedClusterCMDBRef} initialData={sharedClusterCmdbInitialData} />
+                  </FormItem>
+                )
+              }
+              <FormItem label={t('业务信息')}>
+                <NewCmdbInfo ref={this.myCMDBComponentRef} disabled={networkType !== WorkloadNetworkTypeEnum.FloatingIP} />
+              </FormItem>
               <FormItem label={t('优雅终止等待时间')} >
                 <InputAdornment after="秒"><InputNumber max={65535} min={0} value={terminationGracePeriodSeconds} onChange={actions.editWorkload.changeTerminationGracePeriodSeconds} /></InputAdornment>
               </FormItem>
@@ -603,7 +604,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     if(isVolumeTemplateSetting && !volumeTemplateCurrent.triggerValidation()) {
       return;
     }
-    
+
     if (validateWorkloadActions._validateWorkloadEdit(workloadEdit, serviceEdit)) {
       let {
         isCreateService,
