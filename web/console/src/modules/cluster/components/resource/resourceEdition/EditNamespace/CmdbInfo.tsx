@@ -242,7 +242,7 @@ export const CmdbInfo = (
               )
             }
 
-            <Form.Item label="负责人" showStatusIcon={false}>
+            <Form.Item label="负责人" required showStatusIcon={false}>
               <Controller
                 as={<Select searchable boxSizeSync size="m" type="simulate" appearence="button" options={userList} />}
                 name="operator"
