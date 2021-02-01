@@ -123,7 +123,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     actions.editWorkload.selectResourceType(urlParams['resourceName']);
 
     // 判断使用是否可以使用gpu
-    actions.editWorkload.isCanUseGpu();
+    if (cluster.selection && cluster.selection.spec.features && cluster.selection.spec.features.gpu) {
+      actions.editWorkload.isCanUseGpu();
+    }
 
     //判断是否可显示tapp
     actions.editWorkload.isCanUseTapp();

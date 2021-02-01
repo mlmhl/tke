@@ -37,6 +37,7 @@ interface ClusterSpec {
   /** 集群的features */
   features?: {
     ipvs: boolean;
+    gpu: boolean;
     public: boolean;
   };
 
