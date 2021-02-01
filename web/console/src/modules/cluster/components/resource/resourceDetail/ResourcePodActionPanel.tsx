@@ -9,11 +9,13 @@ import { t, Trans } from '@tencent/tea-app/lib/i18n';
 import { TappGrayUpdateEditItem } from 'src/modules/cluster/models/ResourceDetailState';
 import { resourceConfig } from '../../../../../../config';
 import { initValidator } from '../../../../../../src/modules/common';
+import { urlStringify } from '../../../../common/utils';
 import { allActions } from '../../../actions';
 import { CreateResource, PodFilterInNode, Pod } from '../../../models';
 import { containerMonitorFields, MonitorPanelProps, podMonitorFields } from '../../../models/MonitorPanel';
 import { router } from '../../../router';
 import { RootProps } from '../../ClusterApp';
+import { CommonAPI } from '../../../../common/webapi';
 import { IsInNodeManageDetail } from './ResourceDetail';
 import { reduceNs } from '@helper';
 
@@ -299,13 +301,37 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
     return (
       <Button
         onClick={() => {
-          this._handleMonitor('podMonitor');
+          if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+            this._handleGrafanaMonitor();
+          } else {
+            this._handleMonitor('podMonitor');
+          }
         }}
         type="primary"
       >
         {t('监控')}
       </Button>
     );
+  }
+
+  private async _handleGrafanaMonitor() {
+    const { subRoot, route, projectList } = this.props;
+    const { resourceInfo } = subRoot;
+    const { queries } = route;
+    const urls = await CommonAPI.fetchGrafanaURLs();
+    const project = projectList.find(_ => _.name === queries.projectName) || {};
+
+    const params = {
+      orgId: 1,
+      'var-project_name': project.displayName,
+      'var-project_id': queries.projectName,
+      'var-namespace': queries.np,
+      'var-cluster_id': queries.clusterId,
+      'var-workload_kind': resourceInfo.headTitle,
+      'var-workload_name': queries.resourceIns
+    };
+
+    window.open(`${urls.pod_dashboard_url}?${urlStringify(params)}`, '_blank');
   }
 
   /** 处理监控的相关操作 */
