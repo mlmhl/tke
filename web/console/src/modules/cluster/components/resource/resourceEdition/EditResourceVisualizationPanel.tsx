@@ -1128,6 +1128,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   private _reduceContainers(containers: ContainerItem[], volumes: VolumeItem[], volumeTemplates: any[], extraOption?: any) {
     let containersInfo = [];
     let { oversoldRatio, networkType } = extraOption;
+    let hasSetNetworkResource: boolean = false;
     containersInfo = containers.map(c => {
       let containerItem = {
         name: c.name,
@@ -1176,7 +1177,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
             'nvidia.com/gpu': +c.gpu > 0 ? c.gpu + '' : undefined,
             'tencent.com/vcuda-core': +c.gpuCore ? +c.gpuCore * 100 : undefined,
             'tencent.com/vcuda-memory': +c.gpuMem ? +c.gpuMem : undefined,
-            'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP ? '1' : undefined
+            'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP && !hasSetNetworkResource ? '1' : undefined
           }
         };
       }
@@ -1193,11 +1194,12 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
             memory: memRequest ? memRequest + 'Mi' : undefined,
             'tencent.com/vcuda-core': +c.gpuCore ? +c.gpuCore * 100 : undefined,
             'tencent.com/vcuda-memory': +c.gpuMem ? +c.gpuMem : undefined,
-            'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP ? '1' : undefined
+            'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP && !hasSetNetworkResource ? '1' : undefined
           }
         });
       }
 
+      hasSetNetworkResource = networkType === WorkloadNetworkTypeEnum.FloatingIP;
       containerItem['env'] = [];
       c.envItems.forEach(env => {
         let envItem = {
