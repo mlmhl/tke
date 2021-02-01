@@ -11,13 +11,14 @@ import { Justify } from '@tencent/tea-component/lib/justify';
 import { resourceConfig } from '../../../../../../config';
 import { dateFormatter, downloadCsv, reduceNs } from '../../../../../../helpers';
 import { DisplayFiledProps, ResourceInfo } from '../../../../common/models';
-import { includes, isEmpty } from '../../../../common/utils';
+import { includes, isEmpty, urlStringify } from '../../../../common/utils';
 import { allActions } from '../../../actions';
 import { Resource } from '../../../models';
 import { MonitorPanelProps, resourceMonitorFields } from '../../../models/MonitorPanel';
 import { router } from '../../../router';
 import { RootProps } from '../../ClusterApp';
 import { TellIsNeedFetchNS } from '../ResourceSidebarPanel';
+import { CommonAPI } from '../../../../common/webapi';
 import { PlatformContext, IPlatformContext, PlatformTypeEnum } from '@/Wrapper';
 import { resourceLimitTypeToText, resourceTypeToUnit } from '@src/modules/project/constants/Config';
 import { K8SUNIT, valueLabels1000, valueLabels1024 } from '@helper/k8sUnitUtil';
@@ -88,7 +89,7 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
       resourceName = urlParams['resourceName'];
 
     let monitorButton = null;
-    monitorButton = ['deployment', 'statefulset', 'daemonset', 'tapp'].includes(resourceName) && this._renderMonitorButton();
+    monitorButton = ['deployment', 'statefulset', 'daemonset', 'tapp'].concat(WEBPACK_CONFIG_SHARED_CLUSTER ? ['job', 'cronjob', 'np'] : []).includes(resourceName) && this._renderMonitorButton();
 
     return (
       <Table.ActionPanel>
@@ -132,6 +133,36 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
       </Table.ActionPanel>
     );
   }
+
+  async _handleGrafanaMonitor() {
+    const { subRoot, route, projectList } = this.props;
+    const urlParams = router.resolve(route);
+    const { resourceInfo } = subRoot;
+    const isNamespace = urlParams.resourceName === 'np';
+    const { queries } = route;
+    const urls = await CommonAPI.fetchGrafanaURLs();
+    const project = projectList.find(_ => _.name === queries.projectName) || {};
+
+    const params = {
+      orgId: 1,
+      'var-project_name': project.displayName,
+      'var-project_id': queries.projectName,
+      'var-namespace': queries.np,
+      'var-cluster_id': queries.clusterId,
+      'var-workload_kind': resourceInfo.headTitle,
+      'var-workload_name': 'All'
+    };
+
+    if (isNamespace) {
+      delete params['var-workload_name'];
+      delete params['var-workload_kind'];
+      params['var-cluster_id'] = 'All';
+      params['var-namespace'] = 'All';
+    }
+
+    window.open(`${isNamespace ? urls.project_dashboard_url : urls.workload_dashboard_url}?${urlStringify(params)}`, '_blank');
+  }
+
   _handleMonitor() {
     let { subRoot, route } = this.props,
       { resourceOption } = subRoot;
@@ -169,7 +200,11 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
       <Button
         type="primary"
         onClick={() => {
-          this._handleMonitor();
+          if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+            this._handleGrafanaMonitor();
+          } else {
+            this._handleMonitor();
+          }
         }}
       >
         {t('监控')}
