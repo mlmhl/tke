@@ -865,5 +865,9 @@ export const AreaMap = {
   shanghai: {
     value: 'shanghai',
     text: '上海'
+  },
+  tianjin: {
+    value: 'tianjin',
+    text: '天津'
   }
 };
