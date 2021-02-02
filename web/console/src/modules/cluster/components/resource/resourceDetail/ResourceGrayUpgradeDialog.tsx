@@ -8,24 +8,73 @@ import { bindActionCreators, uuid } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
 import { resourceConfig } from '../../../../../../config';
-import { cloneDeep, CreateResource, InputField, WorkflowDialog, TipInfo, initValidator } from '../../../../common';
+import {
+  cloneDeep,
+  CreateResource,
+  InputField,
+  WorkflowDialog,
+  TipInfo,
+  initValidator,
+  ResourceInfo,
+} from '../../../../common';
 import { allActions } from '../../../actions/';
 import { RootProps } from '../../ClusterApp';
 import { Pod } from '../../../models';
+import { router } from '@src/modules/cluster/router';
+import { IsInNodeManageDetail } from '@src/modules/cluster/components/resource/resourceDetail/ResourceDetail';
+import { apiVersion } from '@config/resource/common';
+import { ResourceConfigVersionMap } from '@config/resourceConfig';
+import * as WebAPI from '@src/modules/cluster/WebAPI';
 
 const mapDispatchToProps = dispatch =>
   Object.assign({}, bindActionCreators({ actions: allActions }, dispatch), { dispatch });
 
 enum UpdateType {
   UserSelect = 'UserSelect', // 升级用户选中的pod
-  ByPercentage = 'ByPercentage' // 按比例升级pod
+  ByPercentage = 'ByPercentage', // 按比例升级pod
 }
 
 @connect(state => state, mapDispatchToProps)
 export class ResourceGrayUpgradeDialog extends React.Component<RootProps, {}> {
   state = {
     updateType: UpdateType.UserSelect,
-    updatePercentage: 20
+    updatePercentage: 20,
+    podList: [],
+  };
+
+  getAllPods = async () => {
+    const { subRoot, route, clusterVersion, namespaceSelection } = this.props,
+      urlParams = router.resolve(route),
+      { resourceDetailState, resourceInfo } = subRoot,
+      { podQuery, podFilterInNode } = resourceDetailState;
+
+    const isInNodeManager = IsInNodeManageDetail(urlParams['type']);
+    const podVersionInfo = apiVersion[ResourceConfigVersionMap(clusterVersion)]['pods'];
+    // pods的resourceInfo的配置
+    const podResourceInfo: ResourceInfo = {
+      basicEntry: podVersionInfo.basicEntry,
+      version: podVersionInfo.version,
+      group: podVersionInfo.group,
+      namespaces: 'namespaces',
+      requestType: {
+        list: 'pods',
+      },
+    };
+
+    let k8sQueryObj = {
+      labelSelector: resourceDetailState.resourceDetailInfo.selection.spec.selector.matchLabels,
+    };
+    k8sQueryObj = JSON.parse(JSON.stringify(k8sQueryObj));
+    const query = cloneDeep(podQuery);
+    query.paging.pageSize = 9999;
+    const { records, continueToken } = await WebAPI.fetchResourceList(query, {
+      resourceInfo: podResourceInfo,
+      isClearData: false,
+      k8sQueryObj,
+      isNeedSpecific: false,
+      isContinue: true,
+    });
+    this.setState({ podList: records });
   };
 
   // 升级比例的自动步进
@@ -39,6 +88,9 @@ export class ResourceGrayUpgradeDialog extends React.Component<RootProps, {}> {
   }
 
   setUpdateType = (updateType: string): void => {
+    if (updateType === UpdateType.ByPercentage) {
+      this.getAllPods();
+    }
     this.setState({ updateType });
   };
 
@@ -58,7 +110,7 @@ export class ResourceGrayUpgradeDialog extends React.Component<RootProps, {}> {
 
   // 全部pods记录
   get podRecords(): Pod[] {
-    return this.props.subRoot.resourceDetailState.podList.data.records;
+    return this.state.podList;
   }
 
   // 要升级的pods记录
@@ -85,7 +137,7 @@ export class ResourceGrayUpgradeDialog extends React.Component<RootProps, {}> {
 
   render() {
     const { actions, region, clusterVersion, route } = this.props;
-    const { updateGrayTappFlow, editTappGrayUpdate, podList, podSelection } = this.props.subRoot.resourceDetailState;
+    const { updateGrayTappFlow, editTappGrayUpdate } = this.props.subRoot.resourceDetailState;
     const targetResource = this.props.subRoot.resourceOption.ffResourceList.selection;
     let resourceInfo = resourceConfig(clusterVersion)['tapp'];
 
@@ -107,7 +159,7 @@ export class ResourceGrayUpgradeDialog extends React.Component<RootProps, {}> {
           let containerSetting = updateSettings.containers.find(c => c.name === container.name);
           return {
             ...targetContainer,
-            image: `${containerSetting.imageName}:${containerSetting.imageTag}`
+            image: `${containerSetting.imageName}:${containerSetting.imageTag}`,
           };
         });
         templatePool[pod.metadata.name] = newTemplate;
@@ -116,8 +168,8 @@ export class ResourceGrayUpgradeDialog extends React.Component<RootProps, {}> {
       let jsonYaml = {
         spec: {
           templatePool,
-          templates
-        }
+          templates,
+        },
       };
       return jsonYaml;
     }
@@ -129,7 +181,7 @@ export class ResourceGrayUpgradeDialog extends React.Component<RootProps, {}> {
       namespace: route.queries['np'],
       clusterId: route.queries['clusterId'],
       resourceIns: route.queries['resourceIns'],
-      isStrategic: false
+      isStrategic: false,
     };
 
     return (
@@ -198,17 +250,10 @@ export class ResourceGrayUpgradeDialog extends React.Component<RootProps, {}> {
                               size="full"
                               value={container.imageName}
                               onChange={value => {
-                                actions.resourceDetail.pod.updateTappGrayUpdate(
-                                  index_in,
-                                  value,
-                                  container.imageTag
-                                );
+                                actions.resourceDetail.pod.updateTappGrayUpdate(index_in, value, container.imageTag);
                               }}
                               onBlur={e => {
-                                actions.validate.workload.validateGrayUpdateRegistrySelection(
-                                  index_in,
-                                  e.target.value
-                                );
+                                actions.validate.workload.validateGrayUpdateRegistrySelection(index_in, e.target.value);
                               }}
                             />
                           </Bubble>
@@ -219,11 +264,7 @@ export class ResourceGrayUpgradeDialog extends React.Component<RootProps, {}> {
                           size="full"
                           value={container.imageTag}
                           onChange={value => {
-                            actions.resourceDetail.pod.updateTappGrayUpdate(
-                              index_in,
-                              container.imageName,
-                              value
-                            );
+                            actions.resourceDetail.pod.updateTappGrayUpdate(index_in, container.imageName, value);
                           }}
                         />
                       </FormPanel.Item>
