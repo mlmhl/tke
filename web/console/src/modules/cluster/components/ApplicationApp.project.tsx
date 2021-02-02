@@ -36,8 +36,6 @@ export class ApplicationAppContainer extends React.Component<any, any> {
 interface ApplicationListPanelState {
   /** 菜单栏列表 */
   finalSubRouterList?: SubRouter[];
-  ifSetUserInfo?: boolean;
-  ifSetPortalInfo?: boolean;
 }
 export interface RootProps extends RootState {
   actions?: typeof allActions;
@@ -51,7 +49,33 @@ const mapDispatchToProps = dispatch =>
 
 @connect(state => state, mapDispatchToProps)
 @((router.serve as any)())
-class ApplicationApp extends React.Component<RootProps, {}> {
+class ApplicationApp extends React.Component<RootProps, any> {
+  constructor(props, context) {
+    super(props, context);
+    this.state = {
+      ifSetUserInfo: false,
+      ifSetPortalInfo: false
+    };
+  }
+
+  componentWillReceiveProps(nextProps: RootProps) {
+    const { ifSetPortalInfo, ifSetUserInfo } = this.state;
+    let { actions, rawProjectList, userInfo, wrapperUserInfo, wrapperPortal } = nextProps;
+
+    // 如果rawProjectList为空 && Wrapper中传过来的wrapperPortal不为空 && 没有执行过这个if逻辑则执行（保证这个逻辑只执行1次）
+    if (isEmpty(rawProjectList) && !isEmpty(wrapperPortal) && ifSetPortalInfo === false) {
+      actions.projectNamespace.initProjectList(wrapperPortal);
+      this.setState({ ifSetPortalInfo: true });
+    }
+
+    // 如果userInfo.object.data为空 && Wrapper中传过来的wrapperUserInfo.name不为空 && 没有执行过这个if逻辑则执行（保证这个逻辑只执行1次
+    if (isEmpty(userInfo.object.data) && wrapperUserInfo.name && ifSetUserInfo === false) {
+      // actions.user.fetch();
+      actions.user.fetch({ data: wrapperUserInfo });
+      this.setState({ ifSetUserInfo: true });
+    }
+  }
+
   render() {
     return <ApplicationList {...this.props} />;
   }
@@ -61,9 +85,7 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
   constructor(props, context) {
     super(props, context);
     this.state = {
-      finalSubRouterList: [],
-      ifSetUserInfo: false,
-      ifSetPortalInfo: false
+      finalSubRouterList: []
     };
   }
   componentDidMount() {
@@ -88,24 +110,9 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
   }
 
   componentWillReceiveProps(nextProps: RootProps) {
-    const { ifSetPortalInfo, ifSetUserInfo } = this.state;
-    let { route, actions, namespaceSelection, subRoot, rawProjectList, userInfo, wrapperUserInfo, wrapperPortal } = nextProps,
+    let { route, actions, namespaceSelection, subRoot } = nextProps,
       newUrlParam = router.resolve(route),
       { mode, subRouterList, addons } = subRoot;
-
-    // 如果rawProjectList为空 && Wrapper中传过来的wrapperPortal不为空 && 没有执行过这个if逻辑则执行（保证这个逻辑只执行1次）
-    if (isEmpty(rawProjectList) && !isEmpty(wrapperPortal) && ifSetPortalInfo === false) {
-      actions.projectNamespace.initProjectList(wrapperPortal);
-      this.setState({ ifSetPortalInfo: true });
-    }
-
-    // 如果userInfo.object.data为空 && Wrapper中传过来的wrapperUserInfo.name不为空 && 没有执行过这个if逻辑则执行（保证这个逻辑只执行1次
-    if (isEmpty(userInfo.object.data) && wrapperUserInfo.name && ifSetUserInfo === false) {
-      // actions.user.fetch();
-      actions.user.fetch({ data: wrapperUserInfo });
-      this.setState({ ifSetUserInfo: true });
-    }
-
     let newMode = newUrlParam['mode'];
     const resourceName = newUrlParam['resourceName'];
     const projectName = route.queries['projectName'];
