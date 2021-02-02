@@ -215,10 +215,11 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
 
   /** render新建按钮 */
   private _renderCreateButton() {
-    let { subRoot, namespaceList } = this.props,
+    let { subRoot, namespaceList, route } = this.props,
       { resourceInfo } = subRoot;
-
-    const disabled: boolean = namespaceList.data.recordCount === 0;
+    const urlParams = router.resolve(route);
+    const isNamespace = urlParams.resourceName === 'np';
+    const disabled: boolean = namespaceList.data.recordCount === 0 && isNamespace === false;
     const isShow = !isEmpty(resourceInfo) && resourceInfo.actionField && resourceInfo.actionField.create.isAvailable;
     return isShow ? (
       <Button
