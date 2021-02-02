@@ -59,11 +59,16 @@ const queryProjectNamespaceActions = generateQueryActionCreator({
 
 const restActions = {
   /** 初始化 NamespaceList列表 */
-  initProjectList: () => {
+  initProjectList: (params?: any) => {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
       let { route, projectSelection } = getState();
-      let portalResourceInfo = resourceConfig().portal;
-      let portal = await WebAPI.fetchUserPortal(portalResourceInfo);
+      let portal;
+      if (params) {
+        portal = params;
+      } else {
+        let portalResourceInfo = resourceConfig().portal;
+        portal = await WebAPI.fetchUserPortal(portalResourceInfo);
+      }
       let userProjectList = Object.keys(portal.projects).map(key => {
         return {
           name: key,

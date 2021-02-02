@@ -6,7 +6,10 @@ import * as WebAPI from '../WebAPI';
 type GetState = () => RootState;
 const FFModelUserInfoActions = createFFObjectActions<UserInfo, string>({
   actionName: FFReduxActionName.UserInfo,
-  fetcher: async (query, getState: GetState) => {
+  fetcher: async (query, getState: GetState, fetchOptions) => {
+    if (fetchOptions && fetchOptions.data) {
+      return fetchOptions.data;
+    }
     let response = await WebAPI.fetchUserId(query);
     return response;
   },

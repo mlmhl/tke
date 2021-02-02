@@ -99,10 +99,10 @@ Entry.register({
       title: '应用管理 - TKEStack业务侧',
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          {(projects) => (
+          {({ wrapperPortal, wrapperUserInfo }) => (
             <>
               <ForbiddentDialog />
-              <Application />
+              <Application wrapperPortal={wrapperPortal} wrapperUserInfo={wrapperUserInfo} />
             </>
           )}
         </Wrapper>
@@ -116,10 +116,10 @@ Entry.register({
       title: '应用管理 - TKEStack业务侧',
       container: (
         <Wrapper platformType={PlatformTypeEnum.Business}>
-          {(projects) => (
+          {({ wrapperPortal, wrapperUserInfo }) => (
             <>
               <ForbiddentDialog />
-              <Application />
+              <Application wrapperPortal={wrapperPortal} wrapperUserInfo={wrapperUserInfo} />
             </>
           )}
         </Wrapper>

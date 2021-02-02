@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { connect, Provider } from 'react-redux';
 
-import { cloneDeep } from '@src/modules/common';
+import { cloneDeep, isEmpty } from '@src/modules/common';
 import { bindActionCreators } from '@tencent/ff-redux';
 import { t, Trans } from '@tencent/tea-app/lib/i18n';
 
@@ -27,7 +27,7 @@ export class ApplicationAppContainer extends React.Component<any, any> {
   render() {
     return (
       <Provider store={store}>
-        <ApplicationApp />
+        <ApplicationApp {...this.props} />
       </Provider>
     );
   }
@@ -36,9 +36,14 @@ export class ApplicationAppContainer extends React.Component<any, any> {
 interface ApplicationListPanelState {
   /** 菜单栏列表 */
   finalSubRouterList?: SubRouter[];
+  ifSetUserInfo?: boolean;
+  ifSetPortalInfo?: boolean;
 }
 export interface RootProps extends RootState {
   actions?: typeof allActions;
+  wrapperPortal?: any;
+  wrapperUserInfo?: any;
+  projects?: any;
 }
 
 const mapDispatchToProps = dispatch =>
@@ -56,7 +61,9 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
   constructor(props, context) {
     super(props, context);
     this.state = {
-      finalSubRouterList: []
+      finalSubRouterList: [],
+      ifSetUserInfo: false,
+      ifSetPortalInfo: false
     };
   }
   componentDidMount() {
@@ -74,16 +81,31 @@ class ApplicationList extends React.Component<RootProps, ApplicationListPanelSta
     let isNeedFetchNamespace =
       resourceType === 'resource' || resourceType === 'service' || resourceType === 'config' || resource === 'pvc' || resource === 'csi';
     actions.resource.toggleIsNeedFetchNamespace(isNeedFetchNamespace ? true : false);
-    actions.projectNamespace.initProjectList();
+    // actions.projectNamespace.initProjectList();
 
     // 获取用户信息并存储在redux中
-    actions.user.fetch();
+    // actions.user.fetch();
   }
 
   componentWillReceiveProps(nextProps: RootProps) {
-    let { route, actions, namespaceSelection, subRoot } = nextProps,
+    const { ifSetPortalInfo, ifSetUserInfo } = this.state;
+    let { route, actions, namespaceSelection, subRoot, rawProjectList, userInfo, wrapperUserInfo, wrapperPortal } = nextProps,
       newUrlParam = router.resolve(route),
       { mode, subRouterList, addons } = subRoot;
+
+    // 如果rawProjectList为空 && Wrapper中传过来的wrapperPortal不为空 && 没有执行过这个if逻辑则执行（保证这个逻辑只执行1次）
+    if (isEmpty(rawProjectList) && !isEmpty(wrapperPortal) && ifSetPortalInfo === false) {
+      actions.projectNamespace.initProjectList(wrapperPortal);
+      this.setState({ ifSetPortalInfo: true });
+    }
+
+    // 如果userInfo.object.data为空 && Wrapper中传过来的wrapperUserInfo.name不为空 && 没有执行过这个if逻辑则执行（保证这个逻辑只执行1次
+    if (isEmpty(userInfo.object.data) && wrapperUserInfo.name && ifSetUserInfo === false) {
+      // actions.user.fetch();
+      actions.user.fetch({ data: wrapperUserInfo });
+      this.setState({ ifSetUserInfo: true });
+    }
+
     let newMode = newUrlParam['mode'];
     const resourceName = newUrlParam['resourceName'];
     const projectName = route.queries['projectName'];

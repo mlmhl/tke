@@ -355,6 +355,9 @@ interface ConsoleWrapperState {
   /**该用户负责的业务 */
   projects: Project[];
 
+  /** portal信息*/
+  portal: any;
+
   /** 是否展示user的下拉框 */
   isShowUserDropdown: boolean;
 
@@ -385,6 +388,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
       isShowPlatformSwitch: false,
       userType: UserType.init,
       projects: [],
+      portal: {},
       isShowUserDropdown: false,
       routerConfig: [],
       asideRouterSelect: {
@@ -561,6 +565,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
         this.setState({
           userType,
           projects,
+          portal: response.data
         });
         if (userType === UserType.member && this.props.platformType === PlatformTypeEnum.Manager) {
           location.href = location.origin + '/tkestack-project/application';
@@ -612,7 +617,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
   render() {
     let query = window.location.search;
     let finalContent: React.ReactNode;
-    let { projects, userType } = this.state;
+    let { projects, userType, portal, userInfo } = this.state;
     const tenantId = localStorage.getItem('tenantId');
     if (!tenantId) {
       return (
@@ -651,7 +656,7 @@ export class Wrapper extends React.Component<ConsoleWrapperProps, ConsoleWrapper
             {sideBar && this._renderSideBar(query)}
 
             <div id="appArea" className="main" style={sideBar ? {} : { left: 0 }}>
-              {this.props.children({ projects })}
+              {this.props.children({ projects, wrapperPortal: portal, wrapperUserInfo: userInfo })}
             </div>
           </div>
         </React.Fragment>
