@@ -393,10 +393,6 @@ export const VolumeTypeList = [
     label: t('使用临时目录')
   },
   {
-    value: 'hostPath',
-    label: t('使用主机路径')
-  },
-  {
     value: 'nfsDisk',
     label: t('使用NFS盘')
   },
