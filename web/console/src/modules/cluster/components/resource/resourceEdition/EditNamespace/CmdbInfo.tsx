@@ -181,7 +181,7 @@ export const CmdbInfo = (
     <section className="CMDB-creat-section">
       <Controller
         as={
-          <Switch defaultValue={Boolean(isModify && defaultBusinessInfo)} disabled={disabled}>
+          <Switch defaultValue={Boolean(isModify && defaultBusinessInfo)} value={cmdb && !disabled} disabled={disabled}>
             <Trans>CMDB录入</Trans>
           </Switch>
         }
@@ -189,7 +189,7 @@ export const CmdbInfo = (
         control={control}
         className="CMDB-modify-control"
       />
-      {cmdb && (
+      {cmdb && !disabled && (
         <div className="CMDB-modify-content">
           <Form>
             {
