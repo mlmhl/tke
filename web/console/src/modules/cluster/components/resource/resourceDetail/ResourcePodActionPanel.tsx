@@ -325,7 +325,7 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
       orgId: 1,
       'var-project_name': project.displayName,
       'var-project_id': queries.projectName,
-      'var-namespace': queries.np,
+      'var-namespace': queries.np.replace(`${queries.clusterId}-`, ''),
       'var-cluster_id': queries.clusterId,
       'var-workload_kind': resourceInfo.headTitle,
       'var-workload_name': queries.resourceIns
