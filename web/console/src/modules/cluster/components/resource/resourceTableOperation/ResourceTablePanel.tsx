@@ -125,7 +125,6 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
 
   /** 展示普通的text */
   private _reduceText(showData: any, fieldInfo: DisplayFiledProps, resource: Resource, clipId: string) {
-    console.log('showData, fieldInfo, resource, clipId:', showData, fieldInfo, resource, clipId);
     let showContent;
     if (fieldInfo.isLink) {
       if (fieldInfo.isClip) {
@@ -703,7 +702,6 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
     });
     if (zoneStr) {
       const [prefix, area, number] = zoneStr.split('-');
-      console.log('zoneStr & newAreaMap is:', zoneStr, newAreaMap, newAreaMap[area]);
       const zoneMap = newAreaMap[area]['zoneMap'];
       const zoneData = zoneMap[zoneStr];
       areaText = zoneMap ? (zoneData ? zoneData['text'] : '-') : '-';

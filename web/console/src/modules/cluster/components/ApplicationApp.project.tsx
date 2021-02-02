@@ -76,6 +76,14 @@ class ApplicationApp extends React.Component<RootProps, any> {
     }
   }
 
+  shouldComponentUpdate(nextProps: Readonly<RootProps>, nextState: Readonly<any>, nextContext: any): boolean {
+    let { wrapperUserInfo, wrapperPortal } = nextProps;
+    if (!wrapperUserInfo.name || isEmpty(wrapperPortal)) {
+      return false;
+    }
+    return true;
+  }
+
   render() {
     return <ApplicationList {...this.props} />;
   }
