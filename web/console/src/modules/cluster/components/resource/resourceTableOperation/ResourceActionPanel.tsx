@@ -147,7 +147,6 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
       orgId: 1,
       'var-project_name': project.displayName,
       'var-project_id': queries.projectName,
-      'var-namespace': queries.np.replace(`${queries.clusterId}-`, ''),
       'var-cluster_id': queries.clusterId,
       'var-workload_kind': resourceInfo.headTitle,
       'var-workload_name': 'All'
@@ -158,6 +157,8 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
       delete params['var-workload_kind'];
       params['var-cluster_id'] = 'All';
       params['var-namespace'] = 'All';
+    } else {
+      params['var-namespace'] = queries.np.replace(`${queries.clusterId}-`, '');
     }
 
     window.open(`${isNamespace ? urls.project_dashboard_url : urls.workload_dashboard_url}?${urlStringify(params)}`, '_blank');
