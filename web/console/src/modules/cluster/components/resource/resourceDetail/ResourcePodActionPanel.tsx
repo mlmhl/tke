@@ -319,19 +319,27 @@ export class ResourcePodActionPanel extends React.Component<RootProps, ResourceP
     const { resourceInfo } = subRoot;
     const { queries } = route;
     const urls = await CommonAPI.fetchGrafanaURLs();
-    const project = projectList.find(_ => _.name === queries.projectName) || {};
 
     const params = {
       orgId: 1,
-      'var-project_name': project.displayName,
-      'var-project_id': queries.projectName,
       'var-namespace': queries.np.replace(`${queries.clusterId}-`, ''),
       'var-cluster_id': queries.clusterId,
       'var-workload_kind': resourceInfo.headTitle,
       'var-workload_name': queries.resourceIns
     };
 
-    window.open(`${urls.pod_dashboard_url}?${urlStringify(params)}`, '_blank');
+    if (WEBPACK_CONFIG_IS_BUSINESS) {
+      const project = projectList.find(_ => _.name === queries.projectName) || {};
+      params['var-project_name'] = project.displayName;
+      params['var-project_id'] = queries.projectName;
+    }
+
+    window.open(
+      `${WEBPACK_CONFIG_IS_BUSINESS ? urls.pod_dashboard_url : urls.platform_pod_dashboard_url}?${urlStringify(
+        params
+      )}`,
+      '_blank'
+    );
   }
 
   /** 处理监控的相关操作 */

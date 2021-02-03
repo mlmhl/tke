@@ -89,7 +89,10 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
       resourceName = urlParams['resourceName'];
 
     let monitorButton = null;
-    monitorButton = ['deployment', 'statefulset', 'daemonset', 'tapp'].concat(WEBPACK_CONFIG_SHARED_CLUSTER ? ['job', 'cronjob', 'np'] : []).includes(resourceName) && this._renderMonitorButton();
+    monitorButton =
+      ['deployment', 'statefulset', 'daemonset', 'tapp']
+        .concat(WEBPACK_CONFIG_SHARED_CLUSTER ? ['job', 'cronjob', WEBPACK_CONFIG_IS_BUSINESS ? 'np' : null] : [])
+        .includes(resourceName) && this._renderMonitorButton();
 
     return (
       <Table.ActionPanel>
@@ -141,12 +144,9 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
     const isNamespace = urlParams.resourceName === 'np';
     const { queries } = route;
     const urls = await CommonAPI.fetchGrafanaURLs();
-    const project = projectList.find(_ => _.name === queries.projectName) || {};
 
     const params = {
       orgId: 1,
-      'var-project_name': project.displayName,
-      'var-project_id': queries.projectName,
       'var-cluster_id': queries.clusterId,
       'var-workload_kind': resourceInfo.headTitle,
       'var-workload_name': 'All'
@@ -161,7 +161,22 @@ export class ResourceActionPanel extends React.Component<ResourceActionProps, Re
       params['var-namespace'] = queries.np.replace(`${queries.clusterId}-`, '');
     }
 
-    window.open(`${isNamespace ? urls.project_dashboard_url : urls.workload_dashboard_url}?${urlStringify(params)}`, '_blank');
+    if (WEBPACK_CONFIG_IS_BUSINESS) {
+      const project = projectList.find(_ => _.name === queries.projectName) || {};
+      params['var-project_name'] = project.displayName;
+      params['var-project_id'] = queries.projectName;
+    }
+
+    window.open(
+      `${
+        isNamespace
+          ? urls.project_dashboard_url
+          : WEBPACK_CONFIG_IS_BUSINESS
+          ? urls.workload_dashboard_url
+          : urls.platform_workload_dashboard_url
+      }?${urlStringify(params)}`,
+      '_blank'
+    );
   }
 
   _handleMonitor() {
