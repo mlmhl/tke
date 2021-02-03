@@ -28,7 +28,6 @@ interface PolarisHeaderProps {
   isPlatform: boolean;
   setPolarisFilters: (value: {clusterId: string; projectId: string | null; namespaceId: string}) => void;
   setPolarisInstalledFlag: (value: boolean) => void;
-  createToggle: (value?: boolean) => void;
   triggerRefresh: () => void;
 }
 
@@ -37,7 +36,6 @@ const PolarisHeader = React.memo((props: PolarisHeaderProps) => {
     isPlatform,
     setPolarisFilters,
     setPolarisInstalledFlag,
-    createToggle,
     triggerRefresh
   } = props;
   const dispatch = useDispatch();
@@ -149,7 +147,6 @@ const PolarisHeader = React.memo((props: PolarisHeaderProps) => {
           disabled={isInstalled === false}
           onClick={() => {
             router.navigate({ mode: 'create' });
-            // createToggle();
           }}
         >
           <Trans>新建</Trans>

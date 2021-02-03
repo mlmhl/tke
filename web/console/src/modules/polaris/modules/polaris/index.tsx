@@ -9,7 +9,7 @@ import { RootState } from '@src/modules/polaris/modules/rootReducer';
 import UninstalledPolarisModal from '@src/modules/polaris/common/components/UninstalledPolarisModal';
 import PolarisHeader from '@src/modules/polaris/features/polarisHeader/PolarisHeader';
 import PolarisListPage from '@src/modules/polaris/features/polarisList/PolarisListPage';
-import PolarisEditorModal from '@src/modules/polaris/features/polarisEditor/PolarisEditorPage';
+import PolarisEditor from '@src/modules/polaris/features/polarisEditor/PolarisEditorPage';
 import {
   setPolarisFilters,
   setIsPolarisInstalled,
@@ -58,7 +58,6 @@ const Polaris = React.memo((props: PolarisProps) => {
     dispatch(setIsPolarisInstalled(isPolarisInstalled));
   };
 
-  const { isShowing: createVisible, toggle: createToggle } = useModal();
   const { refreshFlag, triggerRefresh } = useRefresh();
   if (mode === 'create') {
     return (
@@ -73,9 +72,8 @@ const Polaris = React.memo((props: PolarisProps) => {
             <Content.Body>
               <Card>
                 <Card.Body>
-                  <PolarisEditorModal
+                  <PolarisEditor
                     isPlatform={isPlatform}
-                    toggle={createToggle}
                     clusterId={clusterId}
                     projectId={projectId}
                     namespaceId={namespaceId}
@@ -104,7 +102,6 @@ const Polaris = React.memo((props: PolarisProps) => {
                   isPlatform={isPlatform}
                   setPolarisFilters={setSlicePolarisFilters}
                   setPolarisInstalledFlag={setPolarisInstalledFlag}
-                  createToggle={createToggle}
                   triggerRefresh={triggerRefresh}
                 />
               </Table.ActionPanel>
