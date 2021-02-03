@@ -45,12 +45,9 @@ export class ApiKeyTablePanel extends React.Component<RootProps, ApiKeyState> {
                   </Button>
                   <Button
                     type="weak"
-                    /** 暂时先禁用，待指引文档完善之后在启用，目前的指引内容不对
-                      * 详见TAPD：http://tapd.oa.com/TKEx_TEG/prong/stories/view/1020426652862358171?url_cache_key=db5a25eac48b221c86e70a7457885e7a&action_entry_type=story_tree_list
-                     */
-                    disabled={true}
                     onClick={() => {
-                      this.setState({ showUsageGuideline: true });
+                      const w = window.open('about:blank');
+                      w.location.href = 'https://iwiki.woa.com/pages/viewpage.action?pageId=554591858';
                     }}
                   >
                     {t('使用指引')}
