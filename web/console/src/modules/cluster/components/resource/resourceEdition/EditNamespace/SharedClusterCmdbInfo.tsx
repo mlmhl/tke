@@ -39,7 +39,7 @@ export const SharedClusterCmdbInfo = (
     selectedModuleId
   } = initialData;
 
-  const { register, watch, handleSubmit, reset, control, setValue, getValues, triggerValidation, errors } = useForm({
+  const { register, watch, handleSubmit, reset, control, setValue, getValues, trigger, errors } = useForm({
     mode: 'onBlur',
     defaultValues: {
       bsiPath3: selectedModuleId
@@ -62,7 +62,8 @@ export const SharedClusterCmdbInfo = (
   useImperativeHandle(ref, () => ({
     // 在使用 ref 时自定义暴露给父组件的实例值
     getSharedClusterCmdbData: () => {
-      const CMDBData = getValues({ nest: true });
+      // const CMDBData = getValues({ nest: true });
+      const CMDBData = getValues();
       const { bsiPath3 } = CMDBData;
       let bsiPath3Name: string = '';
       bsiPath3List.forEach(item => {
@@ -75,7 +76,7 @@ export const SharedClusterCmdbInfo = (
         moduleId: bsiPath3
       };
     },
-    triggerValidation
+    triggerValidation: trigger
   }));
 
   const style = { marginTop: '6px' };

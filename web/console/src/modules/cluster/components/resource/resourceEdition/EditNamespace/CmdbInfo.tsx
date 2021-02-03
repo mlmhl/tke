@@ -51,7 +51,7 @@ export const CmdbInfo = (
   props: { defaultBusinessInfo?: any; hasPod?: boolean; isModify?: boolean; disabled?: boolean; },
   ref
 ) => {
-  const { register, watch, handleSubmit, reset, control, setValue, getValues, triggerValidation, errors } = useForm({
+  const { register, watch, handleSubmit, reset, control, setValue, getValues, trigger, errors } = useForm({
     mode: 'onBlur',
     defaultValues: {
 
@@ -164,7 +164,8 @@ export const CmdbInfo = (
   useImperativeHandle(ref, () => ({
     // 在使用 ref 时自定义暴露给父组件的实例值
     getCMDBData: () => {
-      const CMDBData = getValues({ nest: true });
+      // const CMDBData = getValues({ nest: true });
+      const CMDBData = getValues();
       const { bsiPath1, bsiPath2, bsiPath3, departmentId } = CMDBData;
       let bsiPath1Name: string = '';
       let bsiPath2Name: string = '';
@@ -194,7 +195,7 @@ export const CmdbInfo = (
       const bsiPathIds = bsiPath1 ? bsiPath1 + ' - ' + bsiPath2 + ' - ' + bsiPath3 : '';
       return { ...CMDBData, bsiPath, bsiPathIds, department };
     },
-    triggerValidation
+    triggerValidation: trigger
   }));
 
   return (
