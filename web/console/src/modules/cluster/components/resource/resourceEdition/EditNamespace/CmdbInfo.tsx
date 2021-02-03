@@ -9,6 +9,7 @@ import { Switch, Form, Select, SelectMultiple, Input } from '@tencent/tea-compon
 
 import {
   fetchDepartmentList,
+  fetchProductList,
   fetchBsiPath1List,
   fetchBsiPath2List,
   fetchBsiPath3List,
@@ -34,7 +35,8 @@ insertCSS(
 declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 export interface DefaultBusinessInfo {
   cmdb?: boolean;
-  department?: string;
+  departmentId?: number;
+  product?: number;
   bsiPath1?: number;
   bsiPath2?: number;
   bsiPath3?: number;
@@ -57,6 +59,7 @@ export const CmdbInfo = (
   });
 
   const [departmentList, setDepartmentList] = useState([]);
+  const [productList, setProductList] = useState([]);
   const [bsiPath1List, setBsiPath1List] = useState([]);
   const [bsiPath2List, setBsiPath2List] = useState([]);
   const [bsiPath3List, setBsiPath3List] = useState([]);
@@ -95,7 +98,7 @@ export const CmdbInfo = (
   /**
    * 相关数据发生变更时，做进一步处理
    */
-  const { cmdb, department: selectedDepartment, bsiPath1: selectedBsiPath1, bsiPath2: selectedBsiPath2 } = watch();
+  const { cmdb, departmentId: selectedDepartment, product: selectedProduct, bsiPath1: selectedBsiPath1, bsiPath2: selectedBsiPath2 } = watch();
   useEffect(() => {
     if (loginUserInfo && cmdb) {
       setValue('operator', loginUserInfo.name);
@@ -104,7 +107,24 @@ export const CmdbInfo = (
 
   useEffect(() => {
     if (selectedDepartment) {
-      fetchBsiPath1List({ dept_name: selectedDepartment ? String(selectedDepartment) : '' }).then(result => {
+      fetchProductList(selectedDepartment).then(result => {
+        setProductList(result);
+        if (!result.length) {
+          setBsiPath1List([]);
+          setBsiPath2List([]);
+          setBsiPath3List([]);
+          setValue('product', undefined);
+          setValue('bsiPath1', undefined);
+          setValue('bsiPath2', undefined);
+          setValue('bsiPath3', undefined);
+        }
+      });
+    }
+  }, [selectedDepartment]);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      fetchBsiPath1List(selectedProduct).then(result => {
         setBsiPath1List(result);
         if (!result.length) {
           setBsiPath2List([]);
@@ -115,11 +135,11 @@ export const CmdbInfo = (
         }
       });
     }
-  }, [selectedDepartment]);
+  }, [selectedProduct]);
 
   useEffect(() => {
     if (selectedBsiPath1) {
-      fetchBsiPath2List({ bs1_name_id: selectedBsiPath1 ? Number(selectedBsiPath1) : undefined }).then(result => {
+      fetchBsiPath2List(selectedBsiPath1).then(result => {
         setBsiPath2List(result);
         if (!result.length) {
           setBsiPath3List([]);
@@ -132,7 +152,7 @@ export const CmdbInfo = (
 
   useEffect(() => {
     if (selectedBsiPath2) {
-      fetchBsiPath3List({ bs2_name_id: selectedBsiPath2 ? Number(selectedBsiPath2) : undefined }).then(result => {
+      fetchBsiPath3List(selectedBsiPath2).then(result => {
         setBsiPath3List(result);
       });
     }
@@ -145,14 +165,14 @@ export const CmdbInfo = (
     // 在使用 ref 时自定义暴露给父组件的实例值
     getCMDBData: () => {
       const CMDBData = getValues({ nest: true });
-      const { bsiPath1, bsiPath2, bsiPath3, department } = CMDBData;
+      const { bsiPath1, bsiPath2, bsiPath3, departmentId } = CMDBData;
       let bsiPath1Name: string = '';
       let bsiPath2Name: string = '';
       let bsiPath3Name: string = '';
-      let departmentId: number = null;
+      let department: string = '';
       departmentList.forEach(item => {
-        if (item.value === department) {
-          departmentId = item.Id;
+        if (item.value === departmentId) {
+          department = item.text;
         }
       });
       bsiPath1List.forEach(item => {
@@ -172,7 +192,7 @@ export const CmdbInfo = (
       });
       const bsiPath = bsiPath1Name ? bsiPath1Name + ' - ' + bsiPath2Name + ' - ' + bsiPath3Name : '';
       const bsiPathIds = bsiPath1 ? bsiPath1 + ' - ' + bsiPath2 + ' - ' + bsiPath3 : '';
-      return { ...CMDBData, bsiPath, bsiPathIds, departmentId };
+      return { ...CMDBData, bsiPath, bsiPathIds, department };
     },
     triggerValidation
   }));
@@ -207,7 +227,23 @@ export const CmdbInfo = (
                           options={departmentList}
                         />
                       }
-                      name="department"
+                      name="departmentId"
+                      control={control}
+                    />
+                  </Form.Item>
+                  <Form.Item label={t('产品')} showStatusIcon={false}>
+                    <Controller
+                      as={
+                        <Select
+                          searchable
+                          boxSizeSync
+                          size="m"
+                          type="simulate"
+                          appearence="button"
+                          options={productList}
+                        />
+                      }
+                      name="product"
                       control={control}
                     />
                   </Form.Item>

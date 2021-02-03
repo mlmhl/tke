@@ -24,15 +24,13 @@ import {
   UserManagedProject,
   UserManagedProjectFilter,
   CMDBDepartmentType,
-  CMDBBusinessLevelOneType,
-  CMDBBusinessLevelTwoType,
-  CMDBBusinessLevelThreeType,
   DepartmentType,
+  CMDBBusinessType,
 } from './models/Project';
 declare const WEBPACK_CONFIG_SHARED_CLUSTER: boolean;
 
 // const cmdbURL = 'http://c.oa.com/api/?api_key=tencent_suanli_gaia';
-const cmdbURL = '/web-api/cmdb?api_key=tencent_suanli_gaia';
+const cmdbURL = '/web-api/cmdb';
 
 // 返回标准操作结果
 function operationResult<T>(target: T[] | T, error?: any): OperationResult<T>[] {
@@ -471,26 +469,20 @@ export async function fetchClusterList(query: QueryState<ClusterFilter>) {
 
 /**
  * 获取cmdb部门列表
- * 注意是POST方法
+ * 注意是get方法
  */
 export async function fetchCMDBDepartmentList(): Promise<DepartmentType[]> {
-  let url = cmdbURL;
-  let method = 'POST';
+  let url = cmdbURL + '/allDept';
+  let method = 'GET';
   let params: RequestParams = {
     method,
     url,
-    data: {
-      method: 'GetDeptInfo',
-      params: {},
-      jsonrpc: '2.0',
-      id: String(Math.floor(Math.random() * 999999)),
-    },
   };
 
   let response = await reduceNetworkRequest(params);
   let departmentList = [];
-  if (response.code === 0) {
-    departmentList = response.data.result.data.map((item: CMDBDepartmentType) => ({
+  if (response.code === 0 && response.data.code === 100000) {
+    departmentList = response.data.data.items.map((item: CMDBDepartmentType) => ({
       id: item.Id,
       name: item.Name,
     }));
@@ -500,32 +492,48 @@ export async function fetchCMDBDepartmentList(): Promise<DepartmentType[]> {
 }
 
 /**
- * 获取一级业务列表
- * 查询条件是部门名称
- * @param departmentName
+ * 获取cmdb产品列表
+ * 查询条件是部门的编号
+ * @param departmentId
  */
-export async function fetchCMDBBusinessLevelOneList(departmentName: string) {
-  let url = cmdbURL;
-  let method = 'POST';
+export async function fetchCMDBProductList(departmentId: number) {
+  let url = cmdbURL + '/product?fatherId=' + departmentId;
+  let method = 'GET';
   let params: RequestParams = {
     method,
     url,
-    data: {
-      method: 'GetBussiness1Info', // 注意这个地方是 GetBussiness1Info，而不是 GetBusiness1Info.因为设计接口的人拼写错了
-      params: {
-        dept_name: departmentName,
-      },
-      jsonrpc: '2.0',
-      id: String(Math.floor(Math.random() * 999999)),
-    },
+  };
+
+  let response = await reduceNetworkRequest(params);
+  let projectList = [];
+  if (response.code === 0 && response.data.code === 100000) {
+    projectList = response.data.data.items.map((item: CMDBBusinessType) => ({
+      id: item.key,
+      name: item.title,
+    }));
+  }
+  return projectList;
+}
+
+/**
+ * 获取一级业务列表
+ * 查询条件是产品的编号
+ * @param productId
+ */
+export async function fetchCMDBBusinessLevelOneList(productId: number) {
+  let url = cmdbURL + '/business1?fatherId=' + productId;
+  let method = 'GET';
+  let params: RequestParams = {
+    method,
+    url,
   };
 
   let response = await reduceNetworkRequest(params);
   let businessLevelOneList = [];
-  if (response.code === 0) {
-    businessLevelOneList = response.data.result.data.map((item: CMDBBusinessLevelOneType) => ({
-      id: item.bs1NameId,
-      name: item.bs1Name,
+  if (response.code === 0 && response.data.code === 100000) {
+    businessLevelOneList = response.data.data.items.map((item: CMDBBusinessType) => ({
+      id: item.key,
+      name: item.title,
     }));
   }
 
@@ -534,31 +542,23 @@ export async function fetchCMDBBusinessLevelOneList(departmentName: string) {
 
 /**
  * 获取二级业务列表
- * 查询条件是一级业务的id
+ * 查询条件是一级业务的编号
  * @param businessLevelOneId
  */
 export async function fetchCMDBBusinessLevelTwoList(businessLevelOneId: number) {
-  let url = cmdbURL;
-  let method = 'POST';
+  let url = cmdbURL + '/business2?fatherId=' + businessLevelOneId;
+  let method = 'GET';
   let params: RequestParams = {
     method,
     url,
-    data: {
-      method: 'GetBussiness2Info', // 同一级业务获取接口，这里也是接口定义的拼写错误
-      params: {
-        bs1_name_id: businessLevelOneId,
-      },
-      jsonrpc: '2.0',
-      id: String(Math.floor(Math.random() * 999999)),
-    },
   };
 
   let response = await reduceNetworkRequest(params);
   let businessLevelTwoList = [];
-  if (response.code === 0) {
-    businessLevelTwoList = response.data.result.data.map((item: CMDBBusinessLevelTwoType) => ({
-      id: item.bs2NameId,
-      name: item.bs2Name,
+  if (response.code === 0 && response.data.code === 100000) {
+    businessLevelTwoList = response.data.data.items.map((item: CMDBBusinessType) => ({
+      id: item.key,
+      name: item.title,
     }));
   }
 
@@ -571,27 +571,19 @@ export async function fetchCMDBBusinessLevelTwoList(businessLevelOneId: number) 
  * @param businessLevelTwoId
  */
 export async function fetchCMDBBusinessLevelThreeList(businessLevelTwoId: number) {
-  let url = cmdbURL;
-  let method = 'POST';
+  let url = cmdbURL + '/business3?fatherId=' + businessLevelTwoId;
+  let method = 'GET';
   let params: RequestParams = {
     method,
     url,
-    data: {
-      method: 'GetBussiness3Info', // 同一级业务获取接口，这里也是接口定义的拼写错误
-      params: {
-        bs2_name_id: businessLevelTwoId,
-      },
-      jsonrpc: '2.0',
-      id: String(Math.floor(Math.random() * 999999)),
-    },
   };
 
   let response = await reduceNetworkRequest(params);
   let businessLevelThreeList = [];
-  if (response.code === 0) {
-    businessLevelThreeList = response.data.result.data.map((item: CMDBBusinessLevelThreeType) => ({
-      id: item.bs3NameId,
-      name: item.bs3Name,
+  if (response.code === 0 && response.data.code === 100000) {
+    businessLevelThreeList = response.data.data.items.map((item: CMDBBusinessType) => ({
+      id: item.key,
+      name: item.title,
     }));
   }
 

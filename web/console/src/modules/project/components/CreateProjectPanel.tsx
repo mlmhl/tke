@@ -22,7 +22,7 @@ import { RootProps } from './ProjectApp';
 import { resourceConfig } from '@config/resourceConfig';
 import { reduceK8sRestfulPath } from '@helper/urlUtil';
 import { Method, reduceNetworkRequest } from '@helper/reduceNetwork';
-import { fetchCMDBBusinessLevelTwoList, fetchCMDBBusinessLevelOneList, fetchCMDBDepartmentList } from '@src/modules/project/WebAPI';
+import { fetchCMDBBusinessLevelTwoList, fetchCMDBBusinessLevelOneList, fetchCMDBDepartmentList, fetchCMDBProductList  } from '@src/modules/project/WebAPI';
 const { useEffect, useReducer } = React;
 
 function CMDBSelector(props) {
@@ -30,6 +30,8 @@ function CMDBSelector(props) {
   const initialState = {
     currentDepartment: 0,
     departmentList: [],
+    currentProduct: 0,
+    productList: [],
     currentBusinessLevelOne: 0,
     businessLevelOneList: [],
     currentBusinessleveTwo: 0,
@@ -43,6 +45,12 @@ function CMDBSelector(props) {
         break;
       case 'departmentList':
         nextState = { ...state, departmentList: action.payload };
+        break;
+      case 'product':
+        nextState = { ...state, currentProduct: action.payload };
+        break;
+      case 'productList':
+        nextState = { ...state, productList: action.payload };
         break;
       case 'businessLevelOne':
         nextState = { ...state, currentBusinessLevelOne: action.payload };
@@ -61,10 +69,12 @@ function CMDBSelector(props) {
     }
     if (!isEqual(state, nextState)) {
       if (onChange) {
-        const { currentDepartment, departmentList, currentBusinessLevelOne, businessLevelOneList, currentBusinessLevelTwo, businessLevelTwoList } = nextState;
+        const { currentDepartment, departmentList, currentProduct, productList, currentBusinessLevelOne, businessLevelOneList, currentBusinessLevelTwo, businessLevelTwoList } = nextState;
         const cmdbInfo = {
-          departmentName: currentDepartment,
-          departmentId: departmentList.find(item => item.name === currentDepartment) && departmentList.find(item => item.name === currentDepartment).id || 0,
+          departmentName: departmentList.find(item => item.id === currentDepartment) && departmentList.find(item => item.id === currentDepartment).name || '',
+          departmentId: currentDepartment,
+          productName: productList.find(item => item.id === currentProduct) && productList.find(item => item.id === currentProduct).name || '',
+          productId: currentProduct,
           businessLevelOneName: businessLevelOneList.find(item => item.id === currentBusinessLevelOne) && businessLevelOneList.find(item => item.id === currentBusinessLevelOne).name || '',
           businessLevelOneId: currentBusinessLevelOne,
           businessLevelTwoName: businessLevelTwoList.find(item => item.id === currentBusinessLevelTwo) && businessLevelTwoList.find(item => item.id === currentBusinessLevelTwo).name || '',
@@ -89,13 +99,23 @@ function CMDBSelector(props) {
 
   useEffect(() => {
     const { currentDepartment } = state;
+    const getProductList = async () => {
+      const data = await fetchCMDBProductList(currentDepartment);
+      dispatch({ type: 'productList', payload: data });
+      return data;
+    };
+    getProductList();
+  }, [state.currentDepartment]);
+
+  useEffect(() => {
+    const { currentProduct } = state;
     const getBusinessLevelOneList = async () => {
-      const data = await fetchCMDBBusinessLevelOneList(currentDepartment);
+      const data = await fetchCMDBBusinessLevelOneList(currentProduct);
       dispatch({ type: 'businessLevelOneList', payload: data });
       return data;
     };
     getBusinessLevelOneList();
-  }, [state.currentDepartment]);
+  }, [state.currentProduct]);
 
   useEffect(() => {
     const { currentBusinessLevelOne } = state;
@@ -113,13 +133,26 @@ function CMDBSelector(props) {
         <Select
           value={state.currentDepartment}
           onChange={value => dispatch({ type: 'department', payload: value })}
-          options={state.departmentList.map(item => ({ text: item.name, value: item.name }))}
+          options={state.departmentList.map(item => ({ text: item.name, value: item.id }))}
           searchable
           type="simulate"
           appearence="button"
           size="m"
           boxSizeSync
           // placeholder="选择集群"
+        />
+      </Form.Item>
+      <Form.Item label="产品">
+        <Select
+          value={state.currentProduct}
+          onChange={value => dispatch({ type: 'product', payload: value })}
+          options={state.productList.map(item => ({ text: item.name, value: item.id }))}
+          searchable
+          type="simulate"
+          appearence="button"
+          size="m"
+          boxSizeSync
+          // placeholder="选择产品"
         />
       </Form.Item>
       <Form.Item label="一级业务">

@@ -17,22 +17,16 @@ const jsonrpc = '2.0';
 export async function fetchDepartmentList() {
   let departmentList = [];
   const params: RequestParams = {
-    method: Method.post,
-    url: url + '?api_key=tencent_suanli_gaia',
-    data: {
-      method: 'GetDeptInfo',
-      jsonrpc,
-      params: {},
-      id: uuid()
-    }
+    method: Method.get,
+    url: url + '/allDept',
   };
   try {
     const response = await reduceNetworkRequest(params);
-    if (response.code === 0) {
-      departmentList = response.data.result.data.map(item => {
+    if (response.code === 0 && response.data.code === 100000) {
+      departmentList = response.data.data.items.map(item => {
         return {
           ...item,
-          value: item.Name,
+          value: item.Id,
           text: item.Name,
           tooltip: item.Name,
         };
@@ -46,31 +40,53 @@ export async function fetchDepartmentList() {
 }
 
 /**
- * 获取一级业务列表
- * @param department 部门信息
+ *获取产品信息
+ *param departmentId 部门信息
  */
-export async function fetchBsiPath1List(department: { dept_name: string }) {
-  // { dept_name: '58同城' }
-  let bsiPath1List = [];
+export async function fetchProductList(departmentId: number) {
+  let productList = [];
   const params: RequestParams = {
-    method: Method.post,
-    url: url + '?api_key=tencent_suanli_gaia',
-    data: {
-      method: 'GetBussiness1Info',
-      jsonrpc,
-      params: department,
-      id: uuid()
-    }
+    method: Method.get,
+    url: url + '/product?fatherId=' + departmentId,
   };
   try {
     const response = await reduceNetworkRequest(params);
-    if (!response.code) {
-      bsiPath1List = response.data.result.data.map(item => {
+    if (response.code === 0 && response.data.code === 100000) {
+      productList = response.data.data.items.map(item => {
         return {
           ...item,
-          value: item.bs1NameId,
-          text: item.bs1Name,
-          tooltip: item.bs1Name,
+          value: item.key,
+          text: item.title,
+          tooltip: item.title,
+        };
+      });
+    }
+    return productList;
+  } catch (error) {
+    tips.error(error, 2000);
+  }
+  return productList;
+}
+
+/**
+ * 获取一级业务列表
+ * @param productId 产品信息
+ */
+export async function fetchBsiPath1List(productId: number) {
+  let bsiPath1List = [];
+  const params: RequestParams = {
+    method: Method.get,
+    url: url + '/business1?fatherId=' + productId,
+  };
+  try {
+    const response = await reduceNetworkRequest(params);
+    if (response.code === 0 && response.data.code === 100000) {
+      bsiPath1List = response.data.data.items.map(item => {
+        return {
+          ...item,
+          value: item.key,
+          text: item.title,
+          tooltip: item.title,
         };
       });
     }
@@ -82,29 +98,23 @@ export async function fetchBsiPath1List(department: { dept_name: string }) {
 
 /**
  * 获取二级业务列表
- * @param bs1_info 一级业务信息
+ * @param bs1_name_id 一级业务信息
  */
-export async function fetchBsiPath2List(bs1_info: { bs1_name_id: number }) {
+export async function fetchBsiPath2List(bs1_name_id: number) {
   let bsiPath2List = [];
   const params: RequestParams = {
-    method: Method.post,
-    url: url + '?api_key=tencent_suanli_gaia',
-    data: {
-      method: 'GetBussiness2Info',
-      jsonrpc,
-      params: bs1_info,
-      id: uuid()
-    }
+    method: Method.get,
+    url: url + '/business2?fatherId=' + bs1_name_id,
   };
   try {
     const response = await reduceNetworkRequest(params);
-    if (!response.code) {
-      bsiPath2List = response.data.result.data.map(item => {
+    if (response.code === 0 && response.data.code === 100000) {
+      bsiPath2List = response.data.data.items.map(item => {
         return {
           ...item,
-          value: item.bs2NameId,
-          text: item.bs2Name,
-          tooltip: item.bs2Name,
+          value: item.key,
+          text: item.title,
+          tooltip: item.title,
         };
       });
     }
@@ -116,29 +126,23 @@ export async function fetchBsiPath2List(bs1_info: { bs1_name_id: number }) {
 
 /**
  * 获取三级业务列表
- * @param bs2_info 二级业务信息
+ * @param bs2_name_id 二级业务信息
  */
-export async function fetchBsiPath3List(bs2_info: { bs2_name_id: number }) {
+export async function fetchBsiPath3List(bs2_name_id: number) {
   let bsiPath3List = [];
   const params: RequestParams = {
-    method: Method.post,
-    url: url + '?api_key=tencent_suanli_gaia',
-    data: {
-      method: 'GetBussiness3Info',
-      jsonrpc,
-      params: bs2_info,
-      id: uuid()
-    }
+    method: Method.get,
+    url: url + '/business3?fatherId=' + bs2_name_id,
   };
   try {
     const response = await reduceNetworkRequest(params);
-    if (!response.code) {
-      bsiPath3List = response.data.result.data.map(item => {
+    if (response.code === 0 && response.data.code === 100000) {
+      bsiPath3List = response.data.data.items.map(item => {
         return {
           ...item,
-          value: item.bs3NameId,
-          text: item.bs3Name,
-          tooltip: item.bs3Name,
+          value: item.key,
+          text: item.title,
+          tooltip: item.title,
         };
       });
     }
