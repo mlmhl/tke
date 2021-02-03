@@ -595,7 +595,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   private async _handleSubmit() {
     let { actions, subRoot, route, region, clusterVersion, userInfo } = this.props,
       { mode, workloadEdit, serviceEdit } = subRoot;
-    const { isVolumeTemplateSetting } = this.state;
+    const isVolumeTemplateSetting  = this._enableVolumeTemplateSetting(workloadEdit.workloadType);
     const creator = userInfo.object.data && userInfo.object.data.name || '';
     const { current: volumeTemplateCurrent } = this.volumeTemplateRef;
     const { current: mySharedClusterCMDBRefCurrent } = this.mySharedClusterCMDBRef;
