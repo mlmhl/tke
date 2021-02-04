@@ -60,7 +60,10 @@ export class EditResourceVolumePanel extends React.Component<RootProps, {}> {
             )}
             <a href="https://iwiki.woa.com/pages/viewpage.action?pageId=554597924" target="_blank">
               指引
-            </a>.{' '}
+            </a>
+            {t(
+              '。'
+            )}
           </span>
         </p>
       </FormItem>

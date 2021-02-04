@@ -338,7 +338,13 @@ const EditResourceVolumeTemplatePanel = (props: ERVTPanel, ref) => {
       <p className="text-label">
         <span style={{ verticalAlign: '-1px' }}>
           {t(
-              '为 StatefulSet、TApp 类型的 Workload 提供 PVC 对象的模板'
+              '为 StatefulSet、TApp 类型的 Workload 提供 PVC 对象的模板。详细介绍请参考'
+          )}
+          <a href="https://iwiki.woa.com/pages/viewpage.action?pageId=554592121" target="_blank">
+            指引
+          </a>
+          {t(
+              '。'
           )}
         </span>
       </p>
