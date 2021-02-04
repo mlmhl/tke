@@ -114,4 +114,6 @@ export interface NamespaceCert {
   keyPem: string;
   caCertPem: string;
   apiServer: string;
+  apiServerIP: string;
+  apiServerHost: string;
 }

@@ -401,6 +401,8 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
       this.setState({ isShowKuctlDialog: false });
     };
     let certInfo = namespaceKubectlConfig.object && namespaceKubectlConfig.object.data;
+    let apiServerIP = certInfo && certInfo.apiServerIP;
+    let apiHost = certInfo && certInfo.apiServerHost;
     let clusterId = selection && selection.spec.clusterName;
     let np = selection && selection.spec.namespace;
     let userName = userInfo.object.data ? userInfo.object.data.name : '';
@@ -475,6 +477,13 @@ export class NamespaceTablePanel extends React.Component<RootProps, {}> {
               测试是否可正常访问您的命名空间下的资源。如果无法连接请查看是否已经开启公网访问或内网访问入口，并确保访问客户端在指定的网络环境内。
               如果返回 (Forbidden) 错误，请确保用户具有所在业务相应的权限。
             </p>
+            {
+            WEBPACK_CONFIG_SHARED_CLUSTER && (
+              <p style={{ marginBottom: '5px' }}>
+                4. 当 APIServer 地址为 clb 类型地址（形如 cls-xxxxxxxxxxxxx.clb.myqcloud.com）时， 您还需要在访问机上配置域名。请在访问机上执行以下命令：sudo sed -i &#39;$a {apiServerIP} {apiHost}&#39; /etc/hosts
+              </p>
+            )
+          }
           </div>
         </Modal.Body>
         <Modal.Footer>
