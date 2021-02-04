@@ -703,7 +703,7 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
     if (zoneStr) {
       const [prefix, area, number] = zoneStr.split('-');
       const zoneMap = newAreaMap[area]['zoneMap'];
-      const zoneData = zoneMap[zoneStr];
+      const zoneData = zoneMap ? zoneMap[zoneStr] : null;
       areaText = zoneMap ? (zoneData ? zoneData['text'] : '-') : '-';
       hard = zoneMap ? (zoneData ? zoneData['hard'] : '') : '';
       if (isReturnHard) {
