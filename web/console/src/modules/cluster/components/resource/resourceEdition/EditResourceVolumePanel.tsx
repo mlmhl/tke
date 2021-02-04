@@ -56,8 +56,11 @@ export class EditResourceVolumePanel extends React.Component<RootProps, {}> {
         <p className="text-label">
           <span style={{ verticalAlign: '-1px' }}>
             {t(
-              '为容器提供存储，目前支持使用临时目录、文件存储NFS、PVC、ConfigMap和Secret，还需挂载到容器的指定路径中。'
+              '为容器提供存储，目前支持使用临时目录、文件存储NFS、PVC、ConfigMap和Secret，还需挂载到容器的指定路径中。详细介绍请参考'
             )}
+            <a href="https://iwiki.woa.com/pages/viewpage.action?pageId=554597924" target="_blank">
+              指引
+            </a>.{' '}
           </span>
         </p>
       </FormItem>
