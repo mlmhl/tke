@@ -19,7 +19,7 @@ function BlankExample() {
               <>
                 <Button type="primary" onClick={() => {
                   const w = window.open('about:blank');
-                  w.location.href = 'http://exp.yunti.oa.com/tkebusiness/guide';
+                  w.location.href = 'https://yunti.oa.com/tkebusiness/guide';
                 }}>查看指引</Button>
               </>
             }
