@@ -259,18 +259,6 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                   onBlur={actions.validate.workload.validateWorkloadName}
                 />
               </FormItem>
-              <FormItem label={t('描述')}>
-                <InputField
-                  type="textarea"
-                  placeholder={t('请输入描述信息，不超过1000个字符')}
-                  tipMode="popup"
-                  validator={v_description}
-                  value={description}
-                  onChange={actions.editWorkload.inputWorkloadDesp}
-                  onBlur={actions.validate.workload.validateWorkloadDesp}
-                />
-              </FormItem>
-
               <EditResourceLabelPanel />
               <FormItem label={t('集群')}>
                 <FormPanel.InlineText style={{ marginLeft: 0 }}>
