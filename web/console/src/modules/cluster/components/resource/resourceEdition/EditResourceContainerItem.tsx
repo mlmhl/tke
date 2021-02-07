@@ -131,6 +131,17 @@ export class EditResourceContainerItem extends React.Component<ContainerItemProp
                         }}
                       />
                     </div>
+                    <p className="text-label">
+                      <span style={{ verticalAlign: '-1px' }}>
+                        {t(
+                              '同时支持公共镜像与私有镜像，详细介绍请参考'
+                        )}
+                        <a href="https://iwiki.woa.com/pages/viewpage.action?pageId=554592053" target="_blank">
+                          指引
+                        </a>
+                        {t('。')}
+                      </span>
+                    </p>
                   </FormItem>
 
                   <EditResourceContainerMountItem cKey={cKey} />
