@@ -710,9 +710,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           ? this._reduceNodeAffinityInfo(nodeAffinityType, nodeAffinityRule, computer.selections)
           : null;
 
-      // pod亲和性
-      const podAffinity = podAffinityType !== PodAffinityType.unset
-        ? this._reducePodAffinity(podAffinityType, workloadLabels)
+      // pod反亲和性
+      const podAntiAffinity = podAffinityType !== PodAffinityType.unset
+        ? this._reducePodAffinity(podAffinityType, true, workloadLabels)
         : null;
 
       // 如果选择了网络模式，需要把网络模式写在annotations当中
@@ -786,7 +786,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
       const affinity = {
         ...affinityInfo as object,
-        ...podAffinity as object,
+        ...podAntiAffinity as object,
       }
 
       // template的内容，因为cronJob是放在 jobTemplate当中
@@ -1413,7 +1413,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
    * 处理Pod亲和性，当前仅 k8s-app 生效。
    * @see {@link http://tapd.oa.com/TKEx_TEG/prong/stories/view/1020426652861936503}
    */
-  private _reducePodAffinity(podAffinityType: string, workloadLabels: any[]) {
+  private _reducePodAffinity(podAffinityType: string, anti: boolean, workloadLabels: any[]) {
     let podAffinity;
     const values = workloadLabels.filter(_ => _.labelKey === 'k8s-app').map(_ => _.labelValue);
 
@@ -1455,6 +1455,11 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         ],
       };
     }
+
+    if (anti) {
+      return { podAntiAffinity: podAffinity };
+    }
+
     return { podAffinity: podAffinity };
   }
 }
