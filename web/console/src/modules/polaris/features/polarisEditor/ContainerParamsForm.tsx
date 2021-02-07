@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import {
   Card,
+  Bubble,
+  Icon,
   Select,
   Text,
   Form,
@@ -235,144 +237,101 @@ const ContainerParamsForm = React.memo((params: ContainerFormModal) => {
         />
       </Form.Item>
       <Form.Item
-        label={t('选择 Pod')}
+        label={
+          <span>
+            <span style={{ marginRight: '5px' }}><Trans>选择Pod</Trans></span>
+            <Bubble
+              content="我们会根据您选择的Workload自动分析出Pod上的标签"
+            >
+              <Icon type="info" />
+            </Bubble>
+          </span>
+        }
         required
         showStatusIcon={false}
       >
-        <Controller
-          render={(
-                { onChange, onBlur, value, name, ref },
-                { invalid, isTouched, isDirty }
-            ) => (
-              <Radio.Group
-                // onBlur={onBlur}
-                onChange={onChange}
-                value={value}
-              >
-                <Radio name="byLabel">按 Label</Radio>
-                <Radio name="byName">按 Pod 名</Radio>
-              </Radio.Group>
-            )}
-          name="podChoice"
-          control={control}
-        />
-      </Form.Item>
-      {podChoice === 'byLabel' ? (
-        <Form.Item>
-          <Card bordered>
-            <Card.Body>
-              <Text style={{ fontSize: '14px' }}><Trans>selector:</Trans></Text>
-              <Card bordered>
-                <Card.Body>
-                  <>
-                    <Form.Item
-                      label={t('资源类型')}
-                      showStatusIcon={false}
-                      status={errors.resourceType ? 'error' : 'success'}
-                      message={errors.resourceType && errors.resourceType.message}
-                    >
-                      <Controller
-                        render={(
-                              { onChange, onBlur, value, name, ref },
-                              { invalid, isTouched, isDirty }
-                          ) => (
-                            <Radio.Group
-                              // onBlur={onBlur}
-                              onChange={onChange}
-                              value={value}
-                              // defalutValue="deployment"
-                            >
-                              <Radio name="deployments">Deployment</Radio>
-                              <Radio name="statefulsets">Statefulset</Radio>
-                              <Radio name="tapps">TAPP</Radio>
-                            </Radio.Group>
-                          )}
-                        name="resourceType"
-                        control={control}
-                      />
-                    </Form.Item>
-                    <Form.Item
-                      label={t('资源列表')}
-                      required
-                      showStatusIcon={false}
-                      status={errors.resource ? 'error' : 'success'}
-                      message={errors.resource && errors.resource.message}
-                    >
-                      <Controller
-                        render={(
-                              { onChange, onBlur, value, name, ref },
-                              { invalid, isTouched, isDirty }
-                          ) => (
-                            <Select
-                              // onBlur={onBlur}
-                              onChange={onChange}
-                              value={value}
-                              searchable
-                              boxSizeSync
-                              type="simulate"
-                              appearence="button"
-                              size="l"
-                              options={workloadList}
-                            />
-                          )}
-                        name="resource"
-                        control={control}
-                        rules={{ required: t('资源不能为空') }}
-                      />
-                    </Form.Item>
-                    <Form.Item label="Labels">
-                      <Form.Text>
-                        <List>
-                          {Object.keys(labels).map(item => (
-                            <List.Item key={item}>{`${item} : ${labels[item]}`}</List.Item>
-                              ))}
-                        </List>
-                      </Form.Text>
-                    </Form.Item>
-                  </>
-                </Card.Body>
-              </Card>
-              <br />
-              <Text style={{ fontSize: '14px' }}><Trans>排除 Pod:</Trans></Text>
-              <TableFormItem
-                name="excludePodNames"
+        <Card bordered>
+          <Card.Body>
+            <Form.Item
+              label={t('资源类型')}
+              showStatusIcon={false}
+              status={errors.resourceType ? 'error' : 'success'}
+              message={errors.resourceType && errors.resourceType.message}
+            >
+              <Controller
+                render={(
+                    { onChange, onBlur, value, name, ref },
+                    { invalid, isTouched, isDirty }
+                ) => (
+                  <Radio.Group
+                    // onBlur={onBlur}
+                    onChange={onChange}
+                    value={value}
+                    // defalutValue="deployment"
+                  >
+                    <Radio name="deployments">Deployment</Radio>
+                    <Radio name="statefulsets">Statefulset</Radio>
+                    <Radio name="tapps">TAPP</Radio>
+                  </Radio.Group>
+                )}
+                name="resourceType"
                 control={control}
-                errors={errors}
-                columns={[{
-                  key: 'name',
-                  header: '名称',
-                  type: TableItemType.input,
-                  defaultValue: '',
-                  rules: {
-                    required: t('名称不能为空'),
-                  },
-                }]}
               />
-            </Card.Body>
-          </Card>
-        </Form.Item>
-        ) : (
-          <Form.Item>
-            <TableFormItem
-              name="includePodNames"
-              control={control}
-              errors={errors}
-              minSize={1}
-              initialValue={includePods}
-              columns={[{
-                  key: 'name',
-                  header: '名称',
-                  type: TableItemType.input,
-                  defaultValue: '',
-                  rules: {
-                    required: t('名称不能为空'),
-                  },
-                }]
-              }
-            />
-          </Form.Item>
-        )}
-      <Form.Item label={t('Pod端口')} required>
+            </Form.Item>
+            <Form.Item
+              label={t('资源列表')}
+              required
+              showStatusIcon={false}
+              status={errors.resource ? 'error' : 'success'}
+              message={errors.resource && errors.resource.message}
+            >
+              <Controller
+                render={(
+                    { onChange, onBlur, value, name, ref },
+                    { invalid, isTouched, isDirty }
+                ) => (
+                  <Select
+                    // onBlur={onBlur}
+                    onChange={onChange}
+                    value={value}
+                    searchable
+                    boxSizeSync
+                    type="simulate"
+                    appearence="button"
+                    size="l"
+                    options={workloadList}
+                  />
+                )}
+                name="resource"
+                control={control}
+                rules={{ required: t('资源不能为空') }}
+              />
+            </Form.Item>
+            <Form.Item label="Pod标签">
+              <Form.Text>
+                <List>
+                  {Object.keys(labels).map(item => (
+                    <List.Item key={item}>{`${item} : ${labels[item]}`}</List.Item>
+                  ))}
+                </List>
+              </Form.Text>
+            </Form.Item>
+          </Card.Body>
+        </Card>
+      </Form.Item>
+      <Form.Item
+        label={
+          <span>
+            <span style={{ marginRight: '5px' }}><Trans>容器内端口</Trans></span>
+            <Bubble
+              content="如果在容器网络模式中选择了随机端口映射，则我们会在后台将容器内端口自动转换成母机上的随机端口，最终注册到北极星的是母机IP和端口。如果网络模式未选择随机端口映射或选择了ENI IP，则最终注册的是容器IP和端口"
+            >
+              <Icon type="info" />
+            </Bubble>
+          </span>
+        }
+        required
+      >
         <TableFormItem
           name="ports"
           control={control}
