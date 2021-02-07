@@ -283,7 +283,7 @@ export const affinityRuleOperator = [
 export const PodAffinityType = {
   possible: 'possible',
   force: 'force',
-  unset: 'unset'
+    unset: 'unset'
 };
 
 export const PodAffinityTypeList = [
