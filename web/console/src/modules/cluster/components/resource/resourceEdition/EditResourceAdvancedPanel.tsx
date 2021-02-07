@@ -49,6 +49,15 @@ export class EditResourceAdvancedPanel extends React.Component<EditResourceAdvan
               </Radio>
             ))}
           </Radio.Group>
+          <p className="text-label">
+            <span style={{ verticalAlign: '-1px' }}>
+              {t('用于将实例分散到不同的节点上，保证服务稳定性。详细介绍请参考')}
+              <a href="https://iwiki.woa.com/pages/viewpage.action?pageId=564095174" target="_blank">
+                指引
+              </a>
+              {t('。')}
+            </span>
+          </p>
         </FormItem>
         <EditResourceAnnotations />
         {/* <FormItem label={t('端口')} isShow={isShowPort}>
