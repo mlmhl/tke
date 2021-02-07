@@ -382,13 +382,15 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
               <EditResourceNetworkTypePanel />
               {
                 WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && (
-                  <FormItem>
+                  <FormItem label={t('业务信息')} >
                     <NewSharedClusterCmdbInfo ref={this.mySharedClusterCMDBRef} initialData={sharedClusterCmdbInitialData} />
+                    <p className="text-label">{t('不论是否开启CMDB录入，都需指定容器所属业务模块')}</p>
                   </FormItem>
                 )
               }
-              <FormItem label={t('业务信息')}>
+              <FormItem label={t('CMDB录入')}>
                 <NewCmdbInfo ref={this.myCMDBComponentRef} disabled={networkType !== WorkloadNetworkTypeEnum.FloatingIP} />
+                <p className="text-label">{t('只有网络模式为"ENI IP（公司内可路由IP）"时才可启用CMDB录入')}</p>
               </FormItem>
               <FormItem label={t('优雅终止等待时间')} >
                 <InputAdornment after="秒"><InputNumber max={65535} min={0} value={terminationGracePeriodSeconds} onChange={actions.editWorkload.changeTerminationGracePeriodSeconds} /></InputAdornment>

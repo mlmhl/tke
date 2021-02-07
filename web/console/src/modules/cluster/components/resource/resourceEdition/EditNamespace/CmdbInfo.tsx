@@ -203,7 +203,7 @@ export const CmdbInfo = (
       <Controller
         as={
           <Switch defaultValue={Boolean(isModify && defaultBusinessInfo)} value={cmdb && !disabled} disabled={disabled}>
-            <Trans>CMDB录入</Trans>
+            <Trans>启用录入</Trans>
           </Switch>
         }
         name="cmdb"
