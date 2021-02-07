@@ -141,6 +141,10 @@ export class DateTimePicker extends React.Component<DateTimePickerProps, any> {
     }
     return pickerValue;
   }
+  _getCondition(range, date) {
+    return (range.min && this.compare(date, range.min) < 0) ||
+        (range.max && this.compare(date, range.max) > 0);
+  }
   /**
    * 根据 props 获得初始日期和范围
    */
@@ -195,10 +199,7 @@ export class DateTimePicker extends React.Component<DateTimePickerProps, any> {
     // 根据 defaultValue 限定开始结束范围
     if (defaultValue.from) {
       const date = this.parse(`${dateFrom} ${timeFrom}`);
-      if (
-        (rangeFrom.min && this.compare(date, rangeFrom.min) < 0) ||
-        (rangeFrom.max && this.compare(date, rangeFrom.max) > 0)
-      ) {
+      if (this._getCondition(rangeFrom, date)) {
         return;
       }
       rangeTo.min = date;
@@ -208,10 +209,7 @@ export class DateTimePicker extends React.Component<DateTimePickerProps, any> {
     }
     if (defaultValue.to) {
       const date = this.parse(`${dateTo} ${timeTo}`);
-      if (
-        (rangeTo.min && this.compare(date, rangeTo.min) < 0) ||
-        (rangeTo.max && this.compare(date, rangeTo.max) > 0)
-      ) {
+      if (this._getCondition(rangeTo, date)) {
         return;
       }
       rangeFrom.max = date;

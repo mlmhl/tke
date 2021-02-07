@@ -321,30 +321,30 @@ export class TagSearchBox extends React.Component<TagSearchBoxProps, any> {
         this._handleClickInput(payload, active);
         break;
 
-      case 'move-left':
-        // if (index <= 0) return;
-        // if (index !== tags.length-1 || curPosType !== FocusPosType.INPUT) index--;
-        // this.markTagElect(index);
-        // this.setState({ curPosType: FocusPosType.TAG });
-        // this[`tag-${index}`].focusTag();
-        break;
-
-      case 'move-right':
-        // if (index >= tags.length - 1) return;
-        // if (curPosType === FocusPosType.INPUT) {
-        //   this.setState({ curPosType: FocusPosType.TAG });
-        // }
-        // // 到达最后input
-        // if (index === tags.length-1) {
-        //   this.markTagElect(-1);
-        //   this[`tag-${index}`].focusInput();
-        //   this.setState({ curPosType: FocusPosType.INPUT });
-        // } else {
-        //   this.markTagElect(index);
-        //   this[`tag-${index}`].focusTag();
-        // }
-        // index++;
-        break;
+      // case 'move-left':
+      //   // if (index <= 0) return;
+      //   // if (index !== tags.length-1 || curPosType !== FocusPosType.INPUT) index--;
+      //   // this.markTagElect(index);
+      //   // this.setState({ curPosType: FocusPosType.TAG });
+      //   // this[`tag-${index}`].focusTag();
+      //   break;
+      //
+      // case 'move-right':
+      //   // if (index >= tags.length - 1) return;
+      //   // if (curPosType === FocusPosType.INPUT) {
+      //   //   this.setState({ curPosType: FocusPosType.TAG });
+      //   // }
+      //   // // 到达最后input
+      //   // if (index === tags.length-1) {
+      //   //   this.markTagElect(-1);
+      //   //   this[`tag-${index}`].focusInput();
+      //   //   this.setState({ curPosType: FocusPosType.INPUT });
+      //   // } else {
+      //   //   this.markTagElect(index);
+      //   //   this[`tag-${index}`].focusTag();
+      //   // }
+      //   // index++;
+      //   break;
     }
 
     this.setState({ curPos: index });

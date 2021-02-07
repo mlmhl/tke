@@ -495,10 +495,11 @@ export const validatorActions = {
         result = result && validatorActions._validateAllMetadataItem(metadatas);
       }
     } else if (logMode === 'containerFile') {
-      result = result && validatorActions._validateContainerFileNamespace(containerFileNamespace).status === 1;
-      result = result && validatorActions._validateContainerFileWorkloadType(containerFileWorkloadType).status === 1;
-      result = result && validatorActions._validateContainerFileWorkload(containerFileWorkload).status === 1;
-      result = result && validatorActions._validateAllContainerFilePath(containerFilePaths);
+      result = validatorActions._containerFileValid({ result, containerFileNamespace, containerFileWorkloadType, containerFileWorkload, containerFilePaths });
+      // result = result && validatorActions._validateContainerFileNamespace(containerFileNamespace).status === 1;
+      // result = result && validatorActions._validateContainerFileWorkloadType(containerFileWorkloadType).status === 1;
+      // result = result && validatorActions._validateContainerFileWorkload(containerFileWorkload).status === 1;
+      // result = result && validatorActions._validateAllContainerFilePath(containerFilePaths);
     }
 
     // 校验消费端的相关合法性
@@ -530,7 +531,14 @@ export const validatorActions = {
     }
     return result;
   },
-
+  _containerFileValid({ result, containerFileNamespace, containerFileWorkloadType, containerFileWorkload, containerFilePaths }) {
+    let newResult = result;
+    newResult = newResult && validatorActions._validateContainerFileNamespace(containerFileNamespace).status === 1;
+    newResult = newResult && validatorActions._validateContainerFileWorkloadType(containerFileWorkloadType).status === 1;
+    newResult = newResult && validatorActions._validateContainerFileWorkload(containerFileWorkload).status === 1;
+    newResult = newResult && validatorActions._validateAllContainerFilePath(containerFilePaths);
+    return newResult;
+  },
   validateLogStashEdit() {
     return async (dispatch: Redux.Dispatch, getState: GetState) => {
       let { logStashEdit, clusterVersion } = getState(),

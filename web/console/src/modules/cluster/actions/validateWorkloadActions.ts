@@ -1640,29 +1640,24 @@ export const validateWorkloadActions = {
     // 如果有健康检查，则校验健康检查
     if (container.healthCheck.isOpenLiveCheck) {
       const liveCheck = container.healthCheck.liveCheck;
-      state =
-        state ||
-        liveCheck.v_port.status === 2 ||
-        liveCheck.v_delayTime.status === 2 ||
-        liveCheck.v_timeOut.status === 2 ||
-        liveCheck.v_intervalTime.status === 2 ||
-        liveCheck.v_healthThreshold.status === 2 ||
-        liveCheck.v_unhealthThreshold.status === 2;
+      state = state || this._getStatusByCheckValue(liveCheck);
     }
 
     if (container.healthCheck.isOpenReadyCheck) {
       const readyCheck = container.healthCheck.readyCheck;
-      state =
-        state ||
-        readyCheck.v_port.status === 2 ||
-        readyCheck.v_delayTime.status === 2 ||
-        readyCheck.v_timeOut.status === 2 ||
-        readyCheck.v_intervalTime.status === 2 ||
-        readyCheck.v_healthThreshold.status === 2 ||
-        readyCheck.v_unhealthThreshold.status === 2;
+      state = state || this._getStatusByCheckValue(readyCheck);
     }
 
     return !state && !!container.name && !!container.registry;
+  },
+
+  _getStatusByCheckValue(check) {
+    return check.v_port.status === 2 ||
+        check.v_delayTime.status === 2 ||
+        check.v_timeOut.status === 2 ||
+        check.v_intervalTime.status === 2 ||
+        check.v_healthThreshold.status === 2 ||
+        check.v_unhealthThreshold.status === 2;
   },
 
   /** 校验容器的所有参数是否已经全部ok */
@@ -2093,10 +2088,11 @@ export const validateWorkloadActions = {
 
     // workloadType为 cronjob 或者 job的时候，需要校验 重复次数 和 并行数
     if (isCronJob || isJob) {
-      result =
-        result &&
-        validateWorkloadActions._validateJobCompletion(+workloadEdit.completion).status === 1 &&
-        validateWorkloadActions._validateJobParallel(+workloadEdit.parallelism).status === 1;
+      result = validateWorkloadActions._hasDataValidate(result, workloadEdit);
+      // result =
+      //   result &&
+      //   validateWorkloadActions._validateJobCompletion(+workloadEdit.completion).status === 1 &&
+      //   validateWorkloadActions._validateJobParallel(+workloadEdit.parallelism).status === 1;
     }
 
     // 如果当前是deployment 并且实例更新方式为autoScale
@@ -2136,6 +2132,11 @@ export const validateWorkloadActions = {
       validateWorkloadActions._validateAllNfsPath(workloadEdit.volumes) &&
       validateWorkloadActions._validateAllHostPath(workloadEdit.volumes) &&
       validateWorkloadActions._validateAllVolumeIsMounted(workloadEdit.volumes, workloadEdit.containers).allIsMounted;
+  },
+  _hasDataValidate(result, workloadEdit) {
+    return result &&
+        validateWorkloadActions._validateAllWorkloadAnnotationsKey(workloadEdit.workloadAnnotations) &&
+        validateWorkloadActions._validateAllWorkloadAnnotationsValue(workloadEdit.workloadAnnotations);
   },
   _autoScaleSubValidate(result, workloadEdit) {
     return result &&

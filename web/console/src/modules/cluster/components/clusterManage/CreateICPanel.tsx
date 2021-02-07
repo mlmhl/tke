@@ -216,18 +216,7 @@ export class CreateICPanel extends React.Component<RootProps, State> {
             <FormPanel.Item
               label="VIP地址"
               isShow={vipType !== CreateICVipType.unuse}
-              message={
-                vipType === CreateICVipType.tke ? (
-                  '用户需要提供一个可用的IP地址，保证该IP和各master节点可以正常联通，TKE会为集群部署keepalived并配置该IP为VIP'
-                ) : (
-                  <Trans>
-                    <p>
-                      在用户自定义VIP情况下，VIP后端需要绑定6443（kube-apiserver端口）端口，同时请确保该VIP有至少两个LB后端（master),
-                    </p>
-                    <p>由于LB自身路由问题，单LB后端情况下存在集群不可用风险。</p>
-                  </Trans>
-                )
-              }
+              message={_getVipMessages(vipType)}
             >
               <InputField
                 type="text"
@@ -387,4 +376,16 @@ export class CreateICPanel extends React.Component<RootProps, State> {
       </ContentView>
     );
   }
+}
+function _getVipMessages(vipType) {
+  return vipType === CreateICVipType.tke ? (
+      '用户需要提供一个可用的IP地址，保证该IP和各master节点可以正常联通，TKE会为集群部署keepalived并配置该IP为VIP'
+  ) : (
+    <Trans>
+      <p>
+        在用户自定义VIP情况下，VIP后端需要绑定6443（kube-apiserver端口）端口，同时请确保该VIP有至少两个LB后端（master),
+      </p>
+      <p>由于LB自身路由问题，单LB后端情况下存在集群不可用风险。</p>
+    </Trans>
+  );
 }

@@ -345,23 +345,24 @@ export class UpdateWorkloadRegistryPanel extends React.Component<RootProps, Upda
       let isRollingUpdate = resourceUpdateType === 'RollingUpdate';
 
       // 获取deployment滚动更新的内容
-      let deploymentRollingUpdateContent = {};
-      if (isDeployment && isRollingUpdate) {
-        deploymentRollingUpdateContent = {
-          maxSurge:
-            rollingUpdateStrategy === 'userDefined'
-              ? +maxSurge
-              : rollingUpdateStrategy === 'createPod'
-              ? +batchSize
-              : 0,
-          maxUnavailable:
-            rollingUpdateStrategy === 'userDefined'
-              ? +maxUnavailable
-              : rollingUpdateStrategy === 'createPod'
-              ? 0
-              : +batchSize
-        };
-      }
+      let deploymentRollingUpdateContent = this._getDeploymentRollingUpdateContent({ isDeployment, isRollingUpdate, rollingUpdateStrategy, maxSurge, batchSize, maxUnavailable });
+      // let deploymentRollingUpdateContent = {};
+      // if (isDeployment && isRollingUpdate) {
+      //   deploymentRollingUpdateContent = {
+      //     maxSurge:
+      //       rollingUpdateStrategy === 'userDefined'
+      //         ? +maxSurge
+      //         : rollingUpdateStrategy === 'createPod'
+      //         ? +batchSize
+      //         : 0,
+      //     maxUnavailable:
+      //       rollingUpdateStrategy === 'userDefined'
+      //         ? +maxUnavailable
+      //         : rollingUpdateStrategy === 'createPod'
+      //         ? 0
+      //         : +batchSize
+      //   };
+      // }
 
       // statefulset滚动更新的内容
       let statefulsetRollingUpdateContent = {};
@@ -456,6 +457,26 @@ export class UpdateWorkloadRegistryPanel extends React.Component<RootProps, Upda
       actions.workflow.updateResourcePart.start([resource], +route.queries['rid']);
       actions.workflow.updateResourcePart.perform();
     }
+  }
+
+  private _getDeploymentRollingUpdateContent({ isDeployment, isRollingUpdate, rollingUpdateStrategy, maxSurge, batchSize, maxUnavailable }) {
+    if (isDeployment && isRollingUpdate) {
+      return {
+        maxSurge:
+            rollingUpdateStrategy === 'userDefined'
+                ? +maxSurge
+                : rollingUpdateStrategy === 'createPod'
+                ? +batchSize
+                : 0,
+        maxUnavailable:
+            rollingUpdateStrategy === 'userDefined'
+                ? +maxUnavailable
+                : rollingUpdateStrategy === 'createPod'
+                ? 0
+                : +batchSize
+      };
+    }
+    return {};
   }
 
   private _getContainerInfo(containers, targetResource, isTapp) {

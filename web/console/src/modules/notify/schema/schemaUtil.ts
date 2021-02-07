@@ -112,7 +112,8 @@ export function getState(schema, component: React.Component, rootObj?, obj?) {
     return {
       ...schema,
       value,
-      activeTimestamp: schema.activeTimestamp === 0 ? Boolean(value) : schema.activeTimestamp,
+      activeTimestamp: _getActiveTimestamp(schema, value),
+      // activeTimestamp: schema.activeTimestamp === 0 ? Boolean(value) : schema.activeTimestamp,
       component
     };
   }
@@ -123,7 +124,8 @@ export function getState(schema, component: React.Component, rootObj?, obj?) {
       ...schema,
       key: Object.keys(obj || {})[0] || 'exact',
       value,
-      activeTimestamp: schema.activeTimestamp === 0 ? Boolean(value) : schema.activeTimestamp,
+      activeTimestamp: _getActiveTimestamp(schema, value),
+      // activeTimestamp: schema.activeTimestamp === 0 ? Boolean(value) : schema.activeTimestamp,
       component
     };
   }
@@ -134,17 +136,27 @@ export function getState(schema, component: React.Component, rootObj?, obj?) {
       ...schema,
       key,
       value: getState(schema.value, component, rootObj, Object.values(obj || {})[0]),
-      activeTimestamp: schema.activeTimestamp === 0 ? Boolean(key) : schema.activeTimestamp,
+      activeTimestamp: _getActiveTimestamp(schema, key),
+      // activeTimestamp: schema.activeTimestamp === 0 ? Boolean(key) : schema.activeTimestamp,
       component
     };
   }
 
   if (schema.type === 'duration') {
+    let newValue = schema.value;
+    let newUnit = schema.unit;
+    if (obj !== undefined) {
+      newValue = /\d+/.exec(obj)[0];
+      newUnit = /[a-zA-Z]+/.exec(obj)[0];
+    }
     return {
       ...schema,
-      value: obj !== undefined ? /\d+/.exec(obj)[0] : schema.value,
-      unit: obj !== undefined ? /[a-zA-Z]+/.exec(obj)[0] : schema.unit,
-      activeTimestamp: schema.activeTimestamp === 0 ? Boolean(obj) : schema.activeTimestamp,
+      value: newValue,
+      unit: newUnit,
+      // value: obj !== undefined ? /\d+/.exec(obj)[0] : schema.value,
+      // unit: obj !== undefined ? /[a-zA-Z]+/.exec(obj)[0] : schema.unit,
+      activeTimestamp: _getActiveTimestamp(schema, obj),
+      // activeTimestamp: schema.activeTimestamp === 0 ? Boolean(obj) : schema.activeTimestamp,
       component
     };
   }
@@ -162,8 +174,12 @@ export function getState(schema, component: React.Component, rootObj?, obj?) {
     ...schema,
     value: _getValue(obj, schema),
     component,
-    activeTimestamp: schema.activeTimestamp === 0 ? Boolean(obj) : schema.activeTimestamp
+    activeTimestamp: _getActiveTimestamp(schema, obj),
+    // activeTimestamp: schema.activeTimestamp === 0 ? Boolean(obj) : schema.activeTimestamp
   };
+}
+function _getActiveTimestamp(schema, value) {
+  return schema.activeTimestamp === 0 ? Boolean(value) : schema.activeTimestamp;
 }
 
 function _getValue(obj, schema) {
@@ -327,9 +343,10 @@ export function schemaObjToJSON(obj, skipPrivateValue = true) {
   }
 
   if (obj.type === 'stringArray') {
-    let value = typeof obj.value === 'string' ? obj.value.split('\n') : obj.value;
-    value = value.map(l => l.trim()).filter(l => l);
-    return value;
+    return _stringArrayParse(obj);
+    // let value = typeof obj.value === 'string' ? obj.value.split('\n') : obj.value;
+    // value = value.map(l => l.trim()).filter(l => l);
+    // return value;
   }
 
   if (obj.type === 'array') {
@@ -348,14 +365,15 @@ export function schemaObjToJSON(obj, skipPrivateValue = true) {
   }
 
   if (obj.type === 'map') {
-    if (!obj.key || !(obj.value && obj.value.key && obj.value.value !== undefined)) {
-      return undefined;
-    }
-    return {
-      [obj.key]: {
-        [obj.value.key]: obj.value.value
-      }
-    };
+    return _mapParse(obj);
+    // if (!obj.key || !(obj.value && obj.value.key && obj.value.value !== undefined)) {
+    //   return undefined;
+    // }
+    // return {
+    //   [obj.key]: {
+    //     [obj.value.key]: obj.value.value
+    //   }
+    // };
   }
 
   if (obj.type === 'labels') {
@@ -409,6 +427,23 @@ function _propertyParse(obj, skipPrivateValue) {
     return undefined;
   }
   return json;
+}
+
+function _mapParse(obj) {
+  if (!obj.key || !(obj.value && obj.value.key && obj.value.value !== undefined)) {
+    return undefined;
+  }
+  return {
+    [obj.key]: {
+      [obj.value.key]: obj.value.value
+    }
+  };
+}
+
+function _stringArrayParse(obj) {
+  let value = typeof obj.value === 'string' ? obj.value.split('\n') : obj.value;
+  value = value.map(l => l.trim()).filter(l => l);
+  return value;
 }
 
 export function cloneSchemaObj(schema, obj, component: React.Component) {

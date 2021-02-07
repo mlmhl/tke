@@ -85,14 +85,23 @@ export function SelectICComputerPanel({
     computer ? validateValue(computer.ipList, rules.ipList) : initValidator
   );
   let [v_username, setV_username] = React.useState<Validation>(
-    computer && computer.authType === 'password' ? validateValue(computer.username, rules.username) : initValidator
+      () => _usenameInit(computer)
   );
+  // let [v_username, setV_username] = React.useState<Validation>(
+  //   computer && computer.authType === 'password' ? validateValue(computer.username, rules.username) : initValidator
+  // );
   let [v_password, setV_password] = React.useState<Validation>(
-    computer && computer.authType === 'password' ? validateValue(computer.password, rules.password) : initValidator
+      () => _passwordInit(computer)
   );
+  // let [v_password, setV_password] = React.useState<Validation>(
+  //   computer && computer.authType === 'password' ? validateValue(computer.password, rules.password) : initValidator
+  // );
   let [v_privateKey, setV_privateKey] = React.useState<Validation>(
-    computer && computer.authType === 'cert' ? validateValue(computer.privateKey, rules.privateKey) : initValidator
+      () => _privateKeyInit(computer)
   );
+  // let [v_privateKey, setV_privateKey] = React.useState<Validation>(
+  //   computer && computer.authType === 'cert' ? validateValue(computer.privateKey, rules.privateKey) : initValidator
+  // );
   let canSave = v_ipList.status === 1 && labelsIsValid;
   if (authType === 'password') {
     canSave = canSave && v_username.status !== 2 && v_password.status === 1;
@@ -269,4 +278,15 @@ export function SelectICComputerPanel({
       </FormPanel.Item>
     </FormPanel>
   );
+}
+function _usenameInit(computer) {
+  return computer && computer.authType === 'password' ? validateValue(computer.username, rules.username) : initValidator;
+}
+
+function _passwordInit(computer) {
+  return computer && computer.authType === 'password' ? validateValue(computer.password, rules.password) : initValidator;
+}
+
+function _privateKeyInit(computer) {
+  return computer && computer.authType === 'cert' ? validateValue(computer.privateKey, rules.privateKey) : initValidator;
 }

@@ -358,30 +358,21 @@ export class TimePicker extends React.Component<TimePickerProps, any> {
     if (start >= 0 && end <= 2) {
       type = 'hour';
       value.hour = (value.hour + 1) % 24;
-      if (
-          ('min' in hourRange && value.hour < hourRange.min) ||
-          ('max' in hourRange && value.hour > hourRange.max)
-      ) {
+      if (this._handleCondition(hourRange, value.hour)) {
         value.hour = hourRange.min || 0;
       }
     }
     if (start >= 3 && end <= 5) {
       type = 'minute';
       value.minute = (value.minute + 1) % 60;
-      if (
-          ('min' in minuteRange && value.minute < minuteRange.min) ||
-          ('max' in minuteRange && value.minute > minuteRange.max)
-      ) {
+      if (this._handleCondition(minuteRange, value.minute)) {
         value.minute = minuteRange.min || 0;
       }
     }
     if (start >= 6 && end <= 8) {
       type = 'second';
       value.second = (value.second + 1) % 60;
-      if (
-          ('min' in secondRange && value.second < secondRange.min) ||
-          ('max' in secondRange && value.second > secondRange.max)
-      ) {
+      if (this._handleCondition(secondRange, value.second)) {
         value.second = secondRange.min || 0;
       }
     }
@@ -393,34 +384,31 @@ export class TimePicker extends React.Component<TimePickerProps, any> {
     if (start >= 0 && end <= 2) {
       type = 'hour';
       value.hour = (value.hour - 1 + 24) % 24;
-      if (
-          ('min' in hourRange && value.hour < hourRange.min) ||
-          ('max' in hourRange && value.hour > hourRange.max)
-      ) {
+      if (this._handleCondition(hourRange, value.hour)) {
         value.hour = hourRange.max || 24;
       }
     }
     if (start >= 3 && end <= 5) {
       type = 'minute';
       value.minute = (value.minute - 1 + 60) % 60;
-      if (
-          ('min' in minuteRange && value.minute < minuteRange.min) ||
-          ('max' in minuteRange && value.minute > minuteRange.max)
-      ) {
+      if (this._handleCondition(minuteRange, value.minute)) {
         value.minute = minuteRange.max || 60;
       }
     }
     if (start >= 6 && end <= 8) {
       type = 'second';
       value.second = (value.second - 1 + 60) % 60;
-      if (
-          ('min' in secondRange && value.second < secondRange.min) ||
-          ('max' in secondRange && value.second > secondRange.max)
-      ) {
+
+      if (this._handleCondition(secondRange, value.second)) {
         value.second = secondRange.max || 60;
       }
     }
     return { type, value };
+  }
+
+  _handleCondition(range, value) {
+    return ('min' in range && value < range.min) ||
+    ('max' in range && value > range.max)
   }
 
   render() {
