@@ -82,6 +82,21 @@ export class CreateICPanel extends React.Component<RootProps, State> {
       this.addComputer();
     }
   }
+  _getCancel({ workflow, action }) {
+    const { actions, route } = this.props;
+     return () => {
+      if (workflow.operationState === OperationState.Done) {
+        action.reset();
+      }
+
+      if (workflow.operationState === OperationState.Started) {
+        action.cancel();
+      }
+      action.reset();
+      actions.clusterCreation.clearClusterCreationState();
+      router.navigate({}, { rid: route.queries['rid'] });
+    };
+  }
   render() {
     let { actions, createIC, route, createICWorkflow } = this.props,
       {
@@ -123,18 +138,19 @@ export class CreateICPanel extends React.Component<RootProps, State> {
 
     const workflow = createICWorkflow;
     const action = actions.workflow.createIC;
-    const cancel = () => {
-      if (workflow.operationState === OperationState.Done) {
-        action.reset();
-      }
-
-      if (workflow.operationState === OperationState.Started) {
-        action.cancel();
-      }
-      action.reset();
-      actions.clusterCreation.clearClusterCreationState();
-      router.navigate({}, { rid: route.queries['rid'] });
-    };
+    const cancel = this._getCancel({ workflow, action });
+    // const cancel = () => {
+    //   if (workflow.operationState === OperationState.Done) {
+    //     action.reset();
+    //   }
+    //
+    //   if (workflow.operationState === OperationState.Started) {
+    //     action.cancel();
+    //   }
+    //   action.reset();
+    //   actions.clusterCreation.clearClusterCreationState();
+    //   router.navigate({}, { rid: route.queries['rid'] });
+    // };
 
     const perform = () => {
       action.start([createIC]);

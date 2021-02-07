@@ -89,7 +89,15 @@ export class InputField extends React.Component<InputFieldProps, InputFieldState
       this.setState({ data: nextProps.value });
     }
   }
-
+  _getBubbleContent({ validator, disabled, disabeldTip, error }) {
+    if (validator && validator.status === 2) {
+      return error;
+    }
+    if (disabled && disabeldTip) {
+      return disabeldTip;
+    }
+    return '';
+  }
   render() {
     const {
       type,
@@ -161,13 +169,8 @@ export class InputField extends React.Component<InputFieldProps, InputFieldState
       </p>
     );
 
-    let bubbleContent: string | React.ReactNode = '';
-    if (validator && validator.status === 2) {
-      bubbleContent = error;
-    }
-    if (disabled && disabeldTip) {
-      bubbleContent = disabeldTip;
-    }
+    let bubbleContent: string | React.ReactNode = this._getBubbleContent({ validator, disabled, disabeldTip, error });
+
     return (
       <div
         className={classnames('form-unit', { 'is-error': validator && validator.status === 2 })}

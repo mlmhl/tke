@@ -90,7 +90,26 @@ class NotifyApp extends React.Component<RootProps, any> {
       actions.resource[resourceName].clearPolling && actions.resource[resourceName].clearPolling();
     }
   }
-
+  _getContentByResourceName(resourceName) {
+    let content;
+    switch (resourceName) {
+      case 'channel':
+        content = <ResourceDetailChannel {...this.props} />;
+        break;
+      case 'template':
+        content = <ResourceDetailTempalte {...this.props} />;
+        break;
+      case 'receiver':
+        content = <ResourceDetailReceiver {...this.props} />;
+        break;
+      case 'receiverGroup':
+        content = <ResourceDetailReceiverGroup {...this.props} />;
+        break;
+      default:
+        content = <ResourceDetail {...this.props} />;
+    }
+    return content;
+  }
   render() {
     let { route } = this.props;
     const urlParams = router.resolve(route);
@@ -100,23 +119,7 @@ class NotifyApp extends React.Component<RootProps, any> {
     switch (urlParams.mode) {
       case 'detail':
         header = <ResourceHeader {...this.props} />;
-
-        switch (urlParams.resourceName) {
-          case 'channel':
-            content = <ResourceDetailChannel {...this.props} />;
-            break;
-          case 'template':
-            content = <ResourceDetailTempalte {...this.props} />;
-            break;
-          case 'receiver':
-            content = <ResourceDetailReceiver {...this.props} />;
-            break;
-          case 'receiverGroup':
-            content = <ResourceDetailReceiverGroup {...this.props} />;
-            break;
-          default:
-            content = <ResourceDetail {...this.props} />;
-        }
+        content = this._getContentByResourceName(urlParams.resourceName);
         break;
 
       case 'create':

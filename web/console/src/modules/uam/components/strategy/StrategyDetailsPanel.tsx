@@ -60,16 +60,7 @@ export const StrategyDetailsPanel = () => {
   const categoryId = route.queries['id'];
   const { business, platform, realProject } = TabType;
 
-  let tabs;
-  if (sub === platform) {
-    tabs = [
-      { id: 'actions', label: '策略语法' },
-      { id: 'users', label: '关联用户' },
-      { id: 'groups', label: '关联用户组' }
-    ];
-  } else {
-    tabs = [{ id: 'actions', label: '策略语法' }];
-  }
+  let tabs = _getTabs(sub);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [basicParamsValue, setBasicParamsValue] = useState({ name: '', description: '' });
@@ -186,7 +177,7 @@ export const StrategyDetailsPanel = () => {
                     }}
                   />
                 ) : (
-                  <span className="item-descr-txt">{strategy.spec.displayName || '-'}</span>
+                  <span className="item-descr-txt">{_getShowValue(strategy.spec.displayName)}</span>
                 )}
                 {editValue.editBasic && isNameError && <p className="is-error">输入不能为空且需要小于256个字符</p>}
               </li>
@@ -199,7 +190,7 @@ export const StrategyDetailsPanel = () => {
                     onChange={(value) => setBasicParamsValue({ ...basicParamsValue, description: value })}
                   />
                 ) : (
-                  <span className="item-descr-txt">{strategy.spec.description || '-'}</span>
+                  <span className="item-descr-txt">{_getShowValue(strategy.spec.description)}</span>
                 )}
               </li>
               <li>
@@ -473,3 +464,20 @@ export const StrategyDetailsPanel = () => {
     });
   }
 };
+function _getTabs(sub) {
+  const { platform } = TabType;
+  let tabs;
+  if (sub === platform) {
+    tabs = [
+      { id: 'actions', label: '策略语法' },
+      { id: 'users', label: '关联用户' },
+      { id: 'groups', label: '关联用户组' }
+    ];
+  } else {
+    tabs = [{ id: 'actions', label: '策略语法' }];
+  }
+  return tabs;
+}
+function _getShowValue(value) {
+  return value || '-';
+}

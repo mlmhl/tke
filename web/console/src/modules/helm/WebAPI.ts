@@ -92,43 +92,23 @@ export async function checkClusterHelmStatus(regionId: number = 1, clusterId: st
   let response = await GET(url, regionId, clusterId);
 
   let ret = response;
-  if (
-    ret.items &&
-    ret.items.length &&
-    ret.items[0].status.phase &&
-    (ret.items[0].status.phase as string).toLowerCase() === 'running'
-  ) {
+  const parse = ret.items &&
+  ret.items.length &&
+  ret.items[0].status.phase &&
+  (ret.items[0].status.phase as string).toLowerCase();
+
+  if (parse === 'running') {
     return { code: ClusterHelmStatus.RUNNING, reason: '' };
-  } else if (
-    ret.items &&
-    ret.items.length &&
-    ret.items[0].status.phase &&
-    (ret.items[0].status.phase as string).toLowerCase() === 'checking'
-  ) {
+  } else if (parse === 'checking') {
     return { code: ClusterHelmStatus.CHECKING, reason: '' };
-  } else if (
-    ret.items &&
-    ret.items.length &&
-    ret.items[0].status.phase &&
-    (ret.items[0].status.phase as string).toLowerCase() === 'initializing'
-  ) {
+  } else if (parse === 'initializing') {
     return { code: ClusterHelmStatus.INIT, reason: '' };
-  } else if (
-    ret.items &&
-    ret.items.length &&
-    ret.items[0].status.phase &&
-    (ret.items[0].status.phase as string).toLowerCase() === 'failed'
-  ) {
+  } else if (parse === 'failed') {
     return {
       code: ClusterHelmStatus.ERROR,
       reason: ret.items[0].status.reason
     };
-  } else if (
-    ret.items &&
-    ret.items.length &&
-    ret.items[0].status.phase &&
-    (ret.items[0].status.phase as string).toLowerCase() === 'reinitializing'
-  ) {
+  } else if (parse === 'reinitializing') {
     return {
       code: ClusterHelmStatus.REINIT,
       reason: ret.items[0].status.reason

@@ -185,65 +185,91 @@ export class RegionBar extends React.Component<RegionBarProps, {}> {
                 } else {
                   /* eslint-disable */
                   let { list, selectItem } = this._rendRegionItem();
-                  if (mode === 'downMenu') {
-                    element = <DownMenu list={list} selected={selectItem} onSelect={onSelect} />;
-                  } else if (mode === 'cardMenu') {
-                    element = <CardMenu list={list} selected={selectItem} onSelect={onSelect} />;
-                  } else {
-                    element = (
-                      <ButtonBar
-                        isNeedPureText={!!isNeedPureText}
-                        list={list}
-                        size="m"
-                        selected={selectItem}
-                        onSelect={onSelect}
-                        bubbleDirection={merge ? 'left' : 'bottom'}
-                      />
-                    );
-                  }
+                  const elementResult = this._getElement({element, mode, list, selectItem, onSelect, isNeedPureText, merge});
+                  element = elementResult;
+                  // if (mode === 'downMenu') {
+                  //   element = <DownMenu list={list} selected={selectItem} onSelect={onSelect} />;
+                  // } else if (mode === 'cardMenu') {
+                  //   element = <CardMenu list={list} selected={selectItem} onSelect={onSelect} />;
+                  // } else {
+                  //   element = (
+                  //     <ButtonBar
+                  //       isNeedPureText={!!isNeedPureText}
+                  //       list={list}
+                  //       size="m"
+                  //       selected={selectItem}
+                  //       onSelect={onSelect}
+                  //       bubbleDirection={merge ? 'left' : 'bottom'}
+                  //     />
+                  //   );
+                  // }
                   /* eslint-enable */
                 }
             }
           } else {
             let { list, selectItem } = this._rendRegionItem();
-            if (mode === 'downMenu') {
-              element = <DownMenu list={list} selected={selectItem} onSelect={onSelect} />;
-            } else if (mode === 'cardMenu') {
-              element = <CardMenu list={list} selected={selectItem} onSelect={onSelect} />;
-            } else {
-              element = (
-                <ButtonBar
-                  isNeedPureText={!!isNeedPureText}
-                  list={list}
-                  size="m"
-                  selected={selectItem}
-                  onSelect={onSelect}
-                  bubbleDirection={merge ? 'left' : 'bottom'}
-                />
-              );
-            }
+            const elementResult = this._getElement({ element, mode, list, selectItem, onSelect, isNeedPureText, merge });
+            element = elementResult;
+            // if (mode === 'downMenu') {
+            //   element = <DownMenu list={list} selected={selectItem} onSelect={onSelect} />;
+            // } else if (mode === 'cardMenu') {
+            //   element = <CardMenu list={list} selected={selectItem} onSelect={onSelect} />;
+            // } else {
+            //   element = (
+            //     <ButtonBar
+            //       isNeedPureText={!!isNeedPureText}
+            //       list={list}
+            //       size="m"
+            //       selected={selectItem}
+            //       onSelect={onSelect}
+            //       bubbleDirection={merge ? 'left' : 'bottom'}
+            //     />
+            //   );
+            // }
           }
       }
     } else if (recordList) {
       let { list, selectItem } = this._rendRegionItem();
-      if (mode === 'downMenu') {
-        element = <DownMenu list={list} selected={selectItem} onSelect={onSelect} />;
-      } else if (mode === 'cardMenu') {
-        element = <CardMenu list={list} selected={selectItem} onSelect={onSelect} />;
-      } else {
-        element = (
-          <ButtonBar
-            isNeedPureText={!!isNeedPureText}
-            list={list}
-            size="m"
-            selected={selectItem}
-            onSelect={onSelect}
-            bubbleDirection={merge ? 'left' : 'bottom'}
-          />
-        );
-      }
+      const elementResult = this._getElement({ element, mode, list, selectItem, onSelect, isNeedPureText, merge });
+      element = elementResult;
+      // if (mode === 'downMenu') {
+      //   element = <DownMenu list={list} selected={selectItem} onSelect={onSelect} />;
+      // } else if (mode === 'cardMenu') {
+      //   element = <CardMenu list={list} selected={selectItem} onSelect={onSelect} />;
+      // } else {
+      //   element = (
+      //     <ButtonBar
+      //       isNeedPureText={!!isNeedPureText}
+      //       list={list}
+      //       size="m"
+      //       selected={selectItem}
+      //       onSelect={onSelect}
+      //       bubbleDirection={merge ? 'left' : 'bottom'}
+      //     />
+      //   );
+      // }
     }
     return element;
+  }
+  _getElement({ element, mode, list, selectItem, onSelect, isNeedPureText, merge }) {
+    let newElement = element;
+    if (mode === 'downMenu') {
+      newElement = <DownMenu list={list} selected={selectItem} onSelect={onSelect} />;
+    } else if (mode === 'cardMenu') {
+      newElement = <CardMenu list={list} selected={selectItem} onSelect={onSelect} />;
+    } else {
+      newElement = (
+        <ButtonBar
+          isNeedPureText={!!isNeedPureText}
+          list={list}
+          size="m"
+          selected={selectItem}
+          onSelect={onSelect}
+          bubbleDirection={merge ? 'left' : 'bottom'}
+        />
+      );
+    }
+    return newElement;
   }
 
   componentWillReceiveProps(nextProps) {

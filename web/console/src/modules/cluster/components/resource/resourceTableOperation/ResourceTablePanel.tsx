@@ -36,36 +36,38 @@ export const IsResourceShowLoadingIcon = (resourceName: string, item: Resource) 
       ? true
       : false;
   } else if (resourceName === 'svc') {
-    let type = item.spec && item.spec.type,
-      isClusterIP = type === 'ClusterIP',
-      isNodePort = type === 'NodePort';
-    return (isClusterIP && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress === undefined) ||
-      (isNodePort && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress === undefined) ||
-      (!isClusterIP && !isNodePort && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress)
-      ? false
-      : true;
+    _svcJudge(item);
+    // let type = item.spec && item.spec.type,
+    //   isClusterIP = type === 'ClusterIP',
+    //   isNodePort = type === 'NodePort';
+    // return (isClusterIP && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress === undefined) ||
+    //   (isNodePort && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress === undefined) ||
+    //   (!isClusterIP && !isNodePort && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress)
+    //   ? false
+    //   : true;
   } else if (resourceName === 'ingress') {
-    // 此处需要判断是否为nginx-ingress，如果为nginx-ingress的话，则不需要进行轮询了
-    let isNginxIngress =
-      item['metadata']['annotations'] &&
-      item['metadata']['annotations']['kubernetes.io/ingress.class'] === 'nginx-ingress'
-        ? true
-        : false;
-
-    // 判断是否为qcloud-loadbalance
-    let isQcloud =
-      item.metadata.annotations && item.metadata.annotations['kubernetes.io/ingress.qcloud-loadbalance-id'];
-
-    return isNginxIngress
-      ? false
-      : isQcloud
-      ? item.metadata.annotations &&
-        item.metadata.annotations['kubernetes.io/ingress.qcloud-loadbalance-id'] &&
-        item.status.loadBalancer &&
-        item.status.loadBalancer.ingress
-        ? false
-        : true
-      : false;
+    _ingressJudge(item);
+    // // 此处需要判断是否为nginx-ingress，如果为nginx-ingress的话，则不需要进行轮询了
+    // let isNginxIngress =
+    //   item['metadata']['annotations'] &&
+    //   item['metadata']['annotations']['kubernetes.io/ingress.class'] === 'nginx-ingress'
+    //     ? true
+    //     : false;
+    //
+    // // 判断是否为qcloud-loadbalance
+    // let isQcloud =
+    //   item.metadata.annotations && item.metadata.annotations['kubernetes.io/ingress.qcloud-loadbalance-id'];
+    //
+    // return isNginxIngress
+    //   ? false
+    //   : isQcloud
+    //   ? item.metadata.annotations &&
+    //     item.metadata.annotations['kubernetes.io/ingress.qcloud-loadbalance-id'] &&
+    //     item.status.loadBalancer &&
+    //     item.status.loadBalancer.ingress
+    //     ? false
+    //     : true
+    //   : false;
   } else if (resourceName === 'pvc' || resourceName === 'csi') {
     return item.status === undefined ? true : item.status.phase === 'Pending' ? true : false;
   } else if (resourceName === 'statefulset') {
@@ -86,6 +88,39 @@ export const IsResourceShowLoadingIcon = (resourceName: string, item: Resource) 
   }
   return false;
 };
+function _svcJudge(item) {
+  let type = item.spec && item.spec.type,
+      isClusterIP = type === 'ClusterIP',
+      isNodePort = type === 'NodePort';
+  return (isClusterIP && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress === undefined) ||
+  (isNodePort && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress === undefined) ||
+  (!isClusterIP && !isNodePort && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress)
+      ? false
+      : true;
+}
+function _ingressJudge(item) {
+  // 此处需要判断是否为nginx-ingress，如果为nginx-ingress的话，则不需要进行轮询了
+  let isNginxIngress =
+      item['metadata']['annotations'] &&
+      item['metadata']['annotations']['kubernetes.io/ingress.class'] === 'nginx-ingress'
+          ? true
+          : false;
+
+  // 判断是否为qcloud-loadbalance
+  let isQcloud =
+      item.metadata.annotations && item.metadata.annotations['kubernetes.io/ingress.qcloud-loadbalance-id'];
+
+  return isNginxIngress
+      ? false
+      : isQcloud
+          ? item.metadata.annotations &&
+          item.metadata.annotations['kubernetes.io/ingress.qcloud-loadbalance-id'] &&
+          item.status.loadBalancer &&
+          item.status.loadBalancer.ingress
+              ? false
+              : true
+          : false;
+}
 
 /** loading的样式 */
 

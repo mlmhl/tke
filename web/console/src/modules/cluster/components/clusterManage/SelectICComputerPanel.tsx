@@ -52,18 +52,29 @@ export function SelectICComputerPanel({
   isNeedGpu?: boolean;
 }) {
   //如果使用了footer，需要在下方留出足够的空间，避免重叠
+  const {
+    ipList: initIpList = '',
+    ssh: initSsh = '22',
+    role: initRole = computerRoleList[0].value,
+    labels: initLabels = [],
+    authType: initAuthType = authTypeList[0].value,
+    username: initUserName = 'root',
+    password: initPassword = '',
+    privateKey: initPrivateKey = '',
+    passPhrase: initPassPhrase = '',
+    isGpu: initIsGpu = false //computer && isNeedGpu ? computer.isGpu : false
+  } = computer || {};
+  let [ipList, setIPList] = React.useState(initIpList);
+  let [ssh, setSSH] = React.useState(initSsh);
 
-  let [ipList, setIPList] = React.useState(computer ? computer.ipList : '');
-  let [ssh, setSSH] = React.useState(computer ? computer.ssh : '22');
-
-  let [role, setRole] = React.useState(computer ? computer.role : computerRoleList[0].value);
-  let [labels, setLabels] = React.useState(computer ? computer.labels : []);
-  let [authType, setAuthType] = React.useState(computer ? computer.authType : authTypeList[0].value);
-  let [username, setUserName] = React.useState(computer ? computer.username : 'root');
-  let [password, setPassword] = React.useState(computer ? computer.password : '');
-  let [privateKey, setPrivateKey] = React.useState(computer ? computer.privateKey : '');
-  let [passPhrase, setPassPhrase] = React.useState(computer ? computer.passPhrase : '');
-  let [isGpu, setIsGpu] = React.useState(computer && isNeedGpu ? computer.isGpu : false);
+  let [role, setRole] = React.useState(initRole);
+  let [labels, setLabels] = React.useState(initLabels);
+  let [authType, setAuthType] = React.useState(initAuthType);
+  let [username, setUserName] = React.useState(initUserName);
+  let [password, setPassword] = React.useState(initPassword);
+  let [privateKey, setPrivateKey] = React.useState(initPrivateKey);
+  let [passPhrase, setPassPhrase] = React.useState(initPassPhrase);
+  let [isGpu, setIsGpu] = React.useState(isNeedGpu ? initIsGpu : false);
 
   let [labelsIsValid, setLabelIsValid] = React.useState(true);
 

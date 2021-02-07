@@ -36,26 +36,27 @@ export const TYPES = {
 let gid = 0;
 export function getState(schema, component: React.Component, rootObj?, obj?) {
   if (typeof schema.properties === 'object') {
-    let properties = {};
-
-    for (let key in schema.properties) {
-      if (key !== 'generateName') {
-        properties[key] = getState(schema.properties[key], component, rootObj, obj !== undefined ? obj[key] : obj);
-      }
-    }
-
-    if (schema.type === 'pickOne') {
-      let json = schemaObjToJSON({ properties });
-      if (json) {
-        schema.pick = Object.keys(json).find(key => !schema.properties[key].required);
-      }
-    }
-
-    if (schema.isChecked !== undefined) {
-      return { ...schema, properties, component, isChecked: Boolean(obj) };
-    }
-
-    return { ...schema, properties, component };
+    return _getObjectResult(schema, component, rootObj, obj);
+    // let properties = {};
+    //
+    // for (let key in schema.properties) {
+    //   if (key !== 'generateName') {
+    //     properties[key] = getState(schema.properties[key], component, rootObj, obj !== undefined ? obj[key] : obj);
+    //   }
+    // }
+    //
+    // if (schema.type === 'pickOne') {
+    //   let json = schemaObjToJSON({ properties });
+    //   if (json) {
+    //     schema.pick = Object.keys(json).find(key => !schema.properties[key].required);
+    //   }
+    // }
+    //
+    // if (schema.isChecked !== undefined) {
+    //   return { ...schema, properties, component, isChecked: Boolean(obj) };
+    // }
+    //
+    // return { ...schema, properties, component };
   }
 
   if (schema.valueSchema) {
@@ -84,26 +85,27 @@ export function getState(schema, component: React.Component, rootObj?, obj?) {
     };
   }
   if (schema.type === 'labels') {
-    let value = obj
-      ? Object.keys(obj).map(key => ({ __key: ++gid, key, value: obj[key] }))
-      : schema.isInitFirstItem
-      ? [
-          schema.getInitFirstItem
-            ? schema.getInitFirstItem()
-            : {
-                __key: ++gid,
-                key: '',
-                value: ''
-              }
-        ]
-      : [];
-    return {
-      ...schema,
-      value,
-      map: obj || {},
-      activeTimestamp: schema.activeTimestamp === 0 ? Boolean(value.length) : schema.activeTimestamp,
-      component
-    };
+    return _getLabelsResult(obj, schema, component);
+    // let value = obj
+    //   ? Object.keys(obj).map(key => ({ __key: ++gid, key, value: obj[key] }))
+    //   : schema.isInitFirstItem
+    //   ? [
+    //       schema.getInitFirstItem
+    //         ? schema.getInitFirstItem()
+    //         : {
+    //             __key: ++gid,
+    //             key: '',
+    //             value: ''
+    //           }
+    //     ]
+    //   : [];
+    // return {
+    //   ...schema,
+    //   value,
+    //   map: obj || {},
+    //   activeTimestamp: schema.activeTimestamp === 0 ? Boolean(value.length) : schema.activeTimestamp,
+    //   component
+    // };
   }
   if (schema.type === 'stringArray') {
     let value = obj || [];
@@ -150,17 +152,67 @@ export function getState(schema, component: React.Component, rootObj?, obj?) {
   if (schema.isChecked !== undefined) {
     return {
       ...schema,
-      value: obj !== undefined ? obj : schema.value,
-      isChecked: Boolean(obj !== undefined ? obj : schema.value),
+      value: _getValue(obj, schema),
+      isChecked: Boolean(_getValue(obj, schema)),
       component
     };
   }
 
   return {
     ...schema,
-    value: obj !== undefined ? obj : schema.value,
+    value: _getValue(obj, schema),
     component,
     activeTimestamp: schema.activeTimestamp === 0 ? Boolean(obj) : schema.activeTimestamp
+  };
+}
+
+function _getValue(obj, schema) {
+  return obj !== undefined ? obj : schema.value;
+}
+
+function _getObjectResult(schema, component, rootObj, obj) {
+  let properties = {};
+
+  for (let key in schema.properties) {
+    if (key !== 'generateName') {
+      properties[key] = getState(schema.properties[key], component, rootObj, obj !== undefined ? obj[key] : obj);
+    }
+  }
+
+  if (schema.type === 'pickOne') {
+    let json = schemaObjToJSON({ properties });
+    if (json) {
+      schema.pick = Object.keys(json).find(key => !schema.properties[key].required);
+    }
+  }
+
+  if (schema.isChecked !== undefined) {
+    return { ...schema, properties, component, isChecked: Boolean(obj) };
+  }
+
+  return { ...schema, properties, component };
+}
+
+function _getLabelsResult(obj, schema, component) {
+  let value = obj
+      ? Object.keys(obj).map(key => ({ __key: ++gid, key, value: obj[key] }))
+      : schema.isInitFirstItem
+          ? [
+            schema.getInitFirstItem
+                ? schema.getInitFirstItem()
+                : {
+                  __key: ++gid,
+                  key: '',
+                  value: ''
+                }
+          ]
+          : [];
+  return {
+    ...schema,
+    value,
+    map: obj || {},
+    activeTimestamp: schema.activeTimestamp === 0 ? Boolean(value.length) : schema.activeTimestamp,
+    component
   };
 }
 
@@ -246,31 +298,32 @@ export function schemaObjToJSON(obj, skipPrivateValue = true) {
     return undefined;
   }
   if (obj.properties || obj.valueSchema) {
-    let json = {};
-    for (let key in obj.properties) {
-      if (obj.pick && obj.pick !== key && !obj.properties[key].required) {
-        continue;
-      }
-      if (skipPrivateValue && key[0] === '_') {
-        continue;
-      }
-      let value = schemaObjToJSON(obj.properties[key], skipPrivateValue);
-      if (value !== undefined) {
-        if (typeof value === 'object') {
-          if (Array.isArray(value) && value.length !== 0) {
-            json[key] = value;
-          } else if (Object.keys(value).length) {
-            json[key] = value;
-          }
-        } else {
-          json[key] = value;
-        }
-      }
-    }
-    if (!Object.keys(json).length) {
-      return undefined;
-    }
-    return json;
+    return _propertyParse(obj, skipPrivateValue);
+    // let json = {};
+    // for (let key in obj.properties) {
+    //   if (obj.pick && obj.pick !== key && !obj.properties[key].required) {
+    //     continue;
+    //   }
+    //   if (skipPrivateValue && key[0] === '_') {
+    //     continue;
+    //   }
+    //   let value = schemaObjToJSON(obj.properties[key], skipPrivateValue);
+    //   if (value !== undefined) {
+    //     if (typeof value === 'object') {
+    //       if (Array.isArray(value) && value.length !== 0) {
+    //         json[key] = value;
+    //       } else if (Object.keys(value).length) {
+    //         json[key] = value;
+    //       }
+    //     } else {
+    //       json[key] = value;
+    //     }
+    //   }
+    // }
+    // if (!Object.keys(json).length) {
+    //   return undefined;
+    // }
+    // return json;
   }
 
   if (obj.type === 'stringArray') {
@@ -329,6 +382,33 @@ export function schemaObjToJSON(obj, skipPrivateValue = true) {
   }
 
   return obj.value;
+}
+function _propertyParse(obj, skipPrivateValue) {
+  let json = {};
+  for (let key in obj.properties) {
+    if (obj.pick && obj.pick !== key && !obj.properties[key].required) {
+      continue;
+    }
+    if (skipPrivateValue && key[0] === '_') {
+      continue;
+    }
+    let value = schemaObjToJSON(obj.properties[key], skipPrivateValue);
+    if (value !== undefined) {
+      if (typeof value === 'object') {
+        if (Array.isArray(value) && value.length !== 0) {
+          json[key] = value;
+        } else if (Object.keys(value).length) {
+          json[key] = value;
+        }
+      } else {
+        json[key] = value;
+      }
+    }
+  }
+  if (!Object.keys(json).length) {
+    return undefined;
+  }
+  return json;
 }
 
 export function cloneSchemaObj(schema, obj, component: React.Component) {

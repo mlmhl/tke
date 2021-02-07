@@ -76,15 +76,15 @@ export const UserDetail = () => {
 
   const { displayName, phoneNumber, email } = basicParamsValue;
   const isNameError = displayName.length <= 0 || displayName.length > 255;
-  const { displayName: pDisplayName = '', phoneNumber: pPhoneNumber = '', email: pEmail = '' } = user ? user.spec : {};
+  // const { displayName: pDisplayName = '', phoneNumber: pPhoneNumber = '', email: pEmail = '' } = user ? user.spec : {};
 
   // 都满足，确定才可用
-  const enabled =
-    (pDisplayName !== displayName || pPhoneNumber !== phoneNumber || pEmail !== email) &&
-    !isNameError &&
-    (!phoneNumber || VALIDATE_PHONE_RULE.pattern.test(phoneNumber)) &&
-    (!email || VALIDATE_EMAIL_RULE.pattern.test(email));
-
+  // const enabled =
+  //   (pDisplayName !== displayName || pPhoneNumber !== phoneNumber || pEmail !== email) &&
+  //   !isNameError &&
+  //   (!phoneNumber || VALIDATE_PHONE_RULE.pattern.test(phoneNumber)) &&
+  //   (!email || VALIDATE_EMAIL_RULE.pattern.test(email));
+  const enabled = _getEnabledValue({ basicParamsValue, user });
   const columns: TableColumn<Strategy>[] = [
     {
       key: 'name',
@@ -264,3 +264,17 @@ export const UserDetail = () => {
     setEditValue({ editBasic: false });
   }
 };
+
+function _getEnabledValue({ basicParamsValue, user }) {
+  const { displayName, phoneNumber, email } = basicParamsValue;
+  const isNameError = displayName.length <= 0 || displayName.length > 255;
+  const { displayName: pDisplayName = '', phoneNumber: pPhoneNumber = '', email: pEmail = '' } = user ? user.spec : {};
+
+  // 都满足，确定才可用
+  const enabled =
+      (pDisplayName !== displayName || pPhoneNumber !== phoneNumber || pEmail !== email) &&
+      !isNameError &&
+      (!phoneNumber || VALIDATE_PHONE_RULE.pattern.test(phoneNumber)) &&
+      (!email || VALIDATE_EMAIL_RULE.pattern.test(email));
+  return enabled;
+}

@@ -234,24 +234,25 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       };
     });
 
-    let finalResourceTypeList = [];
-    ResourceTypeList.forEach(list => {
-      switch (list.value) {
-        case 'tapp':
-          if (isCanUseTapp || addons['TappController'] !== undefined) {
-            finalResourceTypeList.push(list);
-          }
-          break;
-        case 'daemonset':
-          if (!(WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS)) {
-            finalResourceTypeList.push(list);
-          }
-          break;
-        default:
-          finalResourceTypeList.push(list);
-          break;
-      }
-    });
+    let finalResourceTypeList = this._getFinalResourceTypeList(isCanUseTapp, addons);
+    // let finalResourceTypeList = [];
+    // ResourceTypeList.forEach(list => {
+    //   switch (list.value) {
+    //     case 'tapp':
+    //       if (isCanUseTapp || addons['TappController'] !== undefined) {
+    //         finalResourceTypeList.push(list);
+    //       }
+    //       break;
+    //     case 'daemonset':
+    //       if (!(WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS)) {
+    //         finalResourceTypeList.push(list);
+    //       }
+    //       break;
+    //     default:
+    //       finalResourceTypeList.push(list);
+    //       break;
+    //   }
+    // });
 
     /** 共享集群新增模块初始数据 */
     const selectedProject = rawProjectList.filter(item => item.metadata.name === projectSelection)[0] || {};
@@ -564,6 +565,28 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         <ResourceEditHostPathDialog />
       </MainBodyLayout>
     );
+  }
+
+  private _getFinalResourceTypeList(isCanUseTapp, addons) {
+    let finalResourceTypeList = [];
+    ResourceTypeList.forEach(list => {
+      switch (list.value) {
+        case 'tapp':
+          if (isCanUseTapp || addons['TappController'] !== undefined) {
+            finalResourceTypeList.push(list);
+          }
+          break;
+        case 'daemonset':
+          if (!(WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS)) {
+            finalResourceTypeList.push(list);
+          }
+          break;
+        default:
+          finalResourceTypeList.push(list);
+          break;
+      }
+    });
+    return finalResourceTypeList;
   }
 
   /** 生成 workload类型的radio列表 */

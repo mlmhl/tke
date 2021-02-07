@@ -345,36 +345,37 @@ export const EditBusinessNamespacePanel = () => {
     } else {
       const { current } = myCMDBComponentRef;
       // @ts-ignore
-      const { cmdb, department, departmentId, bsiPath, bsiPathIds, operator, bakOperator, all } = current.getCMDBData();
-      const metadata = {};
-      const annotations = {};
-      if (cmdb) {
-        metadata['labels'] = { cmdb: 'true' };
-        if (all) {
-          metadata['labels']['cmdb.all'] = 'true';
-        }
-        if (department) {
-          annotations['cmdb.io/depName'] = department;
-        }
-        if (departmentId) {
-          annotations['cmdb.io/depId'] = departmentId ? String(departmentId) : undefined;
-        }
-        if (bsiPath) {
-          annotations['cmdb.io/bsiPath'] = bsiPath;
-        }
-        if (bsiPathIds) {
-          annotations['cmdb.io/bsiPathIds'] = bsiPathIds;
-        }
-        if (operator) {
-          annotations['cmdb.io/operator'] = operator;
-        }
-        if (bakOperator) {
-          annotations['cmdb.io/bakOperator'] = bakOperator.join(',');
-        }
-        if (JSON.stringify(annotations) !== '{}') {
-          metadata['annotations'] = annotations;
-        }
-      }
+      const { cmdb, all } = current.getCMDBData();
+      // const metadata = {};
+      // const annotations = {};
+      // if (cmdb) {
+      //   metadata['labels'] = { cmdb: 'true' };
+      //   if (all) {
+      //     metadata['labels']['cmdb.all'] = 'true';
+      //   }
+      //   if (department) {
+      //     annotations['cmdb.io/depName'] = department;
+      //   }
+      //   if (departmentId) {
+      //     annotations['cmdb.io/depId'] = departmentId ? String(departmentId) : undefined;
+      //   }
+      //   if (bsiPath) {
+      //     annotations['cmdb.io/bsiPath'] = bsiPath;
+      //   }
+      //   if (bsiPathIds) {
+      //     annotations['cmdb.io/bsiPathIds'] = bsiPathIds;
+      //   }
+      //   if (operator) {
+      //     annotations['cmdb.io/operator'] = operator;
+      //   }
+      //   if (bakOperator) {
+      //     annotations['cmdb.io/bakOperator'] = bakOperator.join(',');
+      //   }
+      //   if (JSON.stringify(annotations) !== '{}') {
+      //     metadata['annotations'] = annotations;
+      //   }
+      // }
+      const { metadata, annotations } = _getMetadataAndAnnotations(myCMDBComponentRef);
 
       const namespaceInfo = {
         spec,
@@ -449,7 +450,7 @@ export const EditBusinessNamespacePanel = () => {
                 required
                 label={t('名称')}
                 showStatusIcon={false}
-                status={errors.namespaceName ? 'error' : 'success'}
+                status={_getStatus(errors.namespaceName)}
                 message={
                       errors.namespaceName
                           ? errors.namespaceName.message
@@ -491,8 +492,8 @@ export const EditBusinessNamespacePanel = () => {
                 required
                 label="集群"
                 showStatusIcon={false}
-                status={errors.clusterName ? 'error' : 'success'}
-                message={errors.clusterName && errors.clusterName.message}
+                status={_getStatus(errors.clusterName)}
+                message={_getMessage(errors.clusterName)}
               >
                 {
                   mode === MODIFY ? (
@@ -522,8 +523,8 @@ export const EditBusinessNamespacePanel = () => {
                     required
                     label="可用区"
                     showStatusIcon={false}
-                    status={errors.zone ? 'error' : 'success'}
-                    message={errors.zone && errors.zone.message}
+                    status={_getStatus(errors.zone)}
+                    message={_getMessage(errors.zone)}
                   >
                     {mode === MODIFY ? showResourceData.selectedZone : (
                       <Controller
@@ -635,3 +636,44 @@ export const EditBusinessNamespacePanel = () => {
     </Content.Body>
   );
 };
+function _getStatus(value) {
+  return value ? 'error' : 'success';
+}
+function _getMessage(value) {
+  return value && value.message;
+}
+function _getMetadataAndAnnotations(myCMDBComponentRef) {
+  const { current } = myCMDBComponentRef;
+  // @ts-ignore
+  const { cmdb, department, departmentId, bsiPath, bsiPathIds, operator, bakOperator, all } = current.getCMDBData();
+  const metadata = {};
+  const annotations = {};
+  if (cmdb) {
+    metadata['labels'] = { cmdb: 'true' };
+    if (all) {
+      metadata['labels']['cmdb.all'] = 'true';
+    }
+    if (department) {
+      annotations['cmdb.io/depName'] = department;
+    }
+    if (departmentId) {
+      annotations['cmdb.io/depId'] = departmentId ? String(departmentId) : undefined;
+    }
+    if (bsiPath) {
+      annotations['cmdb.io/bsiPath'] = bsiPath;
+    }
+    if (bsiPathIds) {
+      annotations['cmdb.io/bsiPathIds'] = bsiPathIds;
+    }
+    if (operator) {
+      annotations['cmdb.io/operator'] = operator;
+    }
+    if (bakOperator) {
+      annotations['cmdb.io/bakOperator'] = bakOperator.join(',');
+    }
+    if (JSON.stringify(annotations) !== '{}') {
+      metadata['annotations'] = annotations;
+    }
+  }
+  return { metadata, annotations };
+}

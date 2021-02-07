@@ -191,14 +191,18 @@ export class CIDR extends React.Component<CIDRProps, CIDRState> {
     }
     if (period === '192') {
       if (order >= 3) {
-        field2 = parts[1] || '168';
+        // field2 = parts[1] || '168';
+        field2 = this._getFieldValue(parts[1], '168');
         field2Range = ['168'];
         field3Range = this.computerRange(digit, 0, 256);
-        field3 = parts[2] || field3Range[0];
+        field3 = this._getFieldValue(parts[2], field3Range[0]);
+        // field3 = parts[2] || field3Range[0];
       } else {
-        field2 = parts[1] || '168';
+        field2 = this._getFieldValue(parts[1], '168');
+        // field2 = parts[1] || '168';
         field2Range = ['168'];
-        field3 = parts[2] || '0';
+        field3 = this._getFieldValue(parts[2], '0');
+        // field3 = parts[2] || '0';
         field3Range = ['0'];
       }
     } else if (period === '172') {
@@ -210,9 +214,11 @@ export class CIDR extends React.Component<CIDRProps, CIDRState> {
           field2Range.splice(cIndex, 1);
         }
 
-        field2 = parts[1] || field2Range[0];
+        // field2 = parts[1] || field2Range[0];
+        field2 = this._getFieldValue(parts[1], field2Range[0]);
         field3Range = this.computerRange(digit, 0, 256);
-        field3 = parts[2] || field3Range[0];
+        field3 = this._getFieldValue(parts[2], field3Range[0]);
+        // field3 = parts[2] || field3Range[0];
       } else {
         field2Range = this.computerRange(digit, 16, 16);
         //去除172.17网段
@@ -220,20 +226,26 @@ export class CIDR extends React.Component<CIDRProps, CIDRState> {
         if (cIndex > -1) {
           field2Range.splice(cIndex, 1);
         }
-        field2 = parts[1] || field2Range[0];
-        field3 = parts[2] || '0';
+        field2 = this._getFieldValue(parts[1], field2Range[0]);
+        // field2 = parts[1] || field2Range[0];
+        field3 = this._getFieldValue(parts[2], '0');
+        // field3 = parts[2] || '0';
         field3Range = ['0'];
       }
     } else if (IsLikeTen(period)) {
       if (order >= 3) {
         field2Range = this.computerRange(8, 0, 256);
-        field2 = parts[1] || field2Range[0];
+        field2 = this._getFieldValue(parts[1], field2Range[0]);
+        // field2 = parts[1] || field2Range[0];
         field3Range = this.computerRange(digit, 0, 256);
-        field3 = parts[2] || field3Range[0];
+        field3 = this._getFieldValue(parts[2], field3Range[0]);
+        // field3 = parts[2] || field3Range[0];
       } else {
         field2Range = this.computerRange(digit, 0, 256);
-        field2 = parts[1] || field2Range[0];
-        field3 = parts[2] || '0';
+        field2 = this._getFieldValue(parts[1], field2Range[0]);
+        // field2 = parts[1] || field2Range[0];
+        field3 = this._getFieldValue(parts[2], '0');
+        // field3 = parts[2] || '0';
         field3Range = ['0'];
       }
     }
@@ -248,6 +260,10 @@ export class CIDR extends React.Component<CIDRProps, CIDRState> {
     });
 
     this._handleChange(period + '.' + field2 + '.' + field3 + '.0/' + mask, maxNodePodNum, maxClusterServiceNum);
+  }
+
+  _getFieldValue(value1, value2) {
+    return value1 || value2;
   }
 
   _handleField1Input(value) {

@@ -355,22 +355,29 @@ export class Input extends React.Component<InputProps, any> {
     }
 
     const inputValue = this.state.inputValue;
+    if (inputValue.length > 0) {
+      if (keys[e.keyCode] === 'backspace') return;
 
-    if (keys[e.keyCode] === 'backspace' && inputValue.length > 0) return;
-
-    if ((keys[e.keyCode] === 'left' || keys[e.keyCode] === 'right') && inputValue.length > 0) {
-      setTimeout(this.refreshShow, 0);
-      return;
+      if (keys[e.keyCode] === 'left' || keys[e.keyCode] === 'right') {
+        setTimeout(this.refreshShow, 0);
+        return;
+      }
     }
+    // if (keys[e.keyCode] === 'backspace' && inputValue.length > 0) return;
+    //
+    // if ((keys[e.keyCode] === 'left' || keys[e.keyCode] === 'right') && inputValue.length > 0) {
+    //   setTimeout(this.refreshShow, 0);
+    //   return;
+    // }
 
     e.preventDefault();
 
     // 事件下传
-    if (this['attr-select']) {
-      if (this['attr-select'].handleKeyDown(e.keyCode) === false) return;
+    if (this['attr-select'] && this['attr-select'].handleKeyDown(e.keyCode) === false) {
+      return;
     }
-    if (this['value-select']) {
-      if (this['value-select'].handleKeyDown(e.keyCode) === false) return;
+    if (this['value-select'] && this['value-select'].handleKeyDown(e.keyCode) === false) {
+      return;
     }
 
     switch (keys[e.keyCode]) {
@@ -400,6 +407,17 @@ export class Input extends React.Component<InputProps, any> {
         this.props.dispatchTagEvent('move-right');
         break;
     }
+  };
+
+  _getStyles = ({ hidden, active, inputWidth, maxWidth, type }) => {
+     const style = {
+      width: hidden ? '0px' : active ? `${inputWidth + 5}px` : '5px',
+      maxWidth: maxWidth ? `${maxWidth - 36}px` : '435px'
+    };
+    if (type === 'edit' && !hidden) {
+      style['padding'] = '0 8px';
+    }
+    return style;
   };
 
   render() {
@@ -442,13 +460,14 @@ export class Input extends React.Component<InputProps, any> {
         />
       ) : null;
 
-    const style = {
-      width: hidden ? '0px' : active ? `${inputWidth + 5}px` : '5px',
-      maxWidth: maxWidth ? `${maxWidth - 36}px` : '435px'
-    };
-    if (type === 'edit' && !hidden) {
-      style['padding'] = '0 8px';
-    }
+    const style = this._getStyles({ hidden, active, inputWidth, maxWidth, type });
+    // const style = {
+    //   width: hidden ? '0px' : active ? `${inputWidth + 5}px` : '5px',
+    //   maxWidth: maxWidth ? `${maxWidth - 36}px` : '435px'
+    // };
+    // if (type === 'edit' && !hidden) {
+    //   style['padding'] = '0 8px';
+    // }
 
     const input =
       type !== 'edit' ? (

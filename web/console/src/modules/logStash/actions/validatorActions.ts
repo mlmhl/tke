@@ -483,11 +483,12 @@ export const validatorActions = {
 
     if (logMode === 'container') {
       // 判断是否为 指定容器，如果为所有容器，则不需要校验
-      if (result && isSelectedAllNamespace === 'selectOne') {
-        containerLogs.forEach(item => {
-          result = result && validatorActions._canAddContainerLog(item, containerLogs);
-        });
-      }
+      // if (result && isSelectedAllNamespace === 'selectOne') {
+      //   containerLogs.forEach(item => {
+      //     result = result && validatorActions._canAddContainerLog(item, containerLogs);
+      //   });
+      // }
+      result = validatorActions._containerValid({ result, isSelectedAllNamespace, containerLogs });
     } else if (logMode === 'node') {
       result = result && (await validatorActions._validateNodeLogPath(nodeLogPath)).status === 1;
       if (result && metadatas.length) {
@@ -516,6 +517,17 @@ export const validatorActions = {
       }
     }
 
+    return result;
+  },
+  _containerValid({ result, isSelectedAllNamespace, containerLogs }) {
+    // 判断是否为 指定容器，如果为所有容器，则不需要校验
+    let newResult = result;
+    if (result && isSelectedAllNamespace === 'selectOne') {
+      containerLogs.forEach(item => {
+        newResult = newResult && validatorActions._canAddContainerLog(item, containerLogs);
+      });
+      return newResult;
+    }
     return result;
   },
 

@@ -97,16 +97,18 @@ export class EditResourcePanel extends React.Component<RootProps, EditResourcePa
     } else if (resourceType === 'np' && (mode === 'create' || mode === 'modify-namespace')) {
       content = <EditBusinessNamespacePanel />;
       headTitle = mode === 'create' ? t('创建命名空间') : t('修改命名空间');
-    } else if (resourceType === 'secret' && mode === 'create') {
-      content = <EditSecretPanel />;
-    } else if (resourceType === 'configmap' && mode === 'create') {
-      content = <EditConfigMapPanel />;
-    } else if (resourceType === 'node' && mode === 'create') {
-      content = <CreateComputerPanel />;
-      headTitle = t('添加节点');
-    } else if (resourceType === 'lbcf' && mode === 'create') {
-      content = <EditLbcfPanel />;
-      headTitle = t('新建负载均衡');
+    } else if (mode === 'create') {
+      if (resourceType === 'secret') {
+        content = <EditSecretPanel />;
+      } else if (resourceType === 'configmap') {
+        content = <EditConfigMapPanel />;
+      } else if (resourceType === 'node') {
+        content = <CreateComputerPanel />;
+        headTitle = t('添加节点');
+      } else if (resourceType === 'lbcf') {
+        content = <EditLbcfPanel />;
+        headTitle = t('新建负载均衡');
+      }
     } else if (mode === 'apply') {
       content = this._editResourceYaml();
       headTitle = t('YAML创建资源');

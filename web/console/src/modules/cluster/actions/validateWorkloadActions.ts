@@ -2055,19 +2055,19 @@ export const validateWorkloadActions = {
   /** 校验整个workload表单是否正确 */
   _validateWorkloadEdit(workloadEdit: WorkloadEdit, serviceEdit: ServiceEdit) {
     let result = true;
-
-    result =
-      result &&
-      validateWorkloadActions._validateWorkloadName(workloadEdit.workloadName).status === 1 &&
-      validateWorkloadActions._validateWorkloadDesp(workloadEdit.description).status === 1 &&
-      validateWorkloadActions._validateAllWorkloadLabelValue(workloadEdit.workloadLabels) &&
-      validateWorkloadActions._validateAllWorkloadLabelKey(workloadEdit.workloadLabels) &&
-      validateWorkloadActions._validateNamespace(workloadEdit.namespace).status === 1 &&
-      validateWorkloadActions._validateAllVolumeName(workloadEdit.volumes) &&
-      validateWorkloadActions._validateAllPvcSelection(workloadEdit.volumes) &&
-      validateWorkloadActions._validateAllNfsPath(workloadEdit.volumes) &&
-      validateWorkloadActions._validateAllHostPath(workloadEdit.volumes) &&
-      validateWorkloadActions._validateAllVolumeIsMounted(workloadEdit.volumes, workloadEdit.containers).allIsMounted;
+    result = validateWorkloadActions._subValidate(result, workloadEdit);
+    // result =
+    //   result &&
+    //   validateWorkloadActions._validateWorkloadName(workloadEdit.workloadName).status === 1 &&
+    //   validateWorkloadActions._validateWorkloadDesp(workloadEdit.description).status === 1 &&
+    //   validateWorkloadActions._validateAllWorkloadLabelValue(workloadEdit.workloadLabels) &&
+    //   validateWorkloadActions._validateAllWorkloadLabelKey(workloadEdit.workloadLabels) &&
+    //   validateWorkloadActions._validateNamespace(workloadEdit.namespace).status === 1 &&
+    //   validateWorkloadActions._validateAllVolumeName(workloadEdit.volumes) &&
+    //   validateWorkloadActions._validateAllPvcSelection(workloadEdit.volumes) &&
+    //   validateWorkloadActions._validateAllNfsPath(workloadEdit.volumes) &&
+    //   validateWorkloadActions._validateAllHostPath(workloadEdit.volumes) &&
+    //   validateWorkloadActions._validateAllVolumeIsMounted(workloadEdit.volumes, workloadEdit.containers).allIsMounted;
 
     if (workloadEdit.workloadAnnotations.length) {
       result =
@@ -2101,12 +2101,13 @@ export const validateWorkloadActions = {
 
     // 如果当前是deployment 并且实例更新方式为autoScale
     if ((isDeployment || isTapp) && workloadEdit.scaleType === 'autoScale') {
-      result =
-        result &&
-        validateWorkloadActions._valdiateAllHpaType(workloadEdit.metrics) &&
-        validateWorkloadActions._validateAllHpaValue(workloadEdit.metrics, workloadEdit.containers) &&
-        validateWorkloadActions._validateMinReplicas(workloadEdit.minReplicas).status === 1 &&
-        validateWorkloadActions._validateMaxReplicas(workloadEdit.maxReplicas, workloadEdit.minReplicas).status === 1;
+      result = validateWorkloadActions._autoScaleSubValidate(result, workloadEdit);
+      // result =
+      //   result &&
+      //   validateWorkloadActions._valdiateAllHpaType(workloadEdit.metrics) &&
+      //   validateWorkloadActions._validateAllHpaValue(workloadEdit.metrics, workloadEdit.containers) &&
+      //   validateWorkloadActions._validateMinReplicas(workloadEdit.minReplicas).status === 1 &&
+      //   validateWorkloadActions._validateMaxReplicas(workloadEdit.maxReplicas, workloadEdit.minReplicas).status === 1;
     }
 
     // 这里是同时创建服务的时候，需要校验Service相关的信息
@@ -2123,7 +2124,26 @@ export const validateWorkloadActions = {
 
     return result;
   },
-
+  _subValidate(result, workloadEdit) {
+    return result &&
+      validateWorkloadActions._validateWorkloadName(workloadEdit.workloadName).status === 1 &&
+      validateWorkloadActions._validateWorkloadDesp(workloadEdit.description).status === 1 &&
+      validateWorkloadActions._validateAllWorkloadLabelValue(workloadEdit.workloadLabels) &&
+      validateWorkloadActions._validateAllWorkloadLabelKey(workloadEdit.workloadLabels) &&
+      validateWorkloadActions._validateNamespace(workloadEdit.namespace).status === 1 &&
+      validateWorkloadActions._validateAllVolumeName(workloadEdit.volumes) &&
+      validateWorkloadActions._validateAllPvcSelection(workloadEdit.volumes) &&
+      validateWorkloadActions._validateAllNfsPath(workloadEdit.volumes) &&
+      validateWorkloadActions._validateAllHostPath(workloadEdit.volumes) &&
+      validateWorkloadActions._validateAllVolumeIsMounted(workloadEdit.volumes, workloadEdit.containers).allIsMounted;
+  },
+  _autoScaleSubValidate(result, workloadEdit) {
+    return result &&
+        validateWorkloadActions._valdiateAllHpaType(workloadEdit.metrics) &&
+        validateWorkloadActions._validateAllHpaValue(workloadEdit.metrics, workloadEdit.containers) &&
+        validateWorkloadActions._validateMinReplicas(workloadEdit.minReplicas).status === 1 &&
+        validateWorkloadActions._validateMaxReplicas(workloadEdit.maxReplicas, workloadEdit.minReplicas).status === 1;
+  },
   validateWorkloadEdit() {
     return async (dispatch, getState: GetState) => {
       let { subRoot } = getState(),

@@ -268,68 +268,74 @@ export class TimePicker extends React.Component<TimePickerProps, any> {
 
     switch (keys[e.keyCode]) {
       case 'up':
-        if (start >= 0 && end <= 2) {
-          type = 'hour';
-          value.hour = (value.hour + 1) % 24;
-          if (
-            ('min' in hourRange && value.hour < hourRange.min) ||
-            ('max' in hourRange && value.hour > hourRange.max)
-          ) {
-            value.hour = hourRange.min || 0;
-          }
-        }
-        if (start >= 3 && end <= 5) {
-          type = 'minute';
-          value.minute = (value.minute + 1) % 60;
-          if (
-            ('min' in minuteRange && value.minute < minuteRange.min) ||
-            ('max' in minuteRange && value.minute > minuteRange.max)
-          ) {
-            value.minute = minuteRange.min || 0;
-          }
-        }
-        if (start >= 6 && end <= 8) {
-          type = 'second';
-          value.second = (value.second + 1) % 60;
-          if (
-            ('min' in secondRange && value.second < secondRange.min) ||
-            ('max' in secondRange && value.second > secondRange.max)
-          ) {
-            value.second = secondRange.min || 0;
-          }
-        }
+        // if (start >= 0 && end <= 2) {
+        //   type = 'hour';
+        //   value.hour = (value.hour + 1) % 24;
+        //   if (
+        //     ('min' in hourRange && value.hour < hourRange.min) ||
+        //     ('max' in hourRange && value.hour > hourRange.max)
+        //   ) {
+        //     value.hour = hourRange.min || 0;
+        //   }
+        // }
+        // if (start >= 3 && end <= 5) {
+        //   type = 'minute';
+        //   value.minute = (value.minute + 1) % 60;
+        //   if (
+        //     ('min' in minuteRange && value.minute < minuteRange.min) ||
+        //     ('max' in minuteRange && value.minute > minuteRange.max)
+        //   ) {
+        //     value.minute = minuteRange.min || 0;
+        //   }
+        // }
+        // if (start >= 6 && end <= 8) {
+        //   type = 'second';
+        //   value.second = (value.second + 1) % 60;
+        //   if (
+        //     ('min' in secondRange && value.second < secondRange.min) ||
+        //     ('max' in secondRange && value.second > secondRange.max)
+        //   ) {
+        //     value.second = secondRange.min || 0;
+        //   }
+        // }
+        const upResult = this._handleUp({start, end, value, hourRange, minuteRange, secondRange});
+        type = upResult.type;
+        value = upResult.value;
         break;
       case 'down':
-        if (start >= 0 && end <= 2) {
-          type = 'hour';
-          value.hour = (value.hour - 1 + 24) % 24;
-          if (
-            ('min' in hourRange && value.hour < hourRange.min) ||
-            ('max' in hourRange && value.hour > hourRange.max)
-          ) {
-            value.hour = hourRange.max || 24;
-          }
-        }
-        if (start >= 3 && end <= 5) {
-          type = 'minute';
-          value.minute = (value.minute - 1 + 60) % 60;
-          if (
-            ('min' in minuteRange && value.minute < minuteRange.min) ||
-            ('max' in minuteRange && value.minute > minuteRange.max)
-          ) {
-            value.minute = minuteRange.max || 60;
-          }
-        }
-        if (start >= 6 && end <= 8) {
-          type = 'second';
-          value.second = (value.second - 1 + 60) % 60;
-          if (
-            ('min' in secondRange && value.second < secondRange.min) ||
-            ('max' in secondRange && value.second > secondRange.max)
-          ) {
-            value.second = secondRange.max || 60;
-          }
-        }
+        // if (start >= 0 && end <= 2) {
+        //   type = 'hour';
+        //   value.hour = (value.hour - 1 + 24) % 24;
+        //   if (
+        //     ('min' in hourRange && value.hour < hourRange.min) ||
+        //     ('max' in hourRange && value.hour > hourRange.max)
+        //   ) {
+        //     value.hour = hourRange.max || 24;
+        //   }
+        // }
+        // if (start >= 3 && end <= 5) {
+        //   type = 'minute';
+        //   value.minute = (value.minute - 1 + 60) % 60;
+        //   if (
+        //     ('min' in minuteRange && value.minute < minuteRange.min) ||
+        //     ('max' in minuteRange && value.minute > minuteRange.max)
+        //   ) {
+        //     value.minute = minuteRange.max || 60;
+        //   }
+        // }
+        // if (start >= 6 && end <= 8) {
+        //   type = 'second';
+        //   value.second = (value.second - 1 + 60) % 60;
+        //   if (
+        //     ('min' in secondRange && value.second < secondRange.min) ||
+        //     ('max' in secondRange && value.second > secondRange.max)
+        //   ) {
+        //     value.second = secondRange.max || 60;
+        //   }
+        // }
+        const downResult = this._handleDown({start, end, value, hourRange, minuteRange, secondRange});
+        type = downResult.type;
+        value = downResult.value;
         break;
       case 'enter':
         this.close();
@@ -347,6 +353,75 @@ export class TimePicker extends React.Component<TimePickerProps, any> {
 
     this.confirm(value);
   };
+  _handleUp({start, end, value, hourRange, minuteRange, secondRange}) {
+    let type;
+    if (start >= 0 && end <= 2) {
+      type = 'hour';
+      value.hour = (value.hour + 1) % 24;
+      if (
+          ('min' in hourRange && value.hour < hourRange.min) ||
+          ('max' in hourRange && value.hour > hourRange.max)
+      ) {
+        value.hour = hourRange.min || 0;
+      }
+    }
+    if (start >= 3 && end <= 5) {
+      type = 'minute';
+      value.minute = (value.minute + 1) % 60;
+      if (
+          ('min' in minuteRange && value.minute < minuteRange.min) ||
+          ('max' in minuteRange && value.minute > minuteRange.max)
+      ) {
+        value.minute = minuteRange.min || 0;
+      }
+    }
+    if (start >= 6 && end <= 8) {
+      type = 'second';
+      value.second = (value.second + 1) % 60;
+      if (
+          ('min' in secondRange && value.second < secondRange.min) ||
+          ('max' in secondRange && value.second > secondRange.max)
+      ) {
+        value.second = secondRange.min || 0;
+      }
+    }
+    return { type, value };
+  }
+
+  _handleDown({start, end, value, hourRange, minuteRange, secondRange}) {
+    let type;
+    if (start >= 0 && end <= 2) {
+      type = 'hour';
+      value.hour = (value.hour - 1 + 24) % 24;
+      if (
+          ('min' in hourRange && value.hour < hourRange.min) ||
+          ('max' in hourRange && value.hour > hourRange.max)
+      ) {
+        value.hour = hourRange.max || 24;
+      }
+    }
+    if (start >= 3 && end <= 5) {
+      type = 'minute';
+      value.minute = (value.minute - 1 + 60) % 60;
+      if (
+          ('min' in minuteRange && value.minute < minuteRange.min) ||
+          ('max' in minuteRange && value.minute > minuteRange.max)
+      ) {
+        value.minute = minuteRange.max || 60;
+      }
+    }
+    if (start >= 6 && end <= 8) {
+      type = 'second';
+      value.second = (value.second - 1 + 60) % 60;
+      if (
+          ('min' in secondRange && value.second < secondRange.min) ||
+          ('max' in secondRange && value.second > secondRange.max)
+      ) {
+        value.second = secondRange.max || 60;
+      }
+    }
+    return { type, value };
+  }
 
   render() {
     const value = this.state.value || { hour: 0, minute: 0, second: 0 };

@@ -390,19 +390,20 @@ export class UpdateWorkloadRegistryPanel extends React.Component<RootProps, Upda
         };
       }
       // 获取容器的内容
-      let containersInfo = containers.map(c => {
-        let targetContainer = targetResource.spec.template.spec.containers.find(e => e.name === c.name);
-        return !isTapp //对于tapp来说，由于更新方式是merge（非strategy-merge），所以需要带上原本的container之前的内容 不然之前的内容会被清空掉
-          ? {
-              name: c.name,
-              image: c.registry + (c.tag ? ':' + c.tag : '')
-            }
-          : {
-              ...targetContainer,
-              name: c.name,
-              image: c.registry + (c.tag ? ':' + c.tag : '')
-            };
-      });
+      let containersInfo = this._getContainerInfo(containers, targetResource, isTapp);
+      // let containersInfo = containers.map(c => {
+      //   let targetContainer = targetResource.spec.template.spec.containers.find(e => e.name === c.name);
+      //   return !isTapp //对于tapp来说，由于更新方式是merge（非strategy-merge），所以需要带上原本的container之前的内容 不然之前的内容会被清空掉
+      //     ? {
+      //         name: c.name,
+      //         image: c.registry + (c.tag ? ':' + c.tag : '')
+      //       }
+      //     : {
+      //         ...targetContainer,
+      //         name: c.name,
+      //         image: c.registry + (c.tag ? ':' + c.tag : '')
+      //       };
+      // });
 
       /**
        * https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#rollingupdatedeployment-v1-apps
@@ -455,6 +456,23 @@ export class UpdateWorkloadRegistryPanel extends React.Component<RootProps, Upda
       actions.workflow.updateResourcePart.start([resource], +route.queries['rid']);
       actions.workflow.updateResourcePart.perform();
     }
+  }
+
+  private _getContainerInfo(containers, targetResource, isTapp) {
+    let containersInfo = containers.map(c => {
+      let targetContainer = targetResource.spec.template.spec.containers.find(e => e.name === c.name);
+      return !isTapp //对于tapp来说，由于更新方式是merge（非strategy-merge），所以需要带上原本的container之前的内容 不然之前的内容会被清空掉
+          ? {
+            name: c.name,
+            image: c.registry + (c.tag ? ':' + c.tag : '')
+          }
+          : {
+            ...targetContainer,
+            name: c.name,
+            image: c.registry + (c.tag ? ':' + c.tag : '')
+          };
+    });
+    return containersInfo;
   }
 
   /** 展示容器的相关信息 */

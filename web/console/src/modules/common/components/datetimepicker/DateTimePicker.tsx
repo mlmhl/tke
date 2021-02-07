@@ -133,6 +133,14 @@ export class DateTimePicker extends React.Component<DateTimePickerProps, any> {
     // TODO range可变
   }
 
+  _getPickerValue({pickerValue, to}) {
+    if (!pickerValue) {
+      pickerValue = { from: to, to };
+    } else {
+      pickerValue.to = to;
+    }
+    return pickerValue;
+  }
   /**
    * 根据 props 获得初始日期和范围
    */
@@ -156,11 +164,12 @@ export class DateTimePicker extends React.Component<DateTimePickerProps, any> {
       const to = this.parseMacro(defaultValue.to as string);
       dateTo = this.formatDate(this.getDate(to));
       timeTo = this.formatTime(this.getTime(to));
-      if (!pickerValue) {
-        pickerValue = { from: to, to };
-      } else {
-        pickerValue.to = to;
-      }
+      pickerValue = this._getPickerValue({pickerValue, to})
+      // if (!pickerValue) {
+      //   pickerValue = { from: to, to };
+      // } else {
+      //   pickerValue.to = to;
+      // }
     }
 
     // 获取初始范围

@@ -239,9 +239,10 @@ export class TagSearchBox extends React.Component<TagSearchBoxProps, any> {
         break;
 
       case 'editing':
-        if ('attr' in payload && tags[index]) tags[index].attr = payload.attr;
-        if ('values' in payload && tags[index]) tags[index].values = payload.values;
-        this.setTags(tags, null, false);
+        this._handleEditing(payload, tags, index);
+        // if ('attr' in payload && tags[index]) tags[index].attr = payload.attr;
+        // if ('values' in payload && tags[index]) tags[index].values = payload.values;
+        // this.setTags(tags, null, false);
         break;
 
       case 'mark':
@@ -306,17 +307,18 @@ export class TagSearchBox extends React.Component<TagSearchBoxProps, any> {
         break;
 
       case 'click-input':
-        this.markTagElect(-1);
-        if (payload === 'edit') {
-          this.setState({ curPosType: FocusPosType.INPUT_EDIT });
-        } else {
-          this.setState({ curPosType: FocusPosType.INPUT });
-        }
-
-        if (!active) {
-          this.setState({ active: true });
-        }
-        this.setState({ showSelect: true });
+        // this.markTagElect(-1);
+        // if (payload === 'edit') {
+        //   this.setState({ curPosType: FocusPosType.INPUT_EDIT });
+        // } else {
+        //   this.setState({ curPosType: FocusPosType.INPUT });
+        // }
+        //
+        // if (!active) {
+        //   this.setState({ active: true });
+        // }
+        // this.setState({ showSelect: true });
+        this._handleClickInput(payload, active);
         break;
 
       case 'move-left':
@@ -347,6 +349,26 @@ export class TagSearchBox extends React.Component<TagSearchBoxProps, any> {
 
     this.setState({ curPos: index });
   };
+
+  _handleEditing(payload, tags, index) {
+    if ('attr' in payload && tags[index]) tags[index].attr = payload.attr;
+    if ('values' in payload && tags[index]) tags[index].values = payload.values;
+    this.setTags(tags, null, false);
+  }
+
+  _handleClickInput(payload, active) {
+    this.markTagElect(-1);
+    if (payload === 'edit') {
+      this.setState({ curPosType: FocusPosType.INPUT_EDIT });
+    } else {
+      this.setState({ curPosType: FocusPosType.INPUT });
+    }
+
+    if (!active) {
+      this.setState({ active: true });
+    }
+    this.setState({ showSelect: true });
+  }
 
   render() {
     const { active, inputWidth, inputValue, tags, curPos, curPosType, dialogActive, showSelect } = this.state;

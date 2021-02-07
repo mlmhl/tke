@@ -40,6 +40,7 @@ interface PolarisFormModal {
   value?: any;
   onChange: any;
 }
+
 const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
   const {
     value,
@@ -119,8 +120,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
         required
         label={t('命名空间')}
         showStatusIcon={false}
-        status={errors.polarisNamespace ? 'error' : 'success'}
-        message={errors.polarisNamespace && errors.polarisNamespace.message}
+        status={_getStatus(errors.polarisNamespace)}
+        message={_getMessage(errors.polarisNamespace)}
       >
         <Controller
           render={(
@@ -149,8 +150,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
         required
         label={t('服务名')}
         showStatusIcon={false}
-        status={errors.serviceName ? 'error' : 'success'}
-        message={errors.serviceName && errors.serviceName.message}
+        status={_getStatus(errors.serviceName)}
+        message={_getMessage(errors.serviceName)}
       >
         <Controller
           render={(
@@ -179,8 +180,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
         required
         label={t('Token')}
         showStatusIcon={false}
-        status={errors.token ? 'error' : 'success'}
-        message={errors.token && errors.token.message}
+        status={_getStatus(errors.token)}
+        message={_getMessage(errors.token)}
       >
         <Controller
           render={(
@@ -205,8 +206,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
         required
         label={t('权重')}
         showStatusIcon={false}
-        status={errors.weight ? 'error' : 'success'}
-        message={errors.weight && errors.weight.message}
+        status={_getStatus(errors.weight)}
+        message={_getMessage(errors.weight)}
       >
         <Controller
           render={(
@@ -234,8 +235,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
       <Form.Item
         label={t('协议')}
         showStatusIcon={false}
-        status={errors.protocol ? 'error' : 'success'}
-        message={errors.protocol && errors.protocol.message}
+        status={_getStatus(errors.protocol)}
+        message={_getMessage(errors.protocol)}
         >
         <Controller
           render={(
@@ -256,8 +257,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
       <Form.Item
         label={t('版本')}
         showStatusIcon={false}
-        status={errors.version ? 'error' : 'success'}
-        message={errors.version && errors.version.message}
+        status={_getStatus(errors.version)}
+        message={_getMessage(errors.version)}
       >
         <Controller
           render={(
@@ -309,8 +310,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
         required
         label={t('是否隔离')}
         showStatusIcon={false}
-        status={errors.isolate ? 'error' : 'success'}
-        message={errors.isolate && errors.isolate.message}
+        status={_getStatus(errors.isolate)}
+        message={_getMessage(errors.isolate)}
         >
         <Controller
           render={(
@@ -363,8 +364,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
         required
         label={t('健康检查')}
         showStatusIcon={false}
-        status={errors.enableHealthCheck ? 'error' : 'success'}
-        message={errors.enableHealthCheck && errors.enableHealthCheck.message}
+        status={_getStatus(errors.enableHealthCheck)}
+        message={_getMessage(errors.enableHealthCheck)}
       >
         <Controller
           render={(
@@ -387,8 +388,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
             <Form.Item
               label={t('检查方式')}
               showStatusIcon={false}
-              status={errors.healthCheckType ? 'error' : 'success'}
-              message={errors.healthCheckType && errors.healthCheckType.message}
+              status={_getStatus(errors.healthCheckType)}
+              message={_getMessage(errors.healthCheckType)}
             >
               <Controller
                 render={(
@@ -411,8 +412,8 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
             <Form.Item
               label={t('TTL')}
               showStatusIcon={false}
-              status={errors.healthCheckTTL ? 'error' : 'success'}
-              message={errors.healthCheckTTL && errors.healthCheckTTL.message}
+              status={_getStatus(errors.healthCheckTTL)}
+              message={_getMessage(errors.healthCheckTTL)}
             >
               <Controller
                 render={(
@@ -438,5 +439,12 @@ const PolarisParamsForm = React.memo((params: PolarisFormModal) => {
     </Form>
   );
 });
+
+function _getStatus(value) {
+  return value ? 'error' : 'success';
+}
+function _getMessage(value) {
+  return value && value.message;
+}
 
 export default PolarisParamsForm;
