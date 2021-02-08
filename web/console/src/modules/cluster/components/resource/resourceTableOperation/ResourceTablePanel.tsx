@@ -30,13 +30,14 @@ export const IsResourceShowLoadingIcon = (resourceName: string, item: Resource) 
     return true;
   } else if (resourceName === 'deployment') {
     // 判断readyReplicas的前提是 replicas是有的，而不是空，空即代表当前没有pod，不需要继续轮训
-    return item.status.readyReplicas === undefined && item.status.replicas
-      ? true
-      : +item.status.readyReplicas < +item.status.replicas
-      ? true
-      : false;
+    return _deploymentJudge(item);
+    // return item.status.readyReplicas === undefined && item.status.replicas
+    //   ? true
+    //   : +item.status.readyReplicas < +item.status.replicas
+    //   ? true
+    //   : false;
   } else if (resourceName === 'svc') {
-    _svcJudge(item);
+    return _svcJudge(item);
     // let type = item.spec && item.spec.type,
     //   isClusterIP = type === 'ClusterIP',
     //   isNodePort = type === 'NodePort';
@@ -46,7 +47,7 @@ export const IsResourceShowLoadingIcon = (resourceName: string, item: Resource) 
     //   ? false
     //   : true;
   } else if (resourceName === 'ingress') {
-    _ingressJudge(item);
+    return _ingressJudge(item);
     // // 此处需要判断是否为nginx-ingress，如果为nginx-ingress的话，则不需要进行轮询了
     // let isNginxIngress =
     //   item['metadata']['annotations'] &&
@@ -73,21 +74,44 @@ export const IsResourceShowLoadingIcon = (resourceName: string, item: Resource) 
   } else if (resourceName === 'statefulset') {
     return item.status.replicas === undefined ? true : +item.status.replicas < +item.spec.replicas ? true : false;
   } else if (resourceName === 'daemonset') {
-    return item.status.currentNumberScheduled === undefined
-      ? true
-      : +item.status.currentNumberScheduled < +item.status.desiredNumberScheduled
-      ? true
-      : false;
+    return _daemonsetJudge(item);
+    // return item.status.currentNumberScheduled === undefined
+    //   ? true
+    //   : +item.status.currentNumberScheduled < +item.status.desiredNumberScheduled
+    //   ? true
+    //   : false;
   } else if (resourceName === 'tapp') {
+    return _tappJudge(item);
     /**待定 todo ing */
-    return item.status.replicas === undefined
-      ? true
-      : +item.status.readyReplicas < +item.status.replicas
-      ? true
-      : false;
+    // return item.status.replicas === undefined
+    //   ? true
+    //   : +item.status.readyReplicas < +item.status.replicas
+    //   ? true
+    //   : false;
   }
   return false;
 };
+function _deploymentJudge(item) {
+  return item.status.readyReplicas === undefined && item.status.replicas
+      ? true
+      : +item.status.readyReplicas < +item.status.replicas
+          ? true
+          : false;
+}
+function _daemonsetJudge(item) {
+  return item.status.currentNumberScheduled === undefined
+      ? true
+      : +item.status.currentNumberScheduled < +item.status.desiredNumberScheduled
+          ? true
+          : false;
+}
+function _tappJudge(item) {
+  return item.status.replicas === undefined
+      ? true
+      : +item.status.readyReplicas < +item.status.replicas
+          ? true
+          : false;
+}
 function _svcJudge(item) {
   let type = item.spec && item.spec.type,
       isClusterIP = type === 'ClusterIP',
@@ -792,36 +816,37 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
     let content;
 
     // fieldInfo当中的 dataField是一个数组，可以同时输入多个值
-    let showData: any = [];
-    const dataFeild = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.shareClusterDataField ? fieldInfo.shareClusterDataField : fieldInfo.dataField;
-    dataFeild.forEach(item => {
-      let annotationsDataFieldKey = '';
-      let newItem = item;
-      const dataFieldKey = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.dataFormat === 'cmdbOperator' ? 'labels' : 'annotations';
-      // 'metadata.annotations.cmdb.io/operator' || 'metadata.labels.teg.tkex.oa.com/creator'
-      const startOfAnnoIndex = item.indexOf(dataFieldKey);
-      if (startOfAnnoIndex !== -1) {
-        const endOfAnnoIndex = startOfAnnoIndex + dataFieldKey.length;
-        newItem = item.substr(0, endOfAnnoIndex);
-        annotationsDataFieldKey = item.substring(endOfAnnoIndex + 1);
-      }
-      let dataFieldIns = newItem.split('.');
-      if (dataFieldIns && annotationsDataFieldKey) {
-        dataFieldIns.push(annotationsDataFieldKey);
-      }
-      let data: any = this._getFinalData(dataFieldIns, resource);
-      // 如果返回的为 '' ，即找不到这个对象，则使用配置文件所设定的默认值
-      showData.push(data === '' ? fieldInfo.noExsitedValue : data);
-    });
+    let showData = this._getShowData(fieldInfo, resource);
+    // let showData: any = [];
+    // const dataFeild = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.shareClusterDataField ? fieldInfo.shareClusterDataField : fieldInfo.dataField;
+    // dataFeild.forEach(item => {
+    //   let annotationsDataFieldKey = '';
+    //   let newItem = item;
+    //   const dataFieldKey = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.dataFormat === 'cmdbOperator' ? 'labels' : 'annotations';
+    //   // 'metadata.annotations.cmdb.io/operator' || 'metadata.labels.teg.tkex.oa.com/creator'
+    //   const startOfAnnoIndex = item.indexOf(dataFieldKey);
+    //   if (startOfAnnoIndex !== -1) {
+    //     const endOfAnnoIndex = startOfAnnoIndex + dataFieldKey.length;
+    //     newItem = item.substr(0, endOfAnnoIndex);
+    //     annotationsDataFieldKey = item.substring(endOfAnnoIndex + 1);
+    //   }
+    //   let dataFieldIns = newItem.split('.');
+    //   if (dataFieldIns && annotationsDataFieldKey) {
+    //     dataFieldIns.push(annotationsDataFieldKey);
+    //   }
+    //   let data: any = this._getFinalData(dataFieldIns, resource);
+    //   // 如果返回的为 '' ，即找不到这个对象，则使用配置文件所设定的默认值
+    //   showData.push(data === '' ? fieldInfo.noExsitedValue : data);
+    // });
 
     showData = showData.length === 1 ? showData[0] : showData;
 
     // 这里是当列表有 bubble等情况的时候，判断当前行属于第几行
     let resourceIndex = ffResourceList.list.data.records.findIndex(item => item.id === resource.id);
-    let direction: 'top' | 'bottom' =
-      ffResourceList.list.data.recordCount < 4 || resourceIndex < ffResourceList.list.data.recordCount - 2
-        ? 'top'
-        : 'bottom';
+    let direction: 'top' | 'bottom' = this._getDirection(ffResourceList, resourceIndex);
+      // ffResourceList.list.data.recordCount < 4 || resourceIndex < ffResourceList.list.data.recordCount - 2
+      //   ? 'top'
+      //   : 'bottom';
     if (fieldInfo.dataFormat === 'text') {
 
       // 共享集群的namespace列表的名称不能点进详情
@@ -861,6 +886,37 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
     }
 
     return content;
+  }
+
+  private _getDirection(ffResourceList, resourceIndex) {
+    return ffResourceList.list.data.recordCount < 4 || resourceIndex < ffResourceList.list.data.recordCount - 2
+        ? 'top'
+        : 'bottom';
+  }
+
+  private _getShowData(fieldInfo, resource) {
+    let showData: any = [];
+    const dataFeild = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.shareClusterDataField ? fieldInfo.shareClusterDataField : fieldInfo.dataField;
+    dataFeild.forEach(item => {
+      let annotationsDataFieldKey = '';
+      let newItem = item;
+      const dataFieldKey = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.dataFormat === 'cmdbOperator' ? 'labels' : 'annotations';
+      // 'metadata.annotations.cmdb.io/operator' || 'metadata.labels.teg.tkex.oa.com/creator'
+      const startOfAnnoIndex = item.indexOf(dataFieldKey);
+      if (startOfAnnoIndex !== -1) {
+        const endOfAnnoIndex = startOfAnnoIndex + dataFieldKey.length;
+        newItem = item.substr(0, endOfAnnoIndex);
+        annotationsDataFieldKey = item.substring(endOfAnnoIndex + 1);
+      }
+      let dataFieldIns = newItem.split('.');
+      if (dataFieldIns && annotationsDataFieldKey) {
+        dataFieldIns.push(annotationsDataFieldKey);
+      }
+      let data: any = this._getFinalData(dataFieldIns, resource);
+      // 如果返回的为 '' ，即找不到这个对象，则使用配置文件所设定的默认值
+      showData.push(data === '' ? fieldInfo.noExsitedValue : data);
+    });
+    return showData;
   }
 
   /** 生成table的表格信息 */

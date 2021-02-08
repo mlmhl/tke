@@ -527,7 +527,9 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
 
     return result || '';
   }
-
+  private _isText(dataFormat, showData) {
+    return dataFormat === 'text' || showData === '-'
+  }
   /** 生成相对应的格式内容 */
   private _renderFormItem(options: { showData: any; fieldInfo: DetailDisplayFieldProps; detailInfo?: any }) {
     let { showData, fieldInfo, detailInfo } = options;
@@ -537,33 +539,36 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
       isShowListItem = true;
 
     // 当showData为 - 的时候，即 此时找不到值，则原样返回即可
-    if (fieldInfo.dataFormat === 'text' || showData === '-') {
+    // if (fieldInfo.dataFormat === 'text' || showData === '-') {
+    if(this._isText(fieldInfo.dataFormat, showData)) {
       // 最为普通的直接返回showData展示即可
       showContent = <p>{showData}</p>;
     } else if (fieldInfo.dataFormat === 'status') {
       // 展示资源的状态
       let statusMap = ResourceStatus[resourceName];
-      showContent = statusMap ? (
-        <p className={classnames('', statusMap[showData] && statusMap[showData].classname)}>
-          {(statusMap[showData] && statusMap[showData].text) || '-'}
-        </p>
-      ) : (
-        <p>showData</p>
-      );
+      showContent = this._getStatusContent(statusMap, showData);
+      // showContent = statusMap ? (
+      //   <p className={classnames('', statusMap[showData] && statusMap[showData].classname)}>
+      //     {(statusMap[showData] && statusMap[showData].text) || '-'}
+      //   </p>
+      // ) : (
+      //   <p>showData</p>
+      // );
     } else if (fieldInfo.dataFormat === 'time') {
       // 时间需要进行处理为 YYYY-MM-DD HH:mm:ss 的格式
       showContent = <p>{dateFormatter(new Date(showData), 'YYYY-MM-DD HH:mm:ss')}</p>;
     } else if (fieldInfo.dataFormat === 'labels') {
-      // label的展示为 key:value、key:value
-      let showLabels = '';
-      let keys = Object.keys(showData);
-      keys.forEach((item, index) => {
-        showLabels += item + '：' + showData[item];
-        if (index !== keys.length - 1) {
-          showLabels += '、';
-        }
-      });
-      showContent = <p>{showLabels}</p>;
+      // // label的展示为 key:value、key:value
+      // let showLabels = '';
+      // let keys = Object.keys(showData);
+      // keys.forEach((item, index) => {
+      //   showLabels += item + '：' + showData[item];
+      //   if (index !== keys.length - 1) {
+      //     showLabels += '、';
+      //   }
+      // });
+      // showContent = <p>{showLabels}</p>;
+      showContent = this._getLabelsContent(showData);
     } else if (fieldInfo.dataFormat === 'keyvalue') {
       // keyvalue的展示为一行一个
       // key1:value1
@@ -577,12 +582,13 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
         );
       });
     } else if (fieldInfo.dataFormat === 'ip') {
-      showContent = (
-        <p>
-          <span id={fieldInfo.label}>{showData}</span>
-          {showData === 'None' && fieldInfo.extraInfo && <span>{` (${fieldInfo.extraInfo})`}</span>}
-        </p>
-      );
+      showContent = this._getIpContent(fieldInfo, showData);
+      // showContent = (
+      //   <p>
+      //     <span id={fieldInfo.label}>{showData}</span>
+      //     {showData === 'None' && fieldInfo.extraInfo && <span>{` (${fieldInfo.extraInfo})`}</span>}
+      //   </p>
+      // );
     } else if (fieldInfo.dataFormat === 'rules') {
       showContent = this._renderRulesItem(showData);
     } else if (fieldInfo.dataFormat === 'ports') {
@@ -599,45 +605,47 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
       });
     } else if (fieldInfo.dataFormat === 'env') {
       // env 环境变量的展示 是 a = b
-      showContent = showData.map((data, index) => {
-        if (data['value']) {
-          return <p key={index}>{`${data['name']}=${data['value']}`}</p>;
-        } else if (data['valueFrom']) {
-          let showKey = Object.keys(data['valueFrom'])[0],
-            refData = data['valueFrom'][showKey];
-          return (
-            <div key={index}>
-              <span className="text">{`${data['name']}=${showKey}`}</span>
-              <Bubble
-                placement="left"
-                content={
-                  <React.Fragment>
-                    <p>{t('名称：') + `${refData['name']}`}</p>
-                    <p>{`Key：${refData['key']}`}</p>
-                  </React.Fragment>
-                }
-              >
-                <i className="plaint-icon" style={{ marginLeft: '5px' }} />
-              </Bubble>
-            </div>
-          );
-        } else {
-          return <p key={index}>{`${data['name']}`}</p>;
-        }
-      });
+      showContent = this._getEnvContent(showData);
+      // showContent = showData.map((data, index) => {
+      //   if (data['value']) {
+      //     return <p key={index}>{`${data['name']}=${data['value']}`}</p>;
+      //   } else if (data['valueFrom']) {
+      //     let showKey = Object.keys(data['valueFrom'])[0],
+      //       refData = data['valueFrom'][showKey];
+      //     return (
+      //       <div key={index}>
+      //         <span className="text">{`${data['name']}=${showKey}`}</span>
+      //         <Bubble
+      //           placement="left"
+      //           content={
+      //             <React.Fragment>
+      //               <p>{t('名称：') + `${refData['name']}`}</p>
+      //               <p>{`Key：${refData['key']}`}</p>
+      //             </React.Fragment>
+      //           }
+      //         >
+      //           <i className="plaint-icon" style={{ marginLeft: '5px' }} />
+      //         </Bubble>
+      //       </div>
+      //     );
+      //   } else {
+      //     return <p key={index}>{`${data['name']}`}</p>;
+      //   }
+      // });
     } else if (fieldInfo.dataFormat === 'volume') {
-      showContent = showData.map((data, index) => {
-        return (
-          <p key={index}>
-            <span className="text text-label">{t('数据卷名称: ')}</span>
-            <span className="text">{`${data['name']} `}</span>
-            <span className="text text-label">{t('目标路径: ')}</span>
-            <span className="text">{`${data['mountPath']} `}</span>
-            <span className="text text-label">{t('挂载子路径: ')}</span>
-            <span className="text">{`${data['subPath'] ? data['subPath'] : t('未设置，默认全覆盖目标路径')} `}</span>
-          </p>
-        );
-      });
+      showContent = this._getVolumeContent(showData);
+      // showContent = showData.map((data, index) => {
+      //   return (
+      //     <p key={index}>
+      //       <span className="text text-label">{t('数据卷名称: ')}</span>
+      //       <span className="text">{`${data['name']} `}</span>
+      //       <span className="text text-label">{t('目标路径: ')}</span>
+      //       <span className="text">{`${data['mountPath']} `}</span>
+      //       <span className="text text-label">{t('挂载子路径: ')}</span>
+      //       <span className="text">{`${data['subPath'] ? data['subPath'] : t('未设置，默认全覆盖目标路径')} `}</span>
+      //     </p>
+      //   );
+      // });
     } else if (fieldInfo.dataFormat === 'probe') {
       showContent = this._renderProbeItem(showData);
     } else if (fieldInfo.dataFormat === 'mapText') {
@@ -650,75 +658,81 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
     } else if (fieldInfo.dataFormat === 'gameBGPort') {
       showContent = this._reduceGameBackendGroupPort(showData);
     } else if (fieldInfo.dataFormat === 'operator') {
-      let {
-        clusterVersion,
-        namespaceSelection,
-        route,
-        subRoot: {
-          deleteResourceFlow,
-          detailResourceOption: { detailDeleteResourceSelection },
-        },
-      } = this.props;
-      //detail页面删除backendGroup
-      showContent = (
-        <PopConfirm
-          title="确定要删除后端负载配置？"
-          message="删除后，后端负载配置将不再生效"
-          visible={deleteResourceFlow.operationState !== OperationState.Pending}
-          footer={
-            <>
-              <Button
-                type="link"
-                onClick={() => {
-                  let bgResourceInfo = resourceConfig(clusterVersion).lbcf_bg;
-                  let resourceIns = detailDeleteResourceSelection;
-
-                  let resource: CreateResource = {
-                    id: uuid(),
-                    resourceInfo: bgResourceInfo,
-                    namespace: namespaceSelection,
-                    clusterId: route.queries['clusterId'],
-                    resourceIns,
-                  };
-                  actions.workflow.deleteResource.start([resource]);
-                  actions.workflow.deleteResource.perform();
-                }}
-              >
-                删除
-              </Button>
-              <Button
-                type="text"
-                onClick={() => {
-                  if (deleteResourceFlow.operationState === OperationState.Done) {
-                    actions.workflow.deleteResource.reset();
-                  }
-                  if (deleteResourceFlow.operationState === OperationState.Started) {
-                    actions.workflow.deleteResource.cancel();
-                  }
-                }}
-              >
-                取消
-              </Button>
-            </>
-          }
-          placement="top-start"
-        >
-          <Button
-            type={'link'}
-            onClick={() => {
-              actions.resource.selectDetailDeleteResouceIns(showData);
-              actions.workflow.deleteResource.start([]);
-            }}
-          >
-            {t('删除')}
-          </Button>
-        </PopConfirm>
-      );
-    } else if (fieldInfo.dataFormat === 'backendRecords') {
-      showContent = this._renderbackendRecordsItem(showData);
-    } else if (fieldInfo.dataFormat === 'forceDeletePod') {
-      showContent = <Text>{showData ? '迁移' : '不迁移'}</Text>;
+      showContent = this._getOperatorContent(showData);
+      // let {
+      //   clusterVersion,
+      //   namespaceSelection,
+      //   route,
+      //   subRoot: {
+      //     deleteResourceFlow,
+      //     detailResourceOption: { detailDeleteResourceSelection },
+      //   },
+      // } = this.props;
+      // //detail页面删除backendGroup
+      // showContent = (
+      //   <PopConfirm
+      //     title="确定要删除后端负载配置？"
+      //     message="删除后，后端负载配置将不再生效"
+      //     visible={deleteResourceFlow.operationState !== OperationState.Pending}
+      //     footer={
+      //       <>
+      //         <Button
+      //           type="link"
+      //           onClick={() => {
+      //             let bgResourceInfo = resourceConfig(clusterVersion).lbcf_bg;
+      //             let resourceIns = detailDeleteResourceSelection;
+      //
+      //             let resource: CreateResource = {
+      //               id: uuid(),
+      //               resourceInfo: bgResourceInfo,
+      //               namespace: namespaceSelection,
+      //               clusterId: route.queries['clusterId'],
+      //               resourceIns,
+      //             };
+      //             actions.workflow.deleteResource.start([resource]);
+      //             actions.workflow.deleteResource.perform();
+      //           }}
+      //         >
+      //           删除
+      //         </Button>
+      //         <Button
+      //           type="text"
+      //           onClick={() => {
+      //             this._handleOperatorCancel(deleteResourceFlow, actions);
+      //             // if (deleteResourceFlow.operationState === OperationState.Done) {
+      //             //   actions.workflow.deleteResource.reset();
+      //             // }
+      //             // if (deleteResourceFlow.operationState === OperationState.Started) {
+      //             //   actions.workflow.deleteResource.cancel();
+      //             // }
+      //           }}
+      //         >
+      //           取消
+      //         </Button>
+      //       </>
+      //     }
+      //     placement="top-start"
+      //   >
+      //     <Button
+      //       type={'link'}
+      //       onClick={() => {
+      //         actions.resource.selectDetailDeleteResouceIns(showData);
+      //         actions.workflow.deleteResource.start([]);
+      //       }}
+      //     >
+      //       {t('删除')}
+      //     </Button>
+      //   </PopConfirm>
+      // );
+    } else {
+      showContent = this._getOtherDataFormatContent(fieldInfo.dataFormat, showData);
     }
+    // else if (fieldInfo.dataFormat === 'backendRecords') {
+    //   showContent = this._renderbackendRecordsItem(showData);
+    // } else if (fieldInfo.dataFormat === 'forceDeletePod') {
+    //   showContent = this._getForceDeletePodContent(showData);
+    //   // showContent = <Text>{showData ? '迁移' : '不迁移'}</Text>;
+    // }
 
     return (
       <ListItem key={uuid()} isShow={isShowListItem} label={fieldInfo.label}>
@@ -726,6 +740,174 @@ export class ResourceDetailPanel extends React.Component<RootProps, ResourceDeta
       </ListItem>
     );
   }
+  private _getOtherDataFormatContent(dataFormat, showData) {
+    let showContent;
+    if (dataFormat === 'backendRecords') {
+      showContent = this._renderbackendRecordsItem(showData);
+    } else if (dataFormat === 'forceDeletePod') {
+      showContent = this._getForceDeletePodContent(showData);
+      // showContent = <Text>{showData ? '迁移' : '不迁移'}</Text>;
+    }
+    return showContent;
+  }
+  private _getIpContent(fieldInfo, showData) {
+    const showContent = (
+        <p>
+          <span id={fieldInfo.label}>{showData}</span>
+          {showData === 'None' && fieldInfo.extraInfo && <span>{` (${fieldInfo.extraInfo})`}</span>}
+        </p>
+    );
+    return showContent;
+  }
+  private _getLabelsContent(showData) {
+    // label的展示为 key:value、key:value
+    let showLabels = '';
+    let keys = Object.keys(showData);
+    keys.forEach((item, index) => {
+      showLabels += item + '：' + showData[item];
+      if (index !== keys.length - 1) {
+        showLabels += '、';
+      }
+    });
+    const showContent = <p>{showLabels}</p>;
+    return showContent;
+  }
+
+  private _getStatusContent(statusMap, showData) {
+    return statusMap ? (
+        <p className={classnames('', statusMap[showData] && statusMap[showData].classname)}>
+          {(statusMap[showData] && statusMap[showData].text) || '-'}
+        </p>
+    ) : (
+        <p>showData</p>
+    );
+  }
+
+  private _getVolumeContent(showData) {
+    return showData.map((data, index) => {
+      return (
+          <p key={index}>
+            <span className="text text-label">{t('数据卷名称: ')}</span>
+            <span className="text">{`${data['name']} `}</span>
+            <span className="text text-label">{t('目标路径: ')}</span>
+            <span className="text">{`${data['mountPath']} `}</span>
+            <span className="text text-label">{t('挂载子路径: ')}</span>
+            <span className="text">{`${data['subPath'] ? data['subPath'] : t('未设置，默认全覆盖目标路径')} `}</span>
+          </p>
+      );
+    });
+  }
+
+  private _getEnvContent(showData) {
+    // env 环境变量的展示 是 a = b
+    const showContent = showData.map((data, index) => {
+      if (data['value']) {
+        return <p key={index}>{`${data['name']}=${data['value']}`}</p>;
+      } else if (data['valueFrom']) {
+        let showKey = Object.keys(data['valueFrom'])[0],
+            refData = data['valueFrom'][showKey];
+        return (
+            <div key={index}>
+              <span className="text">{`${data['name']}=${showKey}`}</span>
+              <Bubble
+                  placement="left"
+                  content={
+                    <React.Fragment>
+                      <p>{t('名称：') + `${refData['name']}`}</p>
+                      <p>{`Key：${refData['key']}`}</p>
+                    </React.Fragment>
+                  }
+              >
+                <i className="plaint-icon" style={{ marginLeft: '5px' }} />
+              </Bubble>
+            </div>
+        );
+      } else {
+        return <p key={index}>{`${data['name']}`}</p>;
+      }
+    });
+    return showContent;
+  }
+  private _getForceDeletePodContent(showData) {
+    return <Text>{showData ? '迁移' : '不迁移'}</Text>;
+  }
+
+  private _getOperatorContent(showData) {
+    let {
+      actions,
+      clusterVersion,
+      namespaceSelection,
+      route,
+      subRoot: {
+        deleteResourceFlow,
+        detailResourceOption: { detailDeleteResourceSelection },
+      },
+    } = this.props;
+    //detail页面删除backendGroup
+    return (
+        <PopConfirm
+            title="确定要删除后端负载配置？"
+            message="删除后，后端负载配置将不再生效"
+            visible={deleteResourceFlow.operationState !== OperationState.Pending}
+            footer={
+              <>
+                <Button
+                    type="link"
+                    onClick={() => {
+                      let bgResourceInfo = resourceConfig(clusterVersion).lbcf_bg;
+                      let resourceIns = detailDeleteResourceSelection;
+
+                      let resource: CreateResource = {
+                        id: uuid(),
+                        resourceInfo: bgResourceInfo,
+                        namespace: namespaceSelection,
+                        clusterId: route.queries['clusterId'],
+                        resourceIns,
+                      };
+                      actions.workflow.deleteResource.start([resource]);
+                      actions.workflow.deleteResource.perform();
+                    }}
+                >
+                  删除
+                </Button>
+                <Button
+                    type="text"
+                    onClick={() => {
+                      // this._handleOperatorCancel(deleteResourceFlow, actions);
+                      if (deleteResourceFlow.operationState === OperationState.Done) {
+                        actions.workflow.deleteResource.reset();
+                      }
+                      if (deleteResourceFlow.operationState === OperationState.Started) {
+                        actions.workflow.deleteResource.cancel();
+                      }
+                    }}
+                >
+                  取消
+                </Button>
+              </>
+            }
+            placement="top-start"
+        >
+          <Button
+              type={'link'}
+              onClick={() => {
+                actions.resource.selectDetailDeleteResouceIns(showData);
+                actions.workflow.deleteResource.start([]);
+              }}
+          >
+            {t('删除')}
+          </Button>
+        </PopConfirm>
+    );
+  }
+  // private _handleOperatorCancel(deleteResourceFlow, actions) {
+  //   if (deleteResourceFlow.operationState === OperationState.Done) {
+  //     actions.workflow.deleteResource.reset();
+  //   }
+  //   if (deleteResourceFlow.operationState === OperationState.Started) {
+  //     actions.workflow.deleteResource.cancel();
+  //   }
+  // }
 
   /** 展示存活检查、就绪检查 */
   private _renderProbeItem(showData: any) {

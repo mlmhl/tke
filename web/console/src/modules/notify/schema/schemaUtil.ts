@@ -75,12 +75,13 @@ export function getState(schema, component: React.Component, rootObj?, obj?) {
   if (schema.type === 'array') {
     return {
       ...schema,
-      value:
-        obj && obj.map
-          ? obj.map(item => getState(schema.item, component, rootObj, item))
-          : schema.isInitFirstItem && !rootObj
-          ? [schema.getInitFirstItem ? schema.getInitFirstItem() : getState(schema.item, component, rootObj, undefined)]
-          : [],
+      value: _getArrayResult({ obj, schema, rootObj, component }),
+      // value:
+      //   obj && obj.map
+      //     ? obj.map(item => getState(schema.item, component, rootObj, item))
+      //     : schema.isInitFirstItem && !rootObj
+      //     ? [schema.getInitFirstItem ? schema.getInitFirstItem() : getState(schema.item, component, rootObj, undefined)]
+      //     : [],
       component
     };
   }
@@ -186,6 +187,13 @@ function _getValue(obj, schema) {
   return obj !== undefined ? obj : schema.value;
 }
 
+function _getArrayResult({ obj, schema, rootObj, component }) {
+  return obj && obj.map
+      ? obj.map(item => getState(schema.item, component, rootObj, item))
+      : schema.isInitFirstItem && !rootObj
+      ? [schema.getInitFirstItem ? schema.getInitFirstItem() : getState(schema.item, component, rootObj, undefined)]
+      : [];
+}
 function _getObjectResult(schema, component, rootObj, obj) {
   let properties = {};
 
@@ -303,16 +311,22 @@ function updateComponent(jsonObj) {
 }
 
 export function schemaObjToJSON(obj, skipPrivateValue = true) {
-  if (!obj) {
-    /* eslint-disable no-debugger*/
-    debugger;
-  }
+  // if (!obj) {
+  //   /* eslint-disable no-debugger*/
+  //   debugger;
+  // }
   if (obj.toJSON) {
     return obj.toJSON(obj, schemaObjToJSON);
   }
-  if (obj.isChecked === false) {
-    return undefined;
+
+  if (obj.isChecked !== undefined) {
+    if (!obj.isChecked) {
+      return undefined;
+    }
   }
+  // if (obj.isChecked === false) {
+  //   return undefined;
+  // }
   if (obj.properties || obj.valueSchema) {
     return _propertyParse(obj, skipPrivateValue);
     // let json = {};
@@ -393,11 +407,11 @@ export function schemaObjToJSON(obj, skipPrivateValue = true) {
     return obj.value + obj.unit;
   }
 
-  if (obj.isChecked !== undefined) {
-    if (!obj.isChecked) {
-      return undefined;
-    }
-  }
+  // if (obj.isChecked !== undefined) {
+  //   if (!obj.isChecked) {
+  //     return undefined;
+  //   }
+  // }
 
   return obj.value;
 }
