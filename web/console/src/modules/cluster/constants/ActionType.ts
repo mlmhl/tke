@@ -229,6 +229,9 @@ export const W_UpdateNodeAffinityRule = 'W_UpdateNodeAffinityRule';
 export const W_SelectNodeAffinityType = 'W_SelectNodeAffinityType';
 /** 优雅终止时间 */
 export const W_ChangeTerminationGracePeriodSeconds = 'W_ChangeTerminationGracePeriodSeconds';
+
+/** 共享内存 */
+export const W_ShmQuantity = 'W_ShmQuantity';
 /** ============================== end 创建Workload相关 =============================== */
 
 /** ============================== start 创建configMap相关 =============================== */

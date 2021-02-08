@@ -155,6 +155,9 @@ export interface WorkloadEdit extends Identifiable {
   /** 优雅停止等待时间，默认30s */
   terminationGracePeriodSeconds: number;
 
+  /** 共享内存 */
+  shmQuantity?: ShmQuantity;
+
   /** ===================== start 下面是实例更新的相关 ====================== */
 
   hpaQuery?: QueryState<ResourceFilter>;
@@ -240,6 +243,15 @@ export interface NatPort extends Identifiable {
 
   /** 端口号 */
   containerPort?: number;
+}
+
+/** 共享内存相关配置 */
+export interface ShmQuantity extends Identifiable {
+  /** 数量值 */
+  quantity?: number;
+
+  /** 单位*/
+  unit?: string;
 }
 
 /** 配置项 和 secret 弹窗的相关编辑工作 */

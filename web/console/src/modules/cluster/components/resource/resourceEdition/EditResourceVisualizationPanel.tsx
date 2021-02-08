@@ -640,7 +640,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         natPorts,
         oversoldRatio,
         isOpenCronHpa,
-        terminationGracePeriodSeconds
+        terminationGracePeriodSeconds,
+        shmQuantity
       } = workloadEdit;
 
 
@@ -709,6 +710,10 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       if (networkType) {
         templateAnnotations = this._getNetworkAnnotations(networkType, templateAnnotations, floatingIPReleasePolicy, isNatOn, natPorts);
       }
+      if (shmQuantity) {
+        templateAnnotations = this._getShmAnnotations(templateAnnotations, shmQuantity);
+      }
+
 
       const cmdbHandleResult = this._handleCmdbDataOrg(labelsInfo, creator, templateAnnotations);
       const templateLabels = cmdbHandleResult.templateLabels;
@@ -890,6 +895,12 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     }
     return templateAnnotations;
   }
+
+  private _getShmAnnotations(templateAnnotations, shm) {
+    templateAnnotations['tkestack.io/shm-size'] = shm.quantity + '' + shm.unit;
+    return templateAnnotations;
+  }
+
   private _handleSubmitSubModuleinValid(workloadType) {
     const isVolumeTemplateSetting  = this._enableVolumeTemplateSetting(workloadType);
     const { current: volumeTemplateCurrent } = this.volumeTemplateRef;

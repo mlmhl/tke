@@ -13,8 +13,9 @@ import {
   initContainer,
   initCronMetrics,
   initHpaMetrics,
+  initSpecificLabel,
   initNatPort,
-  initSpecificLabel
+  initShmQuantity
 } from '../constants/initState';
 import { Resource } from '../models';
 
@@ -217,6 +218,8 @@ const TempReducer = combineReducers({
 
   floatingIPReleasePolicy: reduceToPayload(ActionType.W_FloatingIPReleasePolicy, 'always'),
   terminationGracePeriodSeconds: reduceToPayload(ActionType.W_ChangeTerminationGracePeriodSeconds, 30),
+
+  shmQuantity: reduceToPayload(ActionType.W_ShmQuantity, initShmQuantity)
 });
 
 export const WorkloadEditReducer = (state, action) => {

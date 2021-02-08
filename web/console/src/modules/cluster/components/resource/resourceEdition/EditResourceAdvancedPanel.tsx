@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 import { bindActionCreators } from '@tencent/ff-redux';
 import { t } from '@tencent/tea-app/lib/i18n';
-import { Radio } from '@tencent/tea-component';
+import { Radio, InputAdornment, Select, InputNumber } from '@tencent/tea-component';
 
 import { FormItem } from '../../../../common';
 import { allActions } from '../../../actions';
@@ -58,6 +58,19 @@ export class EditResourceAdvancedPanel extends React.Component<EditResourceAdvan
               {t('。')}
             </span>
           </p>
+        </FormItem>
+        <FormItem label={t('共享内存大小')}>
+          <InputAdornment
+            after={
+              <Select
+                options={['M', 'G'].map(value => ({ value }))}
+                defaultValue="M"
+                size="xs"
+                onChange={value => actions.editWorkload.updateShmUnit(value)}
+              />
+            }
+          >
+            <InputNumber max={65535} min={0} defaultValue={64} onChange={value => actions.editWorkload.updateShmQuantity(value)} /></InputAdornment>
         </FormItem>
         <EditResourceAnnotations />
         {/* <FormItem label={t('端口')} isShow={isShowPort}>

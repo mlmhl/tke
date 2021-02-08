@@ -161,6 +161,14 @@ export const initConfigMapItem: ConfigItems = {
   v_mode: initValidator
 };
 
+
+/** 创建workload，共享内存初始化 */
+export const initShmQuantity: ShmQuantity = {
+  id: uuid(),
+  quantity: 64,
+  unit: 'M'
+};
+
 /** 创建workload，containers的初始化 */
 export const initMount: MountItem[] = [
   {

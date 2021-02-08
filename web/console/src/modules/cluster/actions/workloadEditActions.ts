@@ -37,7 +37,7 @@ import {
   WorkloadLabel,
   ContainerEnv
 } from '../models';
-import { CronMetrics, MatchExpressions, NatPort } from '../models/WorkloadEdit';
+import { CronMetrics, MatchExpressions, NatPort, ShmQuantity } from '../models/WorkloadEdit';
 import { router } from '../router';
 import * as WebAPI from '../WebAPI';
 import { validateWorkloadActions } from './validateWorkloadActions';
@@ -1284,6 +1284,35 @@ export const workloadEditActions = {
     return {
       type: ActionType.W_ChangeTerminationGracePeriodSeconds,
       payload: terminationGracePeriodSeconds
+    };
+  },
+
+
+  /** 变更共享内存大小 */
+  updateShmQuantity: (value: number) => {
+    return async (dispatch, getState: GetState) => {
+      let shm: ShmQuantity = getState().subRoot.workloadEdit.shmQuantity;
+      shm.quantity = value;
+      dispatch(
+        {
+          type: ActionType.W_ShmQuantity,
+          payload: shm
+        }
+      );
+    };
+  },
+
+  /** 变更共享内存单位 */
+  updateShmUnit: (u: string) => {
+    return async (dispatch, getState: GetState) => {
+      let shm: ShmQuantity = getState().subRoot.workloadEdit.shmQuantity;
+      shm.unit = u;
+      dispatch(
+        {
+          type: ActionType.W_ShmQuantity,
+          payload: shm
+        }
+      );
     };
   },
   /** ================ end 下面是滚动更新镜像的相关操作 ======================== */
