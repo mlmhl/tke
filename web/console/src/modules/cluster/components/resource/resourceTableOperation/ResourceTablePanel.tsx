@@ -31,63 +31,18 @@ export const IsResourceShowLoadingIcon = (resourceName: string, item: Resource) 
   } else if (resourceName === 'deployment') {
     // 判断readyReplicas的前提是 replicas是有的，而不是空，空即代表当前没有pod，不需要继续轮训
     return _deploymentJudge(item);
-    // return item.status.readyReplicas === undefined && item.status.replicas
-    //   ? true
-    //   : +item.status.readyReplicas < +item.status.replicas
-    //   ? true
-    //   : false;
   } else if (resourceName === 'svc') {
     return _svcJudge(item);
-    // let type = item.spec && item.spec.type,
-    //   isClusterIP = type === 'ClusterIP',
-    //   isNodePort = type === 'NodePort';
-    // return (isClusterIP && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress === undefined) ||
-    //   (isNodePort && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress === undefined) ||
-    //   (!isClusterIP && !isNodePort && item.status && item.status.loadBalancer && item.status.loadBalancer.ingress)
-    //   ? false
-    //   : true;
   } else if (resourceName === 'ingress') {
     return _ingressJudge(item);
-    // // 此处需要判断是否为nginx-ingress，如果为nginx-ingress的话，则不需要进行轮询了
-    // let isNginxIngress =
-    //   item['metadata']['annotations'] &&
-    //   item['metadata']['annotations']['kubernetes.io/ingress.class'] === 'nginx-ingress'
-    //     ? true
-    //     : false;
-    //
-    // // 判断是否为qcloud-loadbalance
-    // let isQcloud =
-    //   item.metadata.annotations && item.metadata.annotations['kubernetes.io/ingress.qcloud-loadbalance-id'];
-    //
-    // return isNginxIngress
-    //   ? false
-    //   : isQcloud
-    //   ? item.metadata.annotations &&
-    //     item.metadata.annotations['kubernetes.io/ingress.qcloud-loadbalance-id'] &&
-    //     item.status.loadBalancer &&
-    //     item.status.loadBalancer.ingress
-    //     ? false
-    //     : true
-    //   : false;
   } else if (resourceName === 'pvc' || resourceName === 'csi') {
     return item.status === undefined ? true : item.status.phase === 'Pending' ? true : false;
   } else if (resourceName === 'statefulset') {
     return item.status.replicas === undefined ? true : +item.status.replicas < +item.spec.replicas ? true : false;
   } else if (resourceName === 'daemonset') {
     return _daemonsetJudge(item);
-    // return item.status.currentNumberScheduled === undefined
-    //   ? true
-    //   : +item.status.currentNumberScheduled < +item.status.desiredNumberScheduled
-    //   ? true
-    //   : false;
   } else if (resourceName === 'tapp') {
     return _tappJudge(item);
-    /**待定 todo ing */
-    // return item.status.replicas === undefined
-    //   ? true
-    //   : +item.status.readyReplicas < +item.status.replicas
-    //   ? true
-    //   : false;
   }
   return false;
 };
@@ -817,36 +772,11 @@ export class ResourceTablePanel extends React.Component<ResourceTableProps, {}> 
 
     // fieldInfo当中的 dataField是一个数组，可以同时输入多个值
     let showData = this._getShowData(fieldInfo, resource);
-    // let showData: any = [];
-    // const dataFeild = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.shareClusterDataField ? fieldInfo.shareClusterDataField : fieldInfo.dataField;
-    // dataFeild.forEach(item => {
-    //   let annotationsDataFieldKey = '';
-    //   let newItem = item;
-    //   const dataFieldKey = WEBPACK_CONFIG_SHARED_CLUSTER && fieldInfo.dataFormat === 'cmdbOperator' ? 'labels' : 'annotations';
-    //   // 'metadata.annotations.cmdb.io/operator' || 'metadata.labels.teg.tkex.oa.com/creator'
-    //   const startOfAnnoIndex = item.indexOf(dataFieldKey);
-    //   if (startOfAnnoIndex !== -1) {
-    //     const endOfAnnoIndex = startOfAnnoIndex + dataFieldKey.length;
-    //     newItem = item.substr(0, endOfAnnoIndex);
-    //     annotationsDataFieldKey = item.substring(endOfAnnoIndex + 1);
-    //   }
-    //   let dataFieldIns = newItem.split('.');
-    //   if (dataFieldIns && annotationsDataFieldKey) {
-    //     dataFieldIns.push(annotationsDataFieldKey);
-    //   }
-    //   let data: any = this._getFinalData(dataFieldIns, resource);
-    //   // 如果返回的为 '' ，即找不到这个对象，则使用配置文件所设定的默认值
-    //   showData.push(data === '' ? fieldInfo.noExsitedValue : data);
-    // });
-
     showData = showData.length === 1 ? showData[0] : showData;
 
     // 这里是当列表有 bubble等情况的时候，判断当前行属于第几行
     let resourceIndex = ffResourceList.list.data.records.findIndex(item => item.id === resource.id);
     let direction: 'top' | 'bottom' = this._getDirection(ffResourceList, resourceIndex);
-      // ffResourceList.list.data.recordCount < 4 || resourceIndex < ffResourceList.list.data.recordCount - 2
-      //   ? 'top'
-      //   : 'bottom';
     if (fieldInfo.dataFormat === 'text') {
 
       // 共享集群的namespace列表的名称不能点进详情

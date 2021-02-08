@@ -219,38 +219,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     let isDeploymentOrStateful = this._isDeploymentOrStateful(workloadType);
 
     let namespaceOptions = this._getNamespaceOptions(namespaceList);
-    // let namespaceOptions = namespaceList.data.records.map(namespace => {
-    //   const { name, zoneText } = namespace;
-    //   let text = name;
-    //   if (WEBPACK_CONFIG_SHARED_CLUSTER) {
-    //     text = name + (zoneText ? `(${zoneText})` : '');
-    //   }
-    //   return {
-    //     value: name,
-    //     text,
-    //     tooltip: text
-    //   };
-    // });
 
     let finalResourceTypeList = this._getFinalResourceTypeList(isCanUseTapp, addons);
-    // let finalResourceTypeList = [];
-    // ResourceTypeList.forEach(list => {
-    //   switch (list.value) {
-    //     case 'tapp':
-    //       if (isCanUseTapp || addons['TappController'] !== undefined) {
-    //         finalResourceTypeList.push(list);
-    //       }
-    //       break;
-    //     case 'daemonset':
-    //       if (!(WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS)) {
-    //         finalResourceTypeList.push(list);
-    //       }
-    //       break;
-    //     default:
-    //       finalResourceTypeList.push(list);
-    //       break;
-    //   }
-    // });
 
     /** 共享集群新增模块初始数据 */
     const selectedProject = rawProjectList.filter(item => item.metadata.name === projectSelection)[0] || {};
@@ -641,20 +611,12 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       { mode, workloadEdit, serviceEdit } = subRoot;
     const isVolumeTemplateSetting  = this._enableVolumeTemplateSetting(workloadEdit.workloadType);
     const creator = this._getCreator();
-    // const creator = userInfo.object.data && userInfo.object.data.name || '';
     const { current: volumeTemplateCurrent } = this.volumeTemplateRef;
-    // const { current: mySharedClusterCMDBRefCurrent } = this.mySharedClusterCMDBRef;
 
     actions.validate.workload.validateWorkloadEdit();
     if(this._handleSubmitSubModuleinValid(workloadEdit.workloadType)) {
       return;
     }
-    // if(isVolumeTemplateSetting && !volumeTemplateCurrent.triggerValidation()) {
-    //   return;
-    // }
-    // if(WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS && !mySharedClusterCMDBRefCurrent.triggerValidation())  {
-    //   return;
-    // }
     if (validateWorkloadActions._validateWorkloadEdit(workloadEdit, serviceEdit)) {
       let {
         isCreateService,
@@ -734,19 +696,12 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       if(nodeAffinityType !== affinityType.unset) {
         affinityInfo = this._reduceNodeAffinityInfo(nodeAffinityType, nodeAffinityRule, computer.selections);
       }
-      // let affinityInfo =
-      //   nodeAffinityType !== affinityType.unset
-      //     ? this._reduceNodeAffinityInfo(nodeAffinityType, nodeAffinityRule, computer.selections)
-      //     : null;
 
       // pod反亲和性
       let podAntiAffinity = null;
       if(podAffinityType !== PodAffinityType.unset) {
         podAntiAffinity = this._reducePodAffinity(podAffinityType, true, workloadLabels);
       }
-      // const podAntiAffinity = podAffinityType !== PodAffinityType.unset
-      //   ? this._reducePodAffinity(podAffinityType, true, workloadLabels)
-      //   : null;
 
       // 如果选择了网络模式，需要把网络模式写在annotations当中
       let templateAnnotations = {};
@@ -760,66 +715,11 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       }
       if (networkType) {
         templateAnnotations = this._getNetworkAnnotations(networkType, templateAnnotations, floatingIPReleasePolicy);
-        // if (networkType === WorkloadNetworkTypeEnum.Nat || networkType === WorkloadNetworkTypeEnum.Overlay) {
-        //   templateAnnotations['k8s.v1.cni.cncf.io/networks'] = 'galaxy-flannel';
-        // } else if (networkType === WorkloadNetworkTypeEnum.FloatingIP) {
-        //   templateAnnotations['k8s.v1.cni.cncf.io/networks'] = 'galaxy-k8s-vlan';
-        //   templateAnnotations['k8s.v1.cni.galaxy.io/release-policy'] =
-        //     floatingIPReleasePolicy === 'always' ? '' : floatingIPReleasePolicy;
-        // }
       }
 
       const cmdbHandleResult = this._handleCmdbDataOrg(labelsInfo, creator, templateAnnotations);
       const templateLabels = cmdbHandleResult.templateLabels;
       templateAnnotations = cmdbHandleResult.templateAnnotations;
-      // const CMDBData = this.myCMDBComponentRef.current ? this.myCMDBComponentRef.current.getCMDBData() : {};
-      // const templateLabels = cloneDeep(labelsInfo);
-      //
-      // const {
-      //   cmdb = '',
-      //   department = '',
-      //   departmentId = '',
-      //   bsiPath = '',
-      //   operator = '',
-      //   bakOperator = '' } = CMDBData || {};
-      //
-      // if (WEBPACK_CONFIG_SHARED_CLUSTER && WEBPACK_CONFIG_IS_BUSINESS) {
-      //   const sharedClusterCmdbData: SharedClusterCmdbData = this.mySharedClusterCMDBRef.current.getSharedClusterCmdbData();
-      //   const { moduleId, moduleName } = sharedClusterCmdbData;
-      //
-      //   /** label */
-      //   templateLabels['teg.tkex.oa.com/module-id'] = moduleId.toString();
-      //   templateLabels['teg.tkex.oa.com/creator'] = creator;
-      //
-      //   /** annotation */
-      //   if(moduleName) {
-      //     templateAnnotations['teg.tkex.oa.com/module'] = moduleName;
-      //   }
-      //
-      //
-      // }
-      // if (cmdb) {
-      //
-      //   /** label */
-      //   templateLabels['cmdb'] = 'true';
-      //
-      //   /** annotation */
-      //   if (department) {
-      //     templateAnnotations['cmdb.io/depName'] = department;
-      //   }
-      //   if (departmentId) {
-      //     templateAnnotations['cmdb.io/depId'] = departmentId + '';
-      //   }
-      //   if (bsiPath) {
-      //     templateAnnotations['cmdb.io/bsiPath'] = bsiPath;
-      //   }
-      //   if (operator) {
-      //     templateAnnotations['cmdb.io/operator'] = operator;
-      //   }
-      //   if (bakOperator) {
-      //     templateAnnotations['cmdb.io/bakOperator'] = bakOperator.join(',');
-      //   }
-      // }
 
       const affinity = {
         ...affinityInfo as object,
@@ -839,13 +739,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           imagePullSecrets: this._getValueThroughFlag(imagePullSecrets.length, imagePullSecrets.map(item => ({
               name: item.secretName
             }))),
-          // imagePullSecrets: imagePullSecrets.length
-          //   ? imagePullSecrets.map(item => ({
-          //       name: item.secretName
-          //     }))
-          //   : undefined,
           affinity: this._turnEmptyToUndefined(affinity),
-          // hostNetwork: networkType === WorkloadNetworkTypeEnum.Host ? true : undefined
           terminationGracePeriodSeconds: terminationGracePeriodSeconds
         }
       };
@@ -881,15 +775,6 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
           forceDeletePod: this._getValueThroughFlag(isTapp, (nodeAbnormalMigratePolicy === 'true' ? true : false)),
         }
       };
-      // replicas: isNeedContainerNum ? (isAutoScale ? +minReplicas : +containerNum) : undefined,
-      //     serviceName: isStatefulset && serviceEdit.isOpenHeadless ? workloadName : undefined,
-      //     schedule: isCronJobs ? cronSchedule : undefined,
-      //     template: !isCronJobs ? templateContent : undefined,
-      //     jobTemplate: isCronJobs ? jobTemplateContent : undefined,
-      //     selector: !isCronJobOrCronJob ? selectorContent : undefined,
-      //     completions: isJobs ? +completion : undefined,
-      //     parallelism: isJobs ? +parallelism : undefined,
-      //     forceDeletePod: isTapp ? (nodeAbnormalMigratePolicy === 'true' ? true : false) : undefined
       if(isVolumeTemplateSetting) {
         jsonData.spec['volumeClaimTemplates'] = volumeTemplateCurrent.getVolumeTemplates();
       }
@@ -898,18 +783,12 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
        * pre: deployment || statefulset || tapp
        */
       let serviceJsonData = this._getDataSubCondition({isDeployment, isTapp, isStatefulset, extraJudgeFlag: isCreateService, dataFlag: 'service', labelsInfo});
-      // let serviceJsonData =
-      //   isCreateService && (isDeployment || isStatefulset || isTapp)
-      //     ? JSON.stringify(this._reduceServiceData(labelsInfo))
-      //     : '';
 
       /**
        * ========================== 此处是同时创建hpa ==========================
        * pre: deployment || statefulset || tapp
        */
       let hpaJsonData = this._getDataSubCondition({isDeployment, isTapp, isStatefulset, extraJudgeFlag: isAutoScale, dataFlag: 'hpa'});
-      // let hpaJsonData =
-      //   (isDeployment || isTapp || isStatefulset) && isAutoScale ? JSON.stringify(this._reduceHpaData()) : '';
 
       /**
        *  ========================== 此处是同时创建cronhpa ==========================
@@ -917,8 +796,6 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
        *
        */
       let cronhpaJsonData = this._getDataSubCondition({isDeployment, isTapp, isStatefulset, extraJudgeFlag: isOpenCronHpa, dataFlag: 'cronhpa' });
-      // let cronhpaJsonData =
-      //   (isDeployment || isTapp || isStatefulset) && isOpenCronHpa ? JSON.stringify(this._reduceCronHpaData()) : '';
 
       /** 最终传过去的json的数据 */
       let finalJSON = serviceJsonData + hpaJsonData + cronhpaJsonData + JSON.stringify(jsonData);
@@ -987,13 +864,6 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         actions.workflow.applyDifferentInterfaceResource.perform();
       } else {
         this._handleNoTapp({isDeployment, isStatefulset, isCreateService, isAutoScale, isOpenCronHpa, resource})
-        // if ((isDeployment || isStatefulset) && (isCreateService || isAutoScale || isOpenCronHpa)) {
-        //   actions.workflow.applyResource.start([resource], region.selection.value);
-        //   actions.workflow.applyResource.perform();
-        // } else {
-        //   actions.workflow.modifyResource.start([resource], region.selection.value);
-        //   actions.workflow.modifyResource.perform();
-        // }
       }
     }
   }
@@ -1324,14 +1194,6 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
 
       // 挂载点的相关配置
       if (c.mounts.length && (volumes.length || volumeTemplates.length)) {
-        // containerItem['volumeMounts'] = c.mounts.map(m => {
-        //   return {
-        //     mountPath: m.mountPath,
-        //     subPath: m.mountSubPath ? m.mountSubPath : undefined,
-        //     name: m.volume,
-        //     readOnly: m.mode === 'rw' ? undefined : true
-        //   };
-        // });
         containerItem['volumeMounts'] = this._getVolumeCount(c);
       }
 
@@ -1352,72 +1214,14 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       if (this._isSetResourceConditionTrue(c, networkType)) {
         if (this._isSetResource1ConditionTrue(cpuLimit, memLimit, c)) {
           containerItem['resources'] = this._getResource1({ cpuLimit, memLimit, c, networkType, hasSetNetworkResource });
-          // containerItem['resources'] = {
-          //   limits: {
-          //     cpu: cpuLimit ? cpuLimit : undefined,
-          //     memory: memLimit ? memLimit + 'Mi' : undefined,
-          //     'nvidia.com/gpu': +c.gpu > 0 ? c.gpu + '' : undefined,
-          //     'tencent.com/vcuda-core': +c.gpuCore ? +c.gpuCore * 100 : undefined,
-          //     'tencent.com/vcuda-memory': +c.gpuMem ? +c.gpuMem : undefined,
-          //     'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP && !hasSetNetworkResource ? '1' : undefined
-          //   }
-          // };
         }
         if (this._isSetResource2ConditionTrue(cpuRequest, memRequest)) {
           containerItem['resources'] = this._getResource2({ containerItem, cpuRequest, memRequest, c, networkType, hasSetNetworkResource });
-          // containerItem['resources'] = Object.assign({}, containerItem['resources'], {
-          //   requests: {
-          //     cpu: cpuRequest ? cpuRequest : undefined,
-          //     memory: memRequest ? memRequest + 'Mi' : undefined,
-          //     'tencent.com/vcuda-core': +c.gpuCore ? +c.gpuCore * 100 : undefined,
-          //     'tencent.com/vcuda-memory': +c.gpuMem ? +c.gpuMem : undefined,
-          //     'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP && !hasSetNetworkResource ? '1' : undefined
-          //   }
-          // });
         }
       }
 
       hasSetNetworkResource = networkType === WorkloadNetworkTypeEnum.FloatingIP;
       containerItem['env'] = this._getContainerItemEnv(c);
-      // c.envItems.forEach(env => {
-      //   let envItem = {
-      //     name: env.name
-      //   };
-      //
-      //   if (env.type === ContainerEnv.EnvTypeEnum.UserDefined) {
-      //     envItem['value'] = env.value;
-      //   } else if (
-      //     env.type === ContainerEnv.EnvTypeEnum.SecretKeyRef ||
-      //     env.type === ContainerEnv.EnvTypeEnum.ConfigMapRef
-      //   ) {
-      //     let isSecret = env.type === ContainerEnv.EnvTypeEnum.SecretKeyRef;
-      //     let keyRef = {
-      //       key: isSecret ? env.secretDataKey : env.configMapDataKey,
-      //       name: isSecret ? env.secretName : env.configMapName,
-      //       optional: false
-      //     };
-      //
-      //     envItem['valueFrom'] = {
-      //       [isSecret ? 'secretKeyRef' : 'configMapKeyRef']: keyRef
-      //     };
-      //   } else if (env.type === ContainerEnv.EnvTypeEnum.FieldRef) {
-      //     envItem['valueFrom'] = {
-      //       fieldRef: {
-      //         apiVersion: env.apiVersion,
-      //         fieldPath: env.fieldName
-      //       }
-      //     };
-      //   } else if (env.type === ContainerEnv.EnvTypeEnum.ResourceFieldRef) {
-      //     envItem['valueFrom'] = {
-      //       resourceFieldRef: {
-      //         containerName: c.name,
-      //         resource: env.resourceFieldName,
-      //         divisor: env.divisor
-      //       }
-      //     };
-      //   }
-      //   containerItem['env'].push(envItem);
-      // });
 
       // 如果有工作目录
       if (c.workingDir) {
@@ -1444,55 +1248,12 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       // 增加权限集
       if (!isEmpty(c.addCapabilities)) {
         containerItem = this._addAndDeleteAuth(containerItem, c.addCapabilities);
-        // if (isEmpty(containerItem['securityContext'])) {
-        //   containerItem['securityContext'] = {};
-        // }
-        // if (isEmpty(containerItem['securityContext']['capabilities'])) {
-        //   containerItem['securityContext']['capabilities'] = {};
-        // }
-        // containerItem['securityContext']['capabilities']['add'] = c.addCapabilities;
       }
 
       // 删除权限集
       if (!isEmpty(c.dropCapabilities)) {
         containerItem = this._addAndDeleteAuth(containerItem, c.dropCapabilities);
-        // if (isEmpty(containerItem['securityContext'])) {
-        //   containerItem['securityContext'] = {};
-        // }
-        // if (isEmpty(containerItem['securityContext']['capabilities'])) {
-        //   containerItem['securityContext']['capabilities'] = {};
-        // }
-        // containerItem['securityContext']['capabilities']['drop'] = c.dropCapabilities;
       }
-
-      // 存活检查
-      // const reduceHealthCheck = (healthCheckItem: HealthCheckItem) => {
-      //   let healthItem = {
-      //     failureThreshold: +healthCheckItem.unhealthThreshold,
-      //     successThreshold: +healthCheckItem.healthThreshold,
-      //     initialDelaySeconds: healthCheckItem.delayTime ? +healthCheckItem.delayTime : undefined,
-      //     timeoutSeconds: healthCheckItem.timeOut ? +healthCheckItem.timeOut : undefined,
-      //     periodSeconds: healthCheckItem.intervalTime ? +healthCheckItem.intervalTime : undefined
-      //   };
-      //
-      //   if (healthCheckItem.checkMethod === 'methodTcp') {
-      //     healthItem['tcpSocket'] = {
-      //       port: +healthCheckItem.port
-      //     };
-      //   } else if (healthCheckItem.checkMethod === 'methodHttp') {
-      //     healthItem['httpGet'] = {
-      //       path: healthCheckItem.path,
-      //       port: +healthCheckItem.port,
-      //       scheme: healthCheckItem.protocol
-      //     };
-      //   } else if (healthCheckItem.checkMethod === 'methodCmd') {
-      //     healthItem['exec'] = {
-      //       command: healthCheckItem.cmd.split('\n').map(item => item.trim())
-      //     };
-      //   }
-      //
-      //   return healthItem;
-      // };
 
       if (c.healthCheck.isOpenLiveCheck) {
         let healthCheckItem = c.healthCheck.liveCheck;
