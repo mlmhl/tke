@@ -1211,14 +1211,13 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       }
       containerItem['resources'] = {};
       // !!!注意：如果设置了gpu，需要在limits里面设定
-      if (this._isSetResourceConditionTrue(c, networkType)) {
-        if (this._isSetResource1ConditionTrue(cpuLimit, memLimit, c)) {
-          containerItem['resources'] = this._getResource1({ cpuLimit, memLimit, c, networkType, hasSetNetworkResource });
-        }
-        if (this._isSetResource2ConditionTrue(cpuRequest, memRequest)) {
-          containerItem['resources'] = this._getResource2({ containerItem, cpuRequest, memRequest, c, networkType, hasSetNetworkResource });
-        }
+      if (this._isSetResource1ConditionTrue(cpuLimit, memLimit, c, networkType)) {
+        containerItem['resources'] = this._getResource1({ cpuLimit, memLimit, c, networkType, hasSetNetworkResource });
       }
+      if (this._isSetResource2ConditionTrue(cpuRequest, memRequest, c, networkType)) {
+        containerItem['resources'] = this._getResource2({ containerItem, cpuRequest, memRequest, c, networkType, hasSetNetworkResource });
+      }
+
 
       hasSetNetworkResource = networkType === WorkloadNetworkTypeEnum.FloatingIP;
       containerItem['env'] = this._getContainerItemEnv(c);
@@ -1272,11 +1271,11 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
   private _isSetResourceConditionTrue(c, networkType) {
     return (+c.gpuMem > 0 || +c.gpuCore > 0 || networkType === WorkloadNetworkTypeEnum.FloatingIP);
   }
-  private _isSetResource1ConditionTrue(cpuLimit, memLimit, c) {
-    return cpuLimit !== '' || memLimit !== '' || +c.gpu > 0;
+  private _isSetResource1ConditionTrue(cpuLimit, memLimit, c, networkType) {
+    return cpuLimit !== '' || memLimit !== '' || +c.gpu > 0 || +c.gpuMem > 0 || +c.gpuCore > 0 || networkType === WorkloadNetworkTypeEnum.FloatingIP;
   }
-  private _isSetResource2ConditionTrue(cpuRequest, memRequest) {
-    return cpuRequest !== '' || memRequest !== '';
+  private _isSetResource2ConditionTrue(cpuRequest, memRequest, c, networkType) {
+    return cpuRequest !== '' || memRequest !== '' || +c.gpuMem > 0 || +c.gpuCore > 0 || networkType === WorkloadNetworkTypeEnum.FloatingIP;
   }
   private _getVolumeCount(c) {
     const volumeCount = c.mounts.map(m => {
