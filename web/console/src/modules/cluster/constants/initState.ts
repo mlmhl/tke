@@ -18,7 +18,7 @@ import {
   VolumeItem,
   WorkloadLabel
 } from '../models';
-import { CronMetrics } from '../models/WorkloadEdit';
+import { CronMetrics, NatPort } from '../models/WorkloadEdit';
 import { BackendType } from './Config';
 
 /** 创建服务，端口映射的初始值 */
@@ -175,6 +175,13 @@ export const initMount: MountItem[] = [
     v_mode: initValidator
   }
 ];
+
+/** 创建workload，随机端口映射的初始化 */
+export const initNatPort: NatPort = {
+  id: uuid(),
+  containerPortProtocol: 'TCP',
+  containerPort: 1,
+};
 
 /** cpu推荐的初始值 */
 const initCpuLimit: LimitItem[] = [

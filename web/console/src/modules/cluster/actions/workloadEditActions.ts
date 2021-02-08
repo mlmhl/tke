@@ -21,6 +21,7 @@ import {
   initHpaMetrics,
   initmatchExpressions,
   initMount,
+  initNatPort,
   initVolume,
   initWorkloadAnnotataions,
   initWorkloadLabel
@@ -36,7 +37,7 @@ import {
   WorkloadLabel,
   ContainerEnv
 } from '../models';
-import { CronMetrics, MatchExpressions } from '../models/WorkloadEdit';
+import { CronMetrics, MatchExpressions, NatPort } from '../models/WorkloadEdit';
 import { router } from '../router';
 import * as WebAPI from '../WebAPI';
 import { validateWorkloadActions } from './validateWorkloadActions';
@@ -1040,6 +1041,61 @@ export const workloadEditActions = {
       dispatch({
         type: ActionType.W_FloatingIPReleasePolicy,
         payload: floatingIPReleasePolicy
+      });
+    };
+  },
+
+  /** 端口映射开关 */
+  isNatOn: (value: boolean) => {
+    return async (dispatch: Redux.Dispatch, getState: GetState) => {
+      dispatch({
+        type: ActionType.W_IsNatOn,
+        payload: value
+      });
+    };
+  },
+
+  /** 新增端口映射 */
+  addNatPorts: () => {
+    return async (dispatch, getState: GetState) => {
+      let ports: NatPort[] = cloneDeep(getState().subRoot.workloadEdit.natPorts);
+
+      ports.push(Object.assign({}, initNatPort, { id: uuid() }));
+      dispatch({
+        type: ActionType.W_NatPorts,
+        payload: ports
+      });
+    };
+  },
+
+  /** 更新labels */
+  updateNatPorts: (obj: any, portId: string) => {
+    return async (dispatch, getState: GetState) => {
+      let ports: NatPort[] = cloneDeep(getState().subRoot.workloadEdit.natPorts),
+        portIndex = ports.findIndex(port => port.id === portId),
+        objKeys = Object.keys(obj);
+
+      objKeys.forEach(item => {
+        ports[portIndex][item] = obj[item];
+      });
+      dispatch({
+        type: ActionType.W_NatPorts,
+        payload: ports
+      });
+    };
+  },
+
+  /** 删除端口映射*/
+  deleteNatPorts: (portId: string) => {
+    return async (dispatch, getState: GetState) => {
+      let ports: NatPort[] = cloneDeep(getState().subRoot.workloadEdit.natPorts),
+        portIndex = ports.findIndex(port => port.id === portId);
+
+      console.log(ports);
+      ports.splice(portIndex, 1);
+      dispatch({
+        type: ActionType.W_NatPorts,
+        payload: ports
       });
     };
   },

@@ -22,6 +22,7 @@ import {
   WorkloadNetworkTypeEnum,
   PodAffinityType
 } from '../../../constants/Config';
+
 import {
   Computer,
   ContainerItem,
@@ -645,6 +646,8 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         nodeAbnormalMigratePolicy,
         networkType,
         floatingIPReleasePolicy,
+        isNatOn,
+        natPorts,
         oversoldRatio,
         isOpenCronHpa,
         terminationGracePeriodSeconds
@@ -658,7 +661,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       let volumesInfo = this._reduceVolumes(finalVolumes);
 
       // 进行容器的相关数据拼接
-      let containersInfo = this._reduceContainers(containers, volumes, volumeTemplates, { oversoldRatio, networkType });
+      let containersInfo = this._reduceContainers(containers, volumes, volumeTemplates, { oversoldRatio, networkType, isNatOn, natPorts });
 
       // 进行容器的labels的数据拼接，默认有一个 qcloud-app: workload的名称，很懂监控等都用qcloud-app的标签
       let labelsInfo = { 'qcloud-app': workloadName };
@@ -714,7 +717,7 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         });
       }
       if (networkType) {
-        templateAnnotations = this._getNetworkAnnotations(networkType, templateAnnotations, floatingIPReleasePolicy);
+        templateAnnotations = this._getNetworkAnnotations(networkType, templateAnnotations, floatingIPReleasePolicy, isNatOn, natPorts);
       }
 
       const cmdbHandleResult = this._handleCmdbDataOrg(labelsInfo, creator, templateAnnotations);
@@ -884,13 +887,16 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       actions.workflow.modifyResource.perform();
     }
   }
-  private _getNetworkAnnotations(networkType, templateAnnotations, floatingIPReleasePolicy) {
-    if (networkType === WorkloadNetworkTypeEnum.Nat || networkType === WorkloadNetworkTypeEnum.Overlay) {
-      templateAnnotations['k8s.v1.cni.cncf.io/networks'] = 'galaxy-flannel';
+  private _getNetworkAnnotations(networkType, templateAnnotations, floatingIPReleasePolicy, isNatOn, natPorts) {
+    if (networkType === WorkloadNetworkTypeEnum.Overlay){
+      templateAnnotations['teg.tkex.oa.com/network'] = 'globalroute';
+      if (isNatOn && natPorts.length > 0){
+        templateAnnotations['tkestack.io/portmapping'] = '';
+      }
     } else if (networkType === WorkloadNetworkTypeEnum.FloatingIP) {
-      templateAnnotations['k8s.v1.cni.cncf.io/networks'] = 'galaxy-k8s-vlan';
+      templateAnnotations['teg.tkex.oa.com/network'] = 'eni';
       templateAnnotations['k8s.v1.cni.galaxy.io/release-policy'] =
-          floatingIPReleasePolicy === 'always' ? '' : floatingIPReleasePolicy;
+        floatingIPReleasePolicy === 'always' ? '' : floatingIPReleasePolicy;
     }
     return templateAnnotations;
   }
@@ -1179,12 +1185,12 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     });
     return volumesInfo;
   }
-
   /** 处理container相关的配置项 */
   private _reduceContainers(containers: ContainerItem[], volumes: VolumeItem[], volumeTemplates: any[], extraOption?: any) {
     let containersInfo = [];
-    let { oversoldRatio, networkType } = extraOption;
+    let { oversoldRatio, networkType, isNatOn, natPorts } = extraOption;
     let hasSetNetworkResource: boolean = false;
+    let hasNatPortsSet: boolean = false;
     containersInfo = containers.map(c => {
       let containerItem = {
         name: c.name,
@@ -1252,6 +1258,18 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
       // 删除权限集
       if (!isEmpty(c.dropCapabilities)) {
         containerItem = this._addAndDeleteAuth(containerItem, c.dropCapabilities);
+      }
+
+      // 随机端口映射
+      if (isNatOn && natPorts.length > 0 && !hasNatPortsSet) {
+        hasNatPortsSet = true;
+        containerItem['ports'] = [];
+        natPorts.forEach(port => {
+          containerItem['ports'].push({
+            'protocol': port.containerPortProtocol,
+            'containerPort': port.containerPort,
+          });
+        });
       }
 
       if (c.healthCheck.isOpenLiveCheck) {

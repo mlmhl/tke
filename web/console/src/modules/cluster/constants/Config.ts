@@ -571,10 +571,10 @@ export const SharedClusterWorkloadNetworkType = [
     value: WorkloadNetworkTypeEnum.FloatingIP,
     text: t('ENI IP（公司内可路由IP）')
   },
-  {
-    value: WorkloadNetworkTypeEnum.Nat,
-    text: t('Nat（端口映射）')
-  },
+  // {
+  //   value: WorkloadNetworkTypeEnum.Nat,
+  //   text: t('Nat（端口映射）')
+  // },
 ];
 
 export const FloatingIPReleasePolicy = [

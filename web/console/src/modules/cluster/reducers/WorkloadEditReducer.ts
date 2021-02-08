@@ -13,6 +13,7 @@ import {
   initContainer,
   initCronMetrics,
   initHpaMetrics,
+  initNatPort,
   initSpecificLabel
 } from '../constants/initState';
 import { Resource } from '../models';
@@ -162,7 +163,11 @@ const TempReducer = combineReducers({
 
   isCanUseTapp: reduceToPayload(ActionType.W_IsCanUseTapp, false),
 
-  networkType: reduceToPayload(ActionType.W_NetworkType, 'Overlay'),
+  networkType: reduceToPayload(ActionType.W_NetworkType, 'overlay'),
+
+  isNatOn: reduceToPayload(ActionType.W_IsNatOn, false),
+
+  natPorts: reduceToPayload(ActionType.W_NatPorts, [initNatPort]),
 
   podAffinityType: reduceToPayload(ActionType.W_SelectPodAffinity, PodAffinityType.unset),
 

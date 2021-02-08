@@ -143,6 +143,12 @@ export interface WorkloadEdit extends Identifiable {
   /** 浮动ip回收机制 */
   floatingIPReleasePolicy?: string;
 
+  /** 是否开启随机端口映射 */
+  isNatOn?: boolean;
+
+  /** 随机端口映射 */
+  natPorts?: NatPort[];
+
   /**超售比 */
   oversoldRatio?: { [props: string]: string };
 
@@ -225,6 +231,15 @@ export interface WorkloadLabel extends Identifiable {
   /** label的value */
   labelValue?: string;
   v_labelValue?: Validation;
+}
+
+/** workload的随机端口映射配置 */
+export interface NatPort extends Identifiable {
+  /** 端口类型 */
+  containerPortProtocol?: string;
+
+  /** 端口号 */
+  containerPort?: number;
 }
 
 /** 配置项 和 secret 弹窗的相关编辑工作 */
