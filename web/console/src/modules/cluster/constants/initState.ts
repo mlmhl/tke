@@ -18,7 +18,7 @@ import {
   VolumeItem,
   WorkloadLabel
 } from '../models';
-import { CronMetrics, NatPort } from '../models/WorkloadEdit';
+import { CronMetrics, NatPort, ShmQuantity } from '../models/WorkloadEdit';
 import { BackendType } from './Config';
 
 /** 创建服务，端口映射的初始值 */
