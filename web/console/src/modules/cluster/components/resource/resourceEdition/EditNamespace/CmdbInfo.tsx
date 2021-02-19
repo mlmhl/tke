@@ -106,6 +106,10 @@ export const CmdbInfo = (
   }, [loginUserInfo, cmdb]);
 
   useEffect(() => {
+    setValue('cmdb', cmdb && !disabled);
+  }, [disabled]);
+
+  useEffect(() => {
     if (selectedDepartment) {
       fetchProductList(selectedDepartment).then(result => {
         setProductList(result);
@@ -202,7 +206,7 @@ export const CmdbInfo = (
     <section className="CMDB-creat-section">
       <Controller
         as={
-          <Switch defaultValue={Boolean(isModify && defaultBusinessInfo)} value={cmdb && !disabled} disabled={disabled}>
+          <Switch defaultValue={Boolean(isModify && defaultBusinessInfo)} disabled={disabled}>
             <Trans>启用录入</Trans>
           </Switch>
         }
