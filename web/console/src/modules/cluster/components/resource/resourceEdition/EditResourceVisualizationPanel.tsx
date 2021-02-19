@@ -1233,19 +1233,10 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
         memRequest = (+memLimit * 1.0) / +oversoldRatio.memory + '';
       }
       containerItem['resources'] = {};
-      const cpu = cpuRequest ? cpuRequest : undefined;
-      const machineCPU = cpuRequest ? String(Math.round(Number(cpuRequest) * 1000)) : undefined;
-      const machineRequest = {};
-      if (WEBPACK_CONFIG_SHARED_CLUSTER) {
-        if (MachineType.AMD === machineType) {
-          machineRequest['teg.tkex.oa.com/amd-cpu'] = machineCPU;
-        } else {
-          machineRequest['teg.tkex.oa.com/intel-cpu'] = machineCPU;
-        }
-      }
+
       // !!!注意：如果设置了gpu，需要在limits里面设定
       if (this._isSetResource1ConditionTrue(cpuLimit, memLimit, c, networkType)) {
-        containerItem['resources'] = this._getResource1({ cpuLimit, memLimit, c, networkType, hasSetNetworkResource });
+        containerItem['resources'] = this._getResource1({ cpuRequest, cpuLimit, memLimit, c, networkType, hasSetNetworkResource, machineType });
       }
       if (this._isSetResource2ConditionTrue(cpuRequest, memRequest, c, networkType)) {
         containerItem['resources'] = this._getResource2({ containerItem, cpuRequest, memRequest, c, networkType, hasSetNetworkResource, machineType });
@@ -1333,15 +1324,25 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
     });
     return volumeCount;
   }
-  private _getResource1({ cpuLimit, memLimit, c, networkType, hasSetNetworkResource }) {
+  private _getResource1({ cpuRequest, cpuLimit, memLimit, c, networkType, hasSetNetworkResource, machineType }) {
+    const machineCPU = cpuRequest ? String(Math.round(Number(cpuRequest) * 1000)) : undefined;
+    const machineRequest = {};
+    if (WEBPACK_CONFIG_SHARED_CLUSTER) {
+      if (MachineType.AMD === machineType) {
+        machineRequest['teg.tkex.oa.com/amd-cpu'] = machineCPU;
+      } else {
+        machineRequest['teg.tkex.oa.com/intel-cpu'] = machineCPU;
+      }
+    }
     return {
       limits: {
         cpu: cpuLimit ? cpuLimit : undefined,
-            memory: memLimit ? memLimit + 'Mi' : undefined,
-            'nvidia.com/gpu': +c.gpu > 0 ? c.gpu + '' : undefined,
-            'tencent.com/vcuda-core': +c.gpuCore ? +c.gpuCore * 100 : undefined,
-            'tencent.com/vcuda-memory': +c.gpuMem ? +c.gpuMem : undefined,
-            'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP && !hasSetNetworkResource ? '1' : undefined
+        memory: memLimit ? memLimit + 'Mi' : undefined,
+        'nvidia.com/gpu': +c.gpu > 0 ? c.gpu + '' : undefined,
+        'tencent.com/vcuda-core': +c.gpuCore ? +c.gpuCore * 100 : undefined,
+        'tencent.com/vcuda-memory': +c.gpuMem ? +c.gpuMem : undefined,
+        'tke.cloud.tencent.com/eni-ip': networkType === WorkloadNetworkTypeEnum.FloatingIP && !hasSetNetworkResource ? '1' : undefined,
+        ...machineRequest
       }
     };
   }
