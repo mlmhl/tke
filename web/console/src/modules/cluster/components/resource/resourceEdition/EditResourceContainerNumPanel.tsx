@@ -45,6 +45,9 @@ export class EditResourceContainerNumPanel extends React.Component<RootProps, {}
             <div className="up-date">
               {this._manualUpdateContainerNum(isHasCbs)}
               {isCanUseHpa && this._autoscaleContainerNum(isHasCbs)}
+              <p className="text-label">
+                <span style={{ verticalAlign: '-1px' }}>{t('实例数量设置请参考')}<a href="https://iwiki.woa.com/pages/viewpage.action?pageId=559706807" target="_blank">指引</a>{t('。')}</span>
+              </p>
             </div>
           )}
         </FormItem>
