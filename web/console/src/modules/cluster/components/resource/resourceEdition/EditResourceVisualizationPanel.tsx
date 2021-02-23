@@ -389,6 +389,9 @@ export class EditResourceVisualizationPanel extends React.Component<RootProps, E
                     </Radio>)
                   }
                 </Radio.Group>
+                <p className="text-label">
+                  <span style={{ verticalAlign: '-1px' }}>{t('业务默认只有AMD配额，如需使用INTEL，需提前')}<a href="https://yunti.oa.com/plans/tke/append" target="_blank">申请</a>{t('。')}</span>
+                </p>
               </FormItem> : null}
 
               <EditResourceContainerPanel />
